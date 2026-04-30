@@ -1,84 +1,152 @@
-/* Norden Cars — estilos globales adicionales */
+/* Norden Cars — estilos globales */
 
+/* ─── KEYFRAMES ─────────────────────────────────────────────────── */
 @keyframes marquee {
   to { transform: translateX(-50%); }
 }
-
 @keyframes pulse {
   0%, 100% { opacity: .28; }
-  50% { opacity: 1; }
+  50%       { opacity: 1; }
 }
-
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(26px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes dot {
   0%, 80%, 100% { opacity: .2; transform: scale(.8); }
-  40% { opacity: 1; transform: scale(1); }
+  40%           { opacity: 1; transform: scale(1); }
+}
+@keyframes bgDrift {
+  0%   { background-position: center 48%; }
+  50%  { background-position: center 54%; }
+  100% { background-position: center 48%; }
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); }
+  50%      { box-shadow: 0 0 24px 8px rgba(220,38,38,.24); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
-/* Responsive base */
+/* ─── UTILITY CLASSES ───────────────────────────────────────────── */
+.hero-bg-drift {
+  animation: bgDrift 20s ease-in-out infinite;
+}
+.btn-glow {
+  animation: glowPulse 3.5s ease-in-out infinite;
+}
+.title-shimmer {
+  background: linear-gradient(90deg, #f5f5f5 40%, #DC2626 50%, #f5f5f5 60%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+
+/* ─── MOBILE 768px ──────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .hero-grid {
-    grid-template-columns: 1fr !important;
+  /* Reduce section padding */
+  section {
+    padding-left: 5vw !important;
+    padding-right: 5vw !important;
   }
-  .two-col {
+
+  /* Two-column grids → one column */
+  [style*="grid-template-columns: 1fr 1fr"],
+  [style*='gridTemplateColumns:"1fr 1fr"'] {
     grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+
+  /* FAQ two-col */
+  [style*='gridTemplateColumns:"1fr 1.55fr"'] {
+    grid-template-columns: 1fr !important;
+    gap: 36px !important;
+  }
+
+  /* Footer grid */
+  [style*='gridTemplateColumns:"2fr 1fr 1fr"'] {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+
+  /* Sticky heading mobile: normal */
+  [style*='position:"sticky"'] {
+    position: static !important;
+  }
+
+  /* Numbers bar: wrap 2x2 */
+  [style*='background:"#DC2626"'] {
+    flex-wrap: wrap !important;
+  }
+  [style*='background:"#DC2626"'] > div {
+    flex: 0 0 50% !important;
+    padding: 22px 10px !important;
   }
 }
 
-/* Mobile: two-column grids become single column */
-@media (max-width: 700px) {
-  /* Nosotros + Contact page two-column layouts */
-  [style*="grid-template-columns: 1fr 1fr"],
-  [style*="gridTemplateColumns: '1fr 1fr'"] {
-    grid-template-columns: 1fr !important;
+/* ─── MOBILE 600px ──────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  h1 {
+    font-size: clamp(40px, 11vw, 68px) !important;
+    line-height: .9 !important;
+  }
+  h2 {
+    font-size: clamp(26px, 8vw, 42px) !important;
   }
 
-  /* FAQ two-column sticky layout */
-  [style*="gridTemplateColumns: '1fr 1.55fr'"] {
-    grid-template-columns: 1fr !important;
-  }
-  [style*="gridTemplateColumns: '1fr 1.4fr'"] {
-    grid-template-columns: 1fr !important;
-  }
+  /* All minmax grids → 1 column */
+  [style*="minmax(210px"] { grid-template-columns: 1fr !important; }
+  [style*="minmax(198px"] { grid-template-columns: 1fr !important; }
+  [style*="minmax(275px"] { grid-template-columns: 1fr !important; }
+  [style*="minmax(300px"] { grid-template-columns: 1fr !important; }
+  [style*="minmax(320px"] { grid-template-columns: 1fr !important; }
 
-  /* Process steps: 2 per row on small screens */
-  [style*="gridTemplateColumns: 'repeat(auto-fill,minmax(210px"] {
+  /* Photo strip 2x2 */
+  [style*="repeat(4,1fr)"] {
     grid-template-columns: 1fr 1fr !important;
+    height: 240px !important;
   }
 
-  /* Photo strip: 2x2 on mobile */
-  [style*="gridTemplateColumns: 'repeat(4,1fr)'"] {
-    grid-template-columns: 1fr 1fr !important;
-    height: 280px !important;
-  }
-
-  /* Flip cards: smaller */
+  /* Flip service cards: shorter */
   [style*="height:186px"],
   [style*="height: 186px"] {
-    height: 160px !important;
+    height: 150px !important;
+  }
+
+  /* Brand flip cards: shorter */
+  [style*="height:90px"],
+  [style*="height: 90px"] {
+    height: 70px !important;
+    min-width: 72px !important;
+  }
+
+  /* Section padding reduction */
+  section {
+    padding-top: 64px !important;
+    padding-bottom: 64px !important;
   }
 }
 
+/* ─── MOBILE 480px ──────────────────────────────────────────────── */
 @media (max-width: 480px) {
-  /* Single column everything on very small screens */
-  [style*="gridTemplateColumns: 'repeat(auto-fill,minmax(210px"] {
-    grid-template-columns: 1fr !important;
-  }
-  [style*="gridTemplateColumns: 'repeat(auto-fill,minmax(198px"] {
-    grid-template-columns: 1fr 1fr !important;
+  h1 { font-size: clamp(34px, 12vw, 52px) !important; }
+
+  /* Numbers bar font */
+  [style*='background:"#DC2626"'] > div > div:first-child {
+    font-size: 38px !important;
   }
 
-  /* Hero stats bar: 2x2 */
-  [style*="gridTemplateColumns: 'repeat(4,1fr)'"] {
-    grid-template-columns: 1fr 1fr !important;
-  }
-
-  /* Numbers bar */
-  [style*="background: '#DC2626'"] > div {
-    padding: 24px 8px !important;
+  /* Admin panel tabs: scroll horizontal */
+  [style*='borderBottom:"1px solid"'][style*='display:"flex"'] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
   }
 }

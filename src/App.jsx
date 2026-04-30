@@ -390,56 +390,43 @@ function FloatWa({ waAle = "5493814773142" }) {
 
 /* ─── NAV ───────────────────────────────────────────────────────────────────── */
 function Nav({ page, navTo, scrolled }) {
-  const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
   const go = (p) => { navTo(p); setMenuOpen(false); };
-
-  const navLinks = [["home","Inicio"],["stock","Stock"],["nosotros","Nosotros"],["contacto","Contacto"]];
+  const links = [["home","Inicio"],["stock","Stock"],["nosotros","Nosotros"],["contacto","Contacto"]];
 
   return (
     <>
-      <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:400, background: scrolled ? "rgba(9,9,9,.97)" : "rgba(9,9,9,.55)", backdropFilter:"blur(20px)", borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent", transition:"all .4s" }}>
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 5vw", height:68 }}>
-          <button onClick={() => go("home")} style={{ background:"none", border:"none", cursor:"pointer", padding:0, zIndex:2 }}>
-            <img src={IMG_LOGO} alt="NordenCars" style={{ height:36 }}/>
+      <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:400, background: scrolled ? "rgba(9,9,9,.97)" : "rgba(9,9,9,.65)", backdropFilter:"blur(20px)", borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent", transition:"all .4s" }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 5vw", height:64 }}>
+          <button onClick={() => go("home")} style={{ background:"none", border:"none", cursor:"pointer", padding:0 }}>
+            <img src={IMG_LOGO} alt="NordenCars" style={{ height:34 }}/>
           </button>
-
-          {/* Desktop */}
-          {!isMobile && (
-            <div style={{ display:"flex", gap:26, alignItems:"center" }}>
-              {navLinks.map(([p,l]) => (
-                <button key={p} onClick={() => go(p)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:10, letterSpacing:3, textTransform:"uppercase", fontFamily:"sans-serif", color: page===p ? C.white : "rgba(245,245,245,.37)", transition:"color .3s", borderBottom: page===p ? `1px solid ${C.red}` : "1px solid transparent", paddingBottom:2 }}>{l}</button>
-              ))}
-              <button onClick={() => go("contacto")} style={{ background:C.red, border:"none", color:"#fff", padding:"9px 20px", fontSize:9, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:500, cursor:"pointer" }}>Consultar</button>
-              <button onClick={() => go("admin")} title="Panel de administración" style={{ background:"none", border:`1px solid ${C.border2}`, color:C.muted, padding:"7px 9px", cursor:"pointer", fontSize:11, lineHeight:1 }}>⚙</button>
-            </div>
-          )}
-
-          {/* Hamburger */}
-          {isMobile && (
-            <button onClick={() => setMenuOpen(o => !o)} style={{ background:"none", border:"none", cursor:"pointer", padding:"8px", display:"flex", flexDirection:"column", gap:5, zIndex:2 }}>
-              <span style={{ display:"block", width:22, height:2, background:menuOpen ? C.red : C.white, transform:menuOpen?"rotate(45deg) translateY(7px)":"none", transition:"all .3s", transformOrigin:"center" }}/>
-              <span style={{ display:"block", width:22, height:2, background:menuOpen ? "transparent" : C.white, transition:"all .3s" }}/>
-              <span style={{ display:"block", width:22, height:2, background:menuOpen ? C.red : C.white, transform:menuOpen?"rotate(-45deg) translateY(-7px)":"none", transition:"all .3s", transformOrigin:"center" }}/>
-            </button>
-          )}
+          {/* Hamburger — siempre visible */}
+          <button onClick={() => setMenuOpen(o => !o)}
+            aria-label="Menú" aria-expanded={menuOpen}
+            style={{ background:"none", border:"none", cursor:"pointer", padding:"8px 4px", display:"flex", flexDirection:"column", gap:5, zIndex:2 }}>
+            <span style={{ display:"block", width:24, height:2, background:menuOpen?C.red:C.white, transform:menuOpen?"rotate(45deg) translateY(7px)":"none", transition:"all .32s cubic-bezier(.16,1,.3,1)", transformOrigin:"center" }}/>
+            <span style={{ display:"block", width:24, height:2, background:menuOpen?"transparent":C.white, transition:"all .32s" }}/>
+            <span style={{ display:"block", width:24, height:2, background:menuOpen?C.red:C.white, transform:menuOpen?"rotate(-45deg) translateY(-7px)":"none", transition:"all .32s cubic-bezier(.16,1,.3,1)", transformOrigin:"center" }}/>
+          </button>
         </div>
       </nav>
 
-      {/* Mobile drawer overlay */}
-      {isMobile && (
-        <>
-          <div onClick={() => setMenuOpen(false)} style={{ position:"fixed", inset:0, zIndex:398, background:"rgba(0,0,0,.65)", opacity:menuOpen?1:0, pointerEvents:menuOpen?"auto":"none", transition:"opacity .35s" }}/>
-          <div style={{ position:"fixed", top:68, right:0, bottom:0, width:260, background:"#111", borderLeft:`1px solid ${C.border2}`, zIndex:399, transform:menuOpen?"translateX(0)":"translateX(100%)", transition:"transform .38s cubic-bezier(.16,1,.3,1)", display:"flex", flexDirection:"column", padding:"28px 20px", gap:4, overflowY:"auto" }}>
-            {navLinks.map(([p,l]) => (
-              <button key={p} onClick={() => go(p)} style={{ background:page===p?"rgba(220,38,38,.1)":"none", border:"none", borderLeft: page===p?`3px solid ${C.red}`:"3px solid transparent", padding:"14px 16px", cursor:"pointer", textAlign:"left", fontSize:13, letterSpacing:2, textTransform:"uppercase", fontFamily:"sans-serif", color:page===p?C.white:"rgba(245,245,245,.5)", transition:"all .2s" }}>{l}</button>
-            ))}
-            <div style={{ height:1, background:C.border, margin:"10px 0" }}/>
-            <button onClick={() => go("contacto")} style={{ background:C.red, border:"none", color:"#fff", padding:"13px 16px", cursor:"pointer", fontSize:10, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:500 }}>Consultar ahora</button>
-            <button onClick={() => go("admin")} style={{ background:"none", border:`1px solid ${C.border2}`, color:C.muted, padding:"10px 16px", cursor:"pointer", fontSize:9, letterSpacing:2, textTransform:"uppercase", fontFamily:"sans-serif", marginTop:4 }}>⚙ Admin</button>
-          </div>
-        </>
-      )}
+      {/* Overlay */}
+      <div onClick={() => setMenuOpen(false)}
+        style={{ position:"fixed", inset:0, zIndex:398, background:"rgba(0,0,0,.72)", opacity:menuOpen?1:0, pointerEvents:menuOpen?"auto":"none", transition:"opacity .35s" }}/>
+      {/* Drawer */}
+      <div style={{ position:"fixed", top:64, right:0, bottom:0, width:280, background:"#0e0e0e", borderLeft:`1px solid ${C.border2}`, zIndex:399, transform:menuOpen?"translateX(0)":"translateX(100%)", transition:"transform .4s cubic-bezier(.16,1,.3,1)", display:"flex", flexDirection:"column", padding:"32px 24px", gap:2, overflowY:"auto" }}>
+        {links.map(([p,l],i) => (
+          <button key={p} onClick={() => go(p)}
+            style={{ background:page===p?"rgba(220,38,38,.1)":"none", border:"none", borderLeft:page===p?`3px solid ${C.red}`:"3px solid transparent", padding:"15px 18px", cursor:"pointer", textAlign:"left", fontSize:14, letterSpacing:2, textTransform:"uppercase", fontFamily:"sans-serif", color:page===p?C.white:"rgba(245,245,245,.45)", transition:"all .22s", animationDelay:`${i*.05}s` }}>
+            {l}
+          </button>
+        ))}
+        <div style={{ height:1, background:C.border, margin:"14px 0" }}/>
+        <button onClick={() => go("contacto")} style={{ background:C.red, border:"none", color:"#fff", padding:"14px 18px", cursor:"pointer", fontSize:10, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600 }}>Consultar ahora</button>
+        <button onClick={() => go("admin")} style={{ background:"none", border:`1px solid ${C.border}`, color:"rgba(255,255,255,.22)", padding:"10px 18px", cursor:"pointer", fontSize:9, letterSpacing:2, textTransform:"uppercase", fontFamily:"sans-serif", marginTop:6 }}>⚙ Admin</button>
+      </div>
     </>
   );
 }
@@ -625,26 +612,101 @@ function ReviewTile({ r }) {
 }
 
 /* ─── FLIP BRAND CARD (marcas 0km) ──────────────────────────────────────────── */
+// Logos locales en /public/images/logos/<marca>.png tienen prioridad sobre Clearbit
+const BRAND_LOCAL = {
+  "Toyota":"/images/logos/toyota.png","Fiat":"/images/logos/fiat.png",
+  "Chevrolet":"/images/logos/chevrolet.png","BAIC":"/images/logos/baic.png",
+  "BYD":"/images/logos/byd.png","Jeep":"/images/logos/jeep.png",
+  "RAM":"/images/logos/ram.png","Volkswagen":"/images/logos/volkswagen.png",
+  "Peugeot":"/images/logos/peugeot.png","Ford":"/images/logos/ford.png",
+  "Haval":"/images/logos/haval.png","Citroën":"/images/logos/citroen.png",
+  "KIA":"/images/logos/kia.png","BMW":"/images/logos/bmw.png",
+  "MINI":"/images/logos/mini.png","Audi":"/images/logos/audi.png",
+  "Hyundai":"/images/logos/hyundai.png",
+};
 function FlipBrandCard({ brand }) {
   const [flipped, setFlipped] = useState(false);
+  const [useLocal, setUseLocal] = useState(true);
+  const localSrc = BRAND_LOCAL[brand];
   const domain = BRAND_DOMAINS[brand] || `${brand.toLowerCase()}.com`;
-  const logoUrl = `https://logo.clearbit.com/${domain}`;
+  const clearbitSrc = `https://logo.clearbit.com/${domain}`;
+  const logoSrc = (useLocal && localSrc) ? localSrc : clearbitSrc;
   return (
     <div onMouseEnter={() => setFlipped(true)} onMouseLeave={() => setFlipped(false)}
       style={{ perspective:700, cursor:"pointer", height:90, minWidth:100, flex:"1 1 auto" }}>
-      <div style={{ position:"relative", width:"100%", height:"100%", transformStyle:"preserve-3d", transform:flipped?"rotateY(180deg)":"rotateY(0deg)", transition:"transform .5s cubic-bezier(.16,1,.3,1)" }}>
+      <div style={{ position:"relative", width:"100%", height:"100%", transformStyle:"preserve-3d", transform:flipped?"rotateY(180deg)":"rotateY(0deg)", transition:"transform .52s cubic-bezier(.16,1,.3,1)" }}>
         {/* Front – nombre */}
-        <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center", border:`1px solid ${flipped?C.red:"transparent"}` }}>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:1, color:"#555" }}>{brand}</div>
+        <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:2, color:"#444" }}>{brand}</div>
         </div>
-        {/* Back – logo */}
-        <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", background:"#f5f5f5", transform:"rotateY(180deg)", display:"flex", alignItems:"center", justifyContent:"center", padding:12 }}>
-          <img src={logoUrl} alt={brand} style={{ maxWidth:"75%", maxHeight:"65%", objectFit:"contain" }}
-            onError={e => { e.currentTarget.style.display="none"; const fb=e.currentTarget.nextSibling; if(fb) fb.style.display="block"; }}/>
-          <div style={{ display:"none", fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, color:"#111", textTransform:"uppercase" }}>{brand}</div>
+        {/* Back – logo sobre fondo oscuro (transparente si el PNG lo tiene) */}
+        <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", background:C.zinc2, transform:"rotateY(180deg)", display:"flex", alignItems:"center", justifyContent:"center", padding:14, borderTop:`2px solid ${C.red}` }}>
+          <img src={logoSrc} alt={brand}
+            style={{ maxWidth:"78%", maxHeight:"62%", objectFit:"contain", filter:"brightness(0) invert(1)" }}
+            onError={() => {
+              if (useLocal) { setUseLocal(false); }  // fallback a clearbit
+            }}/>
         </div>
       </div>
     </div>
+  );
+}
+
+/* ─── CLIENTES CAROUSEL ─────────────────────────────────────────────────────── */
+function ClientesCarousel({ fotos = [] }) {
+  if (!fotos.length) return null;
+  const doubled = [...fotos, ...fotos];
+  return (
+    <section style={{ padding:"80px 0 60px", background:C.carbon, borderTop:`1px solid ${C.border}`, overflow:"hidden" }}>
+      <Reveal><div style={{ padding:"0 5vw", marginBottom:40 }}>
+        <Tag>Clientes felices</Tag>
+        <SecH>Entregas <Red>recientes</Red></SecH>
+      </div></Reveal>
+      <div style={{ display:"flex", width:"max-content", animation:"marquee 50s linear infinite", gap:3 }}>
+        {doubled.map((f,i) => (
+          <div key={i} style={{ flexShrink:0, width:300, height:220, overflow:"hidden" }}>
+            <img src={f.url} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", filter:"brightness(.82) saturate(.9)", transition:"filter .4s" }}
+              onMouseEnter={e => e.currentTarget.style.filter="brightness(1) saturate(1)"}
+              onMouseLeave={e => e.currentTarget.style.filter="brightness(.82) saturate(.9)"}/>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ─── VIDEOS SECTION ─────────────────────────────────────────────────────────── */
+function VideosSection({ videos = [] }) {
+  const active = videos.filter(v => v.activo !== false);
+  if (!active.length) return null;
+  const embed = (url) => {
+    const yt = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/);
+    if (yt) return `https://www.youtube.com/embed/${yt[1]}?rel=0&modestbranding=1`;
+    const ig = url.match(/instagram\.com\/(?:p|reel)\/([\w-]+)/);
+    if (ig) return `https://www.instagram.com/p/${ig[1]}/embed/`;
+    return url;
+  };
+  return (
+    <section style={{ padding:"100px 5vw", background:"linear-gradient(to bottom,#080808,#0c0c0c)", borderTop:`1px solid ${C.border}` }}>
+      <Reveal><Tag>Contenido</Tag></Reveal>
+      <Reveal delay={.1}><SecH style={{ marginBottom:48 }}>Videos <Red>destacados</Red></SecH></Reveal>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))", gap:4 }}>
+        {active.map((v,i) => (
+          <Reveal key={i} delay={i*.07}>
+            <div style={{ background:C.zinc, overflow:"hidden", border:`1px solid ${C.border}`, transition:"border-color .3s" }}
+              onMouseEnter={e => e.currentTarget.style.borderColor=C.red}
+              onMouseLeave={e => e.currentTarget.style.borderColor=C.border}>
+              <div style={{ position:"relative", paddingTop:"56.25%" }}>
+                <iframe src={embed(v.url)} title={v.titulo||`Video ${i+1}`}
+                  style={{ position:"absolute", inset:0, width:"100%", height:"100%", border:0 }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen loading="lazy"/>
+              </div>
+              {v.titulo && <div style={{ padding:"14px 16px", fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:700, textTransform:"uppercase", color:C.white, letterSpacing:.5, borderTop:`1px solid ${C.border}` }}>{v.titulo}</div>}
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -965,7 +1027,7 @@ function ConfigEditor({ config, showToast, onRefresh }) {
 }
 
 /* ─── HOME PAGE ─────────────────────────────────────────────────────────────── */
-function HomePage({ navTo, setSelectedCar, stockData, config }) {
+function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, videosData }) {
   const waAle = config.whatsapp_ale || "5493814773142";
   const preview = stockData.filter(v => v.destacado).slice(0,4);
   const shown = preview.length >= 2 ? preview : stockData.slice(0,4);
@@ -980,14 +1042,14 @@ function HomePage({ navTo, setSelectedCar, stockData, config }) {
         {/* Left accent */}
         <div style={{ position:"absolute", left:0, top:0, bottom:0, width:3, background:"linear-gradient(to bottom,transparent,#DC2626 22%,#DC2626 78%,transparent)" }}/>
         {/* BG car image — centrado y visible */}
-        <div style={{ position:"absolute", right:0, top:0, bottom:0, width:"65%", backgroundImage:`url(${IMG_BMW_FULL})`, backgroundSize:"cover", backgroundPosition:"center center", maskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)", WebkitMaskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)", filter:"brightness(.55) saturate(.7)" }}/>
+        <div className="hero-bg-drift" style={{ position:"absolute", right:0, top:0, bottom:0, width:"65%", backgroundImage:`url(${IMG_BMW_FULL})`, backgroundSize:"cover", backgroundPosition:"center center", maskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)", WebkitMaskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)", filter:"brightness(.55) saturate(.7)" }}/>
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right,rgba(5,5,5,1) 18%,rgba(5,5,5,.55) 46%,rgba(5,5,5,.08) 100%)" }}/>
-        {/* Patente BMW — desenfocada por privacidad */}
-        <div style={{ position:"absolute", right:"15%", bottom:"19%", width:"15%", height:"9%", backdropFilter:"blur(32px)", WebkitBackdropFilter:"blur(32px)", background:"rgba(4,4,4,.9)", zIndex:4, borderRadius:4 }}/>
+        {/* Patente BMW — blur suave para privacidad */}
+        <div style={{ position:"absolute", right:"15%", bottom:"19%", width:"13%", height:"5.5%", backdropFilter:"blur(22px) saturate(0)", WebkitBackdropFilter:"blur(22px) saturate(0)", background:"rgba(12,12,12,.38)", zIndex:4, borderRadius:3 }}/>
 
-        <div style={{ position:"relative", zIndex:2, padding:"0 5vw", maxWidth:820 }}>
-          <div style={{ fontSize:9, letterSpacing:5, textTransform:"uppercase", color:C.red, marginBottom:18, display:"flex", alignItems:"center", gap:12, fontFamily:"sans-serif", animation:"fadeUp .8s .15s both" }}>
-            <span style={{ width:30, height:1, background:C.red, flexShrink:0 }}/>Yerba Buena, Tucumán · Est. 2022
+        <div style={{ position:"relative", zIndex:2, padding:"0 5vw", maxWidth:820, paddingTop:0 }}>
+          <div style={{ fontSize:9, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:18, display:"flex", alignItems:"center", gap:12, fontFamily:"sans-serif", animation:"fadeUp .8s .15s both", flexWrap:"wrap", overflow:"visible" }}>
+            <span style={{ width:24, height:1, background:C.red, flexShrink:0 }}/>Yerba Buena, Tucumán · Est. 2022
           </div>
           <BigH sz="clamp(56px,9.5vw,112px)" style={{ marginBottom:22, animation:"fadeUp .8s .3s both" }}>
             Tu próximo<br/>vehículo<br/><Red>fácil y</Red><br/><Red>seguro.</Red>
@@ -996,7 +1058,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config }) {
             {config.hero_subtitulo || "Al precio justo, con la transparencia que merecés. 0km y usados seleccionados en Yerba Buena, Tucumán."}
           </p>
           <div style={{ display:"flex", gap:13, flexWrap:"wrap", animation:"fadeUp .8s .6s both" }}>
-            <Btn primary onClick={() => navTo("stock")}>Ver Stock Disponible</Btn>
+            <div className="btn-glow" style={{ display:"inline-block", borderRadius:2 }}><Btn primary onClick={() => navTo("stock")}>Ver Stock Disponible</Btn></div>
             <Btn onClick={() => navTo("contacto")}>Vender mi Auto</Btn>
           </div>
         </div>
@@ -1135,6 +1197,12 @@ function HomePage({ navTo, setSelectedCar, stockData, config }) {
           </div>
         </div>
       </section>
+
+      {/* ── CLIENTES FELICES ── */}
+      <ClientesCarousel fotos={fotosClientes}/>
+
+      {/* ── VIDEOS ── */}
+      <VideosSection videos={videosData}/>
 
       {/* ── LOCATION ── */}
       <section style={{ padding:"80px 5vw", background:C.zinc2, borderTop:`1px solid ${C.border}` }}>
@@ -1479,6 +1547,8 @@ export default function App() {
   const [config, setConfig] = useState({});
   const [loadingStock, setLoadingStock] = useState(true);
   const [appLoading, setAppLoading] = useState(true);
+  const [fotosClientes, setFotosClientes] = useState([]);
+  const [videosData, setVideosData] = useState([]);
 
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 48);
@@ -1493,6 +1563,9 @@ export default function App() {
         const m = {}; data.forEach(x => { m[x.clave] = x.valor; }); setConfig(m);
       }
     });
+    // Cargar fotos clientes y videos en paralelo
+    db.sel("fotos_clientes","activo=eq.true&order=orden.asc,created_at.desc").then(d => { if (Array.isArray(d)) setFotosClientes(d); });
+    db.sel("videos","activo=eq.true&order=orden.asc,created_at.desc").then(d => { if (Array.isArray(d)) setVideosData(d); });
     // Load stock + fotos
     setLoadingStock(true);
     db.sel("vehiculos","activo=eq.true&order=orden.asc,created_at.desc").then(async data => {
@@ -1523,7 +1596,7 @@ export default function App() {
 
       <Nav page={page} navTo={navTo} scrolled={scrolled}/>
 
-      {page==="home"     && <HomePage navTo={navTo} setSelectedCar={setSelectedCar} stockData={stockData} config={config}/>}
+      {page==="home"     && <HomePage navTo={navTo} setSelectedCar={setSelectedCar} stockData={stockData} config={config} fotosClientes={fotosClientes} videosData={videosData}/>}
       {page==="stock"    && <StockPage stockData={stockData} setSelectedCar={setSelectedCar} loading={loadingStock}/>}
       {page==="nosotros" && <NosotrosPage navTo={navTo}/>}
       {page==="contacto" && <ContactoPage config={config} navTo={navTo}/>}
