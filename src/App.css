@@ -28,3 +28,57 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Mobile: two-column grids become single column */
+@media (max-width: 700px) {
+  /* Nosotros + Contact page two-column layouts */
+  [style*="grid-template-columns: 1fr 1fr"],
+  [style*="gridTemplateColumns: '1fr 1fr'"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* FAQ two-column sticky layout */
+  [style*="gridTemplateColumns: '1fr 1.55fr'"] {
+    grid-template-columns: 1fr !important;
+  }
+  [style*="gridTemplateColumns: '1fr 1.4fr'"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Process steps: 2 per row on small screens */
+  [style*="gridTemplateColumns: 'repeat(auto-fill,minmax(210px"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Photo strip: 2x2 on mobile */
+  [style*="gridTemplateColumns: 'repeat(4,1fr)'"] {
+    grid-template-columns: 1fr 1fr !important;
+    height: 280px !important;
+  }
+
+  /* Flip cards: smaller */
+  [style*="height:186px"],
+  [style*="height: 186px"] {
+    height: 160px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Single column everything on very small screens */
+  [style*="gridTemplateColumns: 'repeat(auto-fill,minmax(210px"] {
+    grid-template-columns: 1fr !important;
+  }
+  [style*="gridTemplateColumns: 'repeat(auto-fill,minmax(198px"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Hero stats bar: 2x2 */
+  [style*="gridTemplateColumns: 'repeat(4,1fr)'"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Numbers bar */
+  [style*="background: '#DC2626'"] > div {
+    padding: 24px 8px !important;
+  }
+}

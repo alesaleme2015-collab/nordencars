@@ -43,13 +43,21 @@ const CARROCERIAS = ["Todos","Sedán","SUV","Pick-up","Hatchback","Coupé","Otro
 const ADMIN_PASS  = "norden2025";
 
 const STOCK_LOCAL = [
-  {id:"l1",marca:"Volkswagen",modelo:"Vento GLI",version:"2.0 TSI DSG",anio:2018,tipo:"Usado",carroceria:"Sedán",precio_usd:21500,kilometraje:68000,color:"Blanco Perlado",descripcion:"Motor turbo 2.0 TSI, DSG 6 velocidades, interior deportivo con costuras rojas. Impecable.",destacado:true,fotos:[IMG_VW_FRONT,IMG_VW_INT]},
-  {id:"l2",marca:"BMW",modelo:"M235i",version:"Coupé M Sport",anio:2016,tipo:"Usado",carroceria:"Coupé",precio_usd:28000,kilometraje:95000,color:"Estoril Blue",descripcion:"Motor inline 6 turbo 326cv, paquete M Sport, automático 8 velocidades. Una bestia.",destacado:true,fotos:[IMG_BMW_FULL,IMG_BMW_FRONT,IMG_BMW_INT]},
-  {id:"l3",marca:"Toyota",modelo:"Hilux",version:"SRX 4x4 AT",anio:2022,tipo:"Usado",carroceria:"Pick-up",precio_usd:46000,kilometraje:52000,color:"Blanco",descripcion:"La pick-up más vendida del país. Full equipada, 4x4, automática.",destacado:false,fotos:[]},
-  {id:"l4",marca:"Jeep",modelo:"Compass",version:"Trailhawk 4x4",anio:2022,tipo:"Usado",carroceria:"SUV",precio_usd:27500,kilometraje:38000,color:"Azul Hydro",descripcion:"SUV de lujo con 4x4 inteligente y cuero premium.",destacado:false,fotos:[]},
-  {id:"l5",marca:"BYD",modelo:"Dolphin",version:"Plus",anio:2024,tipo:"0km",carroceria:"Hatchback",precio_usd:22000,kilometraje:0,color:"Azul Oceano",descripcion:"100% eléctrico. 204cv, carga rápida, 400km de autonomía.",destacado:false,fotos:[]},
-  {id:"l6",marca:"Chevrolet",modelo:"Tracker",version:"Premier AT",anio:2024,tipo:"0km",carroceria:"SUV",precio_usd:24500,kilometraje:0,color:"Negro",descripcion:"SUV compacto 0km, motor turbo, cámara 360°.",destacado:false,fotos:[]},
+  {id:"l1",marca:"Volkswagen",modelo:"Vento GLI",version:"2.0 TSI DSG",anio:2018,tipo:"Usado",carroceria:"Sedán",precio_usd:32000000,kilometraje:68000,color:"Blanco Perlado",descripcion:"Motor turbo 2.0 TSI, DSG 6 velocidades, interior deportivo con costuras rojas. Impecable.",destacado:true,fotos:[IMG_VW_FRONT,IMG_VW_INT]},
+  {id:"l2",marca:"BMW",modelo:"M235i",version:"Coupé M Sport",anio:2016,tipo:"Usado",carroceria:"Coupé",precio_usd:48000000,kilometraje:95000,color:"Estoril Blue",descripcion:"Motor inline 6 turbo 326cv, paquete M Sport, automático 8 velocidades. Una bestia.",destacado:true,fotos:[IMG_BMW_FULL,IMG_BMW_FRONT,IMG_BMW_INT]},
+  {id:"l3",marca:"Toyota",modelo:"Hilux",version:"SRX 4x4 AT",anio:2022,tipo:"Usado",carroceria:"Pick-up",precio_usd:78000000,kilometraje:52000,color:"Blanco",descripcion:"La pick-up más vendida del país. Full equipada, 4x4, automática.",destacado:false,fotos:[]},
+  {id:"l4",marca:"Jeep",modelo:"Compass",version:"Trailhawk 4x4",anio:2022,tipo:"Usado",carroceria:"SUV",precio_usd:52000000,kilometraje:38000,color:"Azul Hydro",descripcion:"SUV de lujo con 4x4 inteligente y cuero premium.",destacado:false,fotos:[]},
+  {id:"l5",marca:"BYD",modelo:"Dolphin",version:"Plus",anio:2024,tipo:"0km",carroceria:"Hatchback",precio_usd:38000000,kilometraje:0,color:"Azul Oceano",descripcion:"100% eléctrico. 204cv, carga rápida, 400km de autonomía.",destacado:false,fotos:[]},
+  {id:"l6",marca:"Chevrolet",modelo:"Tracker",version:"Premier AT",anio:2024,tipo:"0km",carroceria:"SUV",precio_usd:42000000,kilometraje:0,color:"Negro",descripcion:"SUV compacto 0km, motor turbo, cámara 360°.",destacado:false,fotos:[]},
 ];
+
+const BRAND_DOMAINS = {
+  "Toyota":"toyota.com","Fiat":"fiat.com","Chevrolet":"chevrolet.com",
+  "BAIC":"baicmotor.com","BYD":"byd.com","Jeep":"jeep.com","RAM":"ramtrucks.com",
+  "Volkswagen":"volkswagen.com","Peugeot":"peugeot.com","Ford":"ford.com",
+  "Haval":"haval.com","Citroën":"citroen.com","KIA":"kia.com",
+  "BMW":"bmw.com","MINI":"mini.com","Audi":"audi.com","Hyundai":"hyundai.com",
+};
 const FAQ = [
   {k:"financiación financiamiento cuotas",a:"Sí, trabajamos con múltiples entidades financieras para que arranques a rodar sin preocupaciones."},
   {k:"permuta cambio parte pago",a:"¡Sí! Tomamos tu vehículo como parte de pago al mejor precio del mercado."},
@@ -71,6 +79,29 @@ const C = {
 };
 
 /* ─── HOOKS ─────────────────────────────────────────────────────────────────── */
+function useCounter(target, duration = 1400) {
+  const ref = useRef(null);
+  const [count, setCount] = useState(0);
+  const [started, setStarted] = useState(false);
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting && !started) setStarted(true); }, { threshold: 0.3 });
+    obs.observe(el); return () => obs.disconnect();
+  }, [started]);
+  useEffect(() => {
+    if (!started) return;
+    const startTime = performance.now();
+    const raf = (now) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(ease * target));
+      if (progress < 1) requestAnimationFrame(raf);
+    };
+    requestAnimationFrame(raf);
+  }, [started, target, duration]);
+  return [ref, count];
+}
+
 function useReveal(threshold = 0.07) {
   const ref = useRef(null);
   const [v, setV] = useState(false);
@@ -87,6 +118,90 @@ function Reveal({ children, delay = 0 }) {
     <div ref={ref} style={{ opacity: v ? 1 : 0, transform: v ? "translateY(0)" : "translateY(26px)", transition: `opacity .72s cubic-bezier(.16,1,.3,1) ${delay}s, transform .72s cubic-bezier(.16,1,.3,1) ${delay}s` }}>
       {children}
     </div>
+  );
+}
+
+function StatCounter({ value, prefix = "", suffix = "", style = {}, duration = 1600 }) {
+  const num = parseInt(value.replace(/\D/g,""), 10) || 0;
+  const [ref, count] = useCounter(num, duration);
+  return (
+    <span ref={ref} style={style}>
+      {prefix}{isNaN(num) || num === 0 ? value : count}{suffix}
+    </span>
+  );
+}
+
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(() => typeof window !== "undefined" && window.innerWidth <= bp);
+  useEffect(() => {
+    const h = () => setM(window.innerWidth <= bp);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, [bp]);
+  return m;
+}
+
+/* ─── LOADING SCREEN ────────────────────────────────────────────────────────── */
+function LoadingScreen({ onDone }) {
+  const [progress, setProgress] = useState(0);
+  const [fading, setFading] = useState(false);
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setProgress(p => {
+        if (p >= 100) {
+          clearInterval(iv);
+          setTimeout(() => setFading(true), 300);
+          setTimeout(() => onDone(), 950);
+          return 100;
+        }
+        return p + (p < 70 ? 3 : 1.2);
+      });
+    }, 40);
+    return () => clearInterval(iv);
+  }, [onDone]);
+  return (
+    <div style={{ position:"fixed", inset:0, zIndex:9999, background:C.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:28, opacity:fading?0:1, transition:"opacity .65s ease", pointerEvents:fading?"none":"auto" }}>
+      <img src={IMG_LOGO} alt="NordenCars" style={{ height:68, animation:"fadeUp .7s .1s both" }}/>
+      <div style={{ width:200, height:2, background:"rgba(255,255,255,.08)", borderRadius:2, overflow:"hidden" }}>
+        <div style={{ height:"100%", width:`${progress}%`, background:C.red, transition:"width .04s linear", borderRadius:2 }}/>
+      </div>
+      <div style={{ fontSize:8, letterSpacing:5, textTransform:"uppercase", color:"rgba(255,255,255,.22)", fontFamily:"sans-serif", animation:"fadeUp .7s .3s both" }}>Cargando experiencia</div>
+    </div>
+  );
+}
+
+/* ─── CUSTOM CURSOR ──────────────────────────────────────────────────────────── */
+function CustomCursor() {
+  const dotRef = useRef(null);
+  const ringRef = useRef(null);
+  useEffect(() => {
+    let x = -200, y = -200, rx = -200, ry = -200, raf;
+    let clicking = false;
+    const move = e => { x = e.clientX; y = e.clientY; };
+    const down = () => { clicking = true; };
+    const up   = () => { clicking = false; };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mousedown", down);
+    window.addEventListener("mouseup", up);
+    const loop = () => {
+      rx += (x - rx) * 0.1;
+      ry += (y - ry) * 0.1;
+      if (dotRef.current) {
+        dotRef.current.style.transform = `translate(${x - 4}px, ${y - 4}px) scale(${clicking ? 0.5 : 1})`;
+      }
+      if (ringRef.current) {
+        ringRef.current.style.transform = `translate(${rx - 18}px, ${ry - 18}px) scale(${clicking ? 1.5 : 1})`;
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("mousemove", move); window.removeEventListener("mousedown", down); window.removeEventListener("mouseup", up); };
+  }, []);
+  return (
+    <>
+      <div ref={dotRef} style={{ position:"fixed", top:0, left:0, width:8, height:8, borderRadius:"50%", background:C.red, pointerEvents:"none", zIndex:99999, transition:"transform .08s, background .2s", willChange:"transform" }}/>
+      <div ref={ringRef} style={{ position:"fixed", top:0, left:0, width:36, height:36, borderRadius:"50%", border:`1.5px solid rgba(220,38,38,.55)`, pointerEvents:"none", zIndex:99998, transition:"transform .12s cubic-bezier(.16,1,.3,1)", willChange:"transform" }}/>
+    </>
   );
 }
 
@@ -275,21 +390,57 @@ function FloatWa({ waAle = "5493814773142" }) {
 
 /* ─── NAV ───────────────────────────────────────────────────────────────────── */
 function Nav({ page, navTo, scrolled }) {
+  const isMobile = useIsMobile();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const go = (p) => { navTo(p); setMenuOpen(false); };
+
+  const navLinks = [["home","Inicio"],["stock","Stock"],["nosotros","Nosotros"],["contacto","Contacto"]];
+
   return (
-    <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:300, background: scrolled ? "rgba(9,9,9,.97)" : "rgba(9,9,9,.55)", backdropFilter:"blur(20px)", borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent", transition:"all .4s" }}>
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 5vw", height:68 }}>
-        <button onClick={() => navTo("home")} style={{ background:"none", border:"none", cursor:"pointer", padding:0 }}>
-          <img src={IMG_LOGO} alt="NordenCars" style={{ height:36 }}/>
-        </button>
-        <div style={{ display:"flex", gap:26, alignItems:"center" }}>
-          {[["home","Inicio"],["stock","Stock"],["nosotros","Nosotros"],["contacto","Contacto"]].map(([p,l]) => (
-            <button key={p} onClick={() => navTo(p)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:10, letterSpacing:3, textTransform:"uppercase", fontFamily:"sans-serif", color: page===p ? C.white : "rgba(245,245,245,.37)", transition:"color .3s", borderBottom: page===p ? `1px solid ${C.red}` : "1px solid transparent", paddingBottom:2 }}>{l}</button>
-          ))}
-          <button onClick={() => navTo("contacto")} style={{ background:C.red, border:"none", color:"#fff", padding:"9px 20px", fontSize:9, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:500, cursor:"pointer" }}>Consultar</button>
-          <button onClick={() => navTo("admin")} title="Panel de administración" style={{ background:"none", border:`1px solid ${C.border2}`, color:C.muted, padding:"7px 9px", cursor:"pointer", fontSize:11, lineHeight:1 }}>⚙</button>
+    <>
+      <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:400, background: scrolled ? "rgba(9,9,9,.97)" : "rgba(9,9,9,.55)", backdropFilter:"blur(20px)", borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent", transition:"all .4s" }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 5vw", height:68 }}>
+          <button onClick={() => go("home")} style={{ background:"none", border:"none", cursor:"pointer", padding:0, zIndex:2 }}>
+            <img src={IMG_LOGO} alt="NordenCars" style={{ height:36 }}/>
+          </button>
+
+          {/* Desktop */}
+          {!isMobile && (
+            <div style={{ display:"flex", gap:26, alignItems:"center" }}>
+              {navLinks.map(([p,l]) => (
+                <button key={p} onClick={() => go(p)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:10, letterSpacing:3, textTransform:"uppercase", fontFamily:"sans-serif", color: page===p ? C.white : "rgba(245,245,245,.37)", transition:"color .3s", borderBottom: page===p ? `1px solid ${C.red}` : "1px solid transparent", paddingBottom:2 }}>{l}</button>
+              ))}
+              <button onClick={() => go("contacto")} style={{ background:C.red, border:"none", color:"#fff", padding:"9px 20px", fontSize:9, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:500, cursor:"pointer" }}>Consultar</button>
+              <button onClick={() => go("admin")} title="Panel de administración" style={{ background:"none", border:`1px solid ${C.border2}`, color:C.muted, padding:"7px 9px", cursor:"pointer", fontSize:11, lineHeight:1 }}>⚙</button>
+            </div>
+          )}
+
+          {/* Hamburger */}
+          {isMobile && (
+            <button onClick={() => setMenuOpen(o => !o)} style={{ background:"none", border:"none", cursor:"pointer", padding:"8px", display:"flex", flexDirection:"column", gap:5, zIndex:2 }}>
+              <span style={{ display:"block", width:22, height:2, background:menuOpen ? C.red : C.white, transform:menuOpen?"rotate(45deg) translateY(7px)":"none", transition:"all .3s", transformOrigin:"center" }}/>
+              <span style={{ display:"block", width:22, height:2, background:menuOpen ? "transparent" : C.white, transition:"all .3s" }}/>
+              <span style={{ display:"block", width:22, height:2, background:menuOpen ? C.red : C.white, transform:menuOpen?"rotate(-45deg) translateY(-7px)":"none", transition:"all .3s", transformOrigin:"center" }}/>
+            </button>
+          )}
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Mobile drawer overlay */}
+      {isMobile && (
+        <>
+          <div onClick={() => setMenuOpen(false)} style={{ position:"fixed", inset:0, zIndex:398, background:"rgba(0,0,0,.65)", opacity:menuOpen?1:0, pointerEvents:menuOpen?"auto":"none", transition:"opacity .35s" }}/>
+          <div style={{ position:"fixed", top:68, right:0, bottom:0, width:260, background:"#111", borderLeft:`1px solid ${C.border2}`, zIndex:399, transform:menuOpen?"translateX(0)":"translateX(100%)", transition:"transform .38s cubic-bezier(.16,1,.3,1)", display:"flex", flexDirection:"column", padding:"28px 20px", gap:4, overflowY:"auto" }}>
+            {navLinks.map(([p,l]) => (
+              <button key={p} onClick={() => go(p)} style={{ background:page===p?"rgba(220,38,38,.1)":"none", border:"none", borderLeft: page===p?`3px solid ${C.red}`:"3px solid transparent", padding:"14px 16px", cursor:"pointer", textAlign:"left", fontSize:13, letterSpacing:2, textTransform:"uppercase", fontFamily:"sans-serif", color:page===p?C.white:"rgba(245,245,245,.5)", transition:"all .2s" }}>{l}</button>
+            ))}
+            <div style={{ height:1, background:C.border, margin:"10px 0" }}/>
+            <button onClick={() => go("contacto")} style={{ background:C.red, border:"none", color:"#fff", padding:"13px 16px", cursor:"pointer", fontSize:10, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:500 }}>Consultar ahora</button>
+            <button onClick={() => go("admin")} style={{ background:"none", border:`1px solid ${C.border2}`, color:C.muted, padding:"10px 16px", cursor:"pointer", fontSize:9, letterSpacing:2, textTransform:"uppercase", fontFamily:"sans-serif", marginTop:4 }}>⚙ Admin</button>
+          </div>
+        </>
+      )}
+    </>
   );
 }
 
@@ -313,7 +464,7 @@ function Marquee() {
 function CarCard({ car, onClick }) {
   const [hov, setHov] = useState(false);
   const img = car.fotos && car.fotos.length ? car.fotos[0] : null;
-  const precio = car.precio_usd ? `USD ${Number(car.precio_usd).toLocaleString("es-AR")}` : "Consultar";
+  const precio = (car.precio_ars || car.precio_usd) ? `$ ${Number(car.precio_ars || car.precio_usd).toLocaleString("es-AR")}` : "Consultar";
   const km = car.kilometraje === 0 ? "0 km" : `${Number(car.kilometraje).toLocaleString("es-AR")} km`;
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={() => onClick(car)}
@@ -359,7 +510,7 @@ function CarModal({ car, onClose, waAle, waGonchi }) {
   useEffect(() => { document.body.style.overflow="hidden"; return () => { document.body.style.overflow=""; }; }, []);
   if (!car) return null;
   const fotos = car.fotos || [];
-  const precio = car.precio_usd ? `USD ${Number(car.precio_usd).toLocaleString("es-AR")}` : "Consultar";
+  const precio = (car.precio_ars || car.precio_usd) ? `$ ${Number(car.precio_ars || car.precio_usd).toLocaleString("es-AR")}` : "Consultar";
   const km = car.kilometraje===0 ? "0 km" : `${Number(car.kilometraje).toLocaleString("es-AR")} km`;
   const carEnc = encodeURIComponent(`${car.marca} ${car.modelo} ${car.anio}`);
   return (
@@ -416,16 +567,41 @@ function CarModal({ car, onClose, waAle, waGonchi }) {
   );
 }
 
-/* ─── SERVICE TILE ──────────────────────────────────────────────────────────── */
-function ServiceTile({ s }) {
-  const [hov, setHov] = useState(false);
+/* ─── FLIP CARD (services) ──────────────────────────────────────────────────── */
+function FlipCard({ s }) {
+  const [flipped, setFlipped] = useState(false);
   return (
-    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ background:hov?C.zinc2:C.zinc, padding:"30px 22px", transition:"background .3s", position:"relative", overflow:"hidden" }}>
-      <span style={{ fontSize:22, marginBottom:14, display:"block" }}>{s.i}</span>
-      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom:8 }}>{s.t}</div>
-      <div style={{ fontSize:11, fontWeight:300, lineHeight:1.65, color:C.muted, fontFamily:"sans-serif" }}>{s.d}</div>
-      <div style={{ position:"absolute", bottom:0, left:0, width:hov?"100%":"0%", height:2, background:C.red, transition:"width .42s cubic-bezier(.16,1,.3,1)" }}/>
+    <div onMouseEnter={() => setFlipped(true)} onMouseLeave={() => setFlipped(false)}
+      style={{ perspective:1000, cursor:"pointer", height:186 }}>
+      <div style={{
+        position:"relative", width:"100%", height:"100%",
+        transformStyle:"preserve-3d",
+        transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+        transition:"transform .55s cubic-bezier(.16,1,.3,1)",
+      }}>
+        {/* Front */}
+        <div style={{
+          position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden",
+          background:C.zinc, padding:"28px 22px",
+          display:"flex", flexDirection:"column", justifyContent:"space-between",
+          borderBottom:`2px solid transparent`,
+        }}>
+          <span style={{ fontSize:26, display:"block" }}>{s.i}</span>
+          <div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:18, fontWeight:700, textTransform:"uppercase", color:C.white, lineHeight:1.1, marginBottom:8 }}>{s.t}</div>
+            <div style={{ fontSize:8, letterSpacing:2, color:C.muted2, textTransform:"uppercase", fontFamily:"sans-serif" }}>Ver más →</div>
+          </div>
+        </div>
+        {/* Back */}
+        <div style={{
+          position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden",
+          background:C.red, padding:"28px 22px",
+          transform:"rotateY(180deg)",
+          display:"flex", alignItems:"center",
+        }}>
+          <p style={{ fontSize:13, fontWeight:300, lineHeight:1.7, color:"rgba(255,255,255,.92)", fontFamily:"sans-serif", margin:0 }}>{s.d}</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -448,13 +624,26 @@ function ReviewTile({ r }) {
   );
 }
 
-/* ─── BRAND TILE ────────────────────────────────────────────────────────────── */
-function BrandTile({ brand }) {
-  const [hov, setHov] = useState(false);
+/* ─── FLIP BRAND CARD (marcas 0km) ──────────────────────────────────────────── */
+function FlipBrandCard({ brand }) {
+  const [flipped, setFlipped] = useState(false);
+  const domain = BRAND_DOMAINS[brand] || `${brand.toLowerCase()}.com`;
+  const logoUrl = `https://logo.clearbit.com/${domain}`;
   return (
-    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ background:hov?"#191919":"#111", padding:"17px 13px", display:"flex", flexDirection:"column", alignItems:"center", gap:5, cursor:"pointer", transition:"all .3s", border:`1px solid ${hov?"rgba(220,38,38,.2)":"transparent"}`, minWidth:92, flex:"0 0 auto" }}>
-      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:1, color:hov?C.white:"#565656", transition:"color .3s" }}>{brand}</div>
+    <div onMouseEnter={() => setFlipped(true)} onMouseLeave={() => setFlipped(false)}
+      style={{ perspective:700, cursor:"pointer", height:90, minWidth:100, flex:"1 1 auto" }}>
+      <div style={{ position:"relative", width:"100%", height:"100%", transformStyle:"preserve-3d", transform:flipped?"rotateY(180deg)":"rotateY(0deg)", transition:"transform .5s cubic-bezier(.16,1,.3,1)" }}>
+        {/* Front – nombre */}
+        <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center", border:`1px solid ${flipped?C.red:"transparent"}` }}>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:1, color:"#555" }}>{brand}</div>
+        </div>
+        {/* Back – logo */}
+        <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", background:"#f5f5f5", transform:"rotateY(180deg)", display:"flex", alignItems:"center", justifyContent:"center", padding:12 }}>
+          <img src={logoUrl} alt={brand} style={{ maxWidth:"75%", maxHeight:"65%", objectFit:"contain" }}
+            onError={e => { e.currentTarget.style.display="none"; const fb=e.currentTarget.nextSibling; if(fb) fb.style.display="block"; }}/>
+          <div style={{ display:"none", fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, color:"#111", textTransform:"uppercase" }}>{brand}</div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -465,7 +654,7 @@ function Footer({ navTo }) {
     <footer style={{ background:"#040404", borderTop:`1px solid ${C.border}`, padding:"48px 5vw 28px" }}>
       <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:48, paddingBottom:36, borderBottom:`1px solid ${C.border}`, marginBottom:24 }}>
         <div>
-          <img src={IMG_LOGO} alt="NordenCars" style={{ height:32, marginBottom:13 }}/>
+          <img src={IMG_LOGO} alt="NordenCars" style={{ height:54, marginBottom:13 }}/>
           <p style={{ fontSize:11, fontWeight:300, color:C.muted, lineHeight:1.7, maxWidth:250, fontFamily:"sans-serif" }}>Compraventa de vehículos 0km y usados premium. Galería Mercato, Casco Viejo, Yerba Buena, Tucumán.</p>
         </div>
         <div>
@@ -725,7 +914,7 @@ function CarForm({ car, onSave, onCancel }) {
         <FormField label="Año" k="anio" type="number" d={d} set={set}/>
         <FormField label="Tipo" k="tipo" opts={["0km","Usado"]} d={d} set={set}/>
         <FormField label="Carrocería" k="carroceria" opts={["Sedán","SUV","Pick-up","Hatchback","Coupé","Otro"]} d={d} set={set}/>
-        <FormField label="Precio USD" k="precio_usd" type="number" d={d} set={set}/>
+        <FormField label="Precio ARS $" k="precio_usd" type="number" d={d} set={set}/>
         <FormField label="Kilómetros" k="kilometraje" type="number" d={d} set={set}/>
       </div>
       <FormField label="Color" k="color" d={d} set={set}/>
@@ -778,14 +967,6 @@ function ConfigEditor({ config, showToast, onRefresh }) {
 /* ─── HOME PAGE ─────────────────────────────────────────────────────────────── */
 function HomePage({ navTo, setSelectedCar, stockData, config }) {
   const waAle = config.whatsapp_ale || "5493814773142";
-  const [reviews, setReviews] = useState([
-    {id:1,nombre:"Martín L.",detalle:"Tucumán · VW Vento 2018",texto:"Compré el Vento con ellos y fue increíble. Todo transparente, sin vueltas. Impecable.",estrellas:5},
-    {id:2,nombre:"Sofía R.",detalle:"Yerba Buena · BYD 0km",texto:"Me asesoraron perfecto para mi primer 0km. Me fui con el auto que quería dentro del presupuesto.",estrellas:5},
-    {id:3,nombre:"Federico P.",detalle:"San Miguel · BMW M235i",texto:"El BMW que compré con Ale es una bestia. Papeles en orden y transferencia rapidísima.",estrellas:5},
-  ]);
-  useEffect(() => {
-    db.sel("resenas","activo=eq.true&order=orden.asc").then(data => { if (Array.isArray(data) && data.length) setReviews(data); });
-  }, []);
   const preview = stockData.filter(v => v.destacado).slice(0,4);
   const shown = preview.length >= 2 ? preview : stockData.slice(0,4);
 
@@ -801,13 +982,15 @@ function HomePage({ navTo, setSelectedCar, stockData, config }) {
         {/* BG car image — centrado y visible */}
         <div style={{ position:"absolute", right:0, top:0, bottom:0, width:"65%", backgroundImage:`url(${IMG_BMW_FULL})`, backgroundSize:"cover", backgroundPosition:"center center", maskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)", WebkitMaskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)", filter:"brightness(.55) saturate(.7)" }}/>
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right,rgba(5,5,5,1) 18%,rgba(5,5,5,.55) 46%,rgba(5,5,5,.08) 100%)" }}/>
+        {/* Patente BMW — desenfocada por privacidad */}
+        <div style={{ position:"absolute", right:"15%", bottom:"19%", width:"15%", height:"9%", backdropFilter:"blur(32px)", WebkitBackdropFilter:"blur(32px)", background:"rgba(4,4,4,.9)", zIndex:4, borderRadius:4 }}/>
 
         <div style={{ position:"relative", zIndex:2, padding:"0 5vw", maxWidth:820 }}>
           <div style={{ fontSize:9, letterSpacing:5, textTransform:"uppercase", color:C.red, marginBottom:18, display:"flex", alignItems:"center", gap:12, fontFamily:"sans-serif", animation:"fadeUp .8s .15s both" }}>
             <span style={{ width:30, height:1, background:C.red, flexShrink:0 }}/>Yerba Buena, Tucumán · Est. 2022
           </div>
           <BigH sz="clamp(56px,9.5vw,112px)" style={{ marginBottom:22, animation:"fadeUp .8s .3s both" }}>
-            Tu próximo<br/>vehículo<br/><Red>premium.</Red>
+            Tu próximo<br/>vehículo<br/><Red>fácil y</Red><br/><Red>seguro.</Red>
           </BigH>
           <p style={{ fontSize:14, fontWeight:300, lineHeight:1.8, color:"rgba(245,245,245,.44)", maxWidth:450, marginBottom:42, fontFamily:"sans-serif", animation:"fadeUp .8s .45s both" }}>
             {config.hero_subtitulo || "Al precio justo, con la transparencia que merecés. 0km y usados seleccionados en Yerba Buena, Tucumán."}
@@ -826,10 +1009,12 @@ function HomePage({ navTo, setSelectedCar, stockData, config }) {
 
         {/* Stats bar */}
         <div style={{ position:"absolute", bottom:0, left:0, right:0, display:"flex", borderTop:`1px solid ${C.border}`, background:"rgba(5,5,5,.9)", zIndex:2 }}>
-          {[["120+","Vehículos vendidos"],["100%","Satisfacción"],["17","Marcas 0km"],["Tucumán","Yerba Buena"]].map(([n,l],i) => (
+          {[["+","100","","Vehículos vendidos"],["","100","%","Satisfacción"],["","17","","Marcas 0km"],["","Tucumán","","Yerba Buena"]].map(([pre,n,suf,l],i) => (
             <div key={i} style={{ flex:1, padding:"17px 4vw", borderRight:i<3?`1px solid ${C.border}`:"none" }}>
               <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:26, fontWeight:700, color:C.white, lineHeight:1 }}>
-                {n.replace(/[+%]/g,"")}<span style={{ color:C.red }}>{n.match(/[+%]/)?.[0]||""}</span>
+                {pre && <span style={{color:C.red}}>{pre}</span>}
+                {isNaN(parseInt(n)) ? n : <StatCounter value={n} duration={1400}/>}
+                {suf && <span style={{color:C.red}}>{suf}</span>}
               </div>
               <div style={{ fontSize:8, letterSpacing:2, textTransform:"uppercase", color:C.muted, marginTop:3, fontFamily:"sans-serif" }}>{l}</div>
             </div>
@@ -845,7 +1030,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config }) {
           <div><Reveal><Tag>Stock destacado</Tag></Reveal><Reveal delay={.1}><SecH>Vehículos <Red>disponibles</Red></SecH></Reveal></div>
           <Reveal><Btn onClick={() => navTo("stock")}>Ver todo el stock →</Btn></Reveal>
         </div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:1, background:C.border }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:1, background:C.bg }}>
           {shown.map((car,i) => <Reveal key={car.id} delay={i*.07}><CarCard car={car} onClick={setSelectedCar}/></Reveal>)}
         </div>
       </section>
@@ -855,35 +1040,68 @@ function HomePage({ navTo, setSelectedCar, stockData, config }) {
         <Reveal><Tag>Marcas oficiales</Tag></Reveal>
         <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Vendemos <Red>0km</Red></SecH></Reveal>
         <div style={{ overflowX:"auto", paddingBottom:4 }}>
-          <div style={{ display:"flex", flexWrap:"wrap", gap:1, background:C.border, minWidth:600 }}>
-            {MARCAS_0KM.map((m,i) => <Reveal key={m} delay={i*.022}><BrandTile brand={m}/></Reveal>)}
+          <div style={{ display:"flex", flexWrap:"wrap", gap:1, background:C.bg, minWidth:600 }}>
+            {MARCAS_0KM.map((m,i) => <Reveal key={m} delay={i*.022}><FlipBrandCard brand={m}/></Reveal>)}
           </div>
         </div>
       </section>
 
       {/* ── NUMBERS BAR ── */}
       <div style={{ background:C.red, display:"flex", gap:1 }}>
-        {[["120+","Vehículos vendidos"],["100%","Satisfacción"],["17","Marcas 0km"],["24hs","Respuesta"]].map(([v,l],i) => (
+        {[["+","100","","Vehículos vendidos"],["","100","%","Satisfacción"],["","17","","Marcas 0km"],["","24","hs","Respuesta"]].map(([pre,n,suf,l],i) => (
           <div key={i} style={{ flex:1, background:"rgba(0,0,0,.13)", padding:"36px 16px", textAlign:"center" }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:50, fontWeight:900, color:"#fff", lineHeight:1, letterSpacing:-2 }}>{v}</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:50, fontWeight:900, color:"#fff", lineHeight:1, letterSpacing:-2 }}>
+              {pre}{<StatCounter value={n} duration={1600}/>}{suf}
+            </div>
             <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.56)", marginTop:7, fontFamily:"sans-serif" }}>{l}</div>
           </div>
         ))}
       </div>
 
-      {/* ── SERVICES ── */}
+      {/* ── SERVICES (flip cards) ── */}
       <section style={{ padding:"100px 5vw", background:"linear-gradient(to bottom,#0b0b0b,#0f0f0f)" }}>
         <Reveal><Tag>Por qué elegirnos</Tag></Reveal>
-        <Reveal delay={.1}><SecH style={{ marginBottom:48 }}>Nuestro <Red>compromiso</Red></SecH></Reveal>
+        <Reveal delay={.1}><SecH style={{ marginBottom:12 }}>Nuestro <Red>compromiso</Red></SecH></Reveal>
+        <Reveal delay={.15}><p style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif", marginBottom:44, letterSpacing:.5 }}>Pasá el cursor sobre cada tarjeta para conocer más.</p></Reveal>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(198px,1fr))", gap:1, background:C.border }}>
-          {[{i:"🔍",t:"Stock seleccionado",d:"Cada auto pasa revisión rigurosa antes de entrar al catálogo."},
-            {i:"📋",t:"Transparencia",d:"Historial completo y documentación en orden. Sin letras chicas."},
-            {i:"💳",t:"Financiación",d:"Opciones flexibles para que arranques sin preocupaciones."},
-            {i:"🔄",t:"Permutas",d:"Tomamos tu auto como parte de pago al mejor precio del mercado."},
-            {i:"⚡",t:"Gestión ágil",d:"Transferencia y trámites resueltos rápido para que solo manejes."},
-            {i:"📍",t:"Presencia local",d:"Galería Mercato, Yerba Buena. Atención presencial y personalizada."},
-          ].map((s,i) => <Reveal key={i} delay={i*.055}><ServiceTile s={s}/></Reveal>)}
+          {[{i:"🔍",t:"Stock seleccionado",d:"Cada auto pasa una revisión rigurosa antes de entrar al catálogo. Solo publicamos lo que recomendaríamos a un amigo."},
+            {i:"📋",t:"Transparencia total",d:"Historial completo y documentación en orden. Sin letras chicas, sin sorpresas. Lo que acordamos es lo que firmamos."},
+            {i:"💳",t:"Financiación",d:"Trabajamos con múltiples entidades. Te armamos el plan de cuotas que mejor se ajuste a tus posibilidades."},
+            {i:"🔄",t:"Permutas",d:"Tomamos tu auto como parte de pago al mejor precio del mercado. Simple, rápido y sin vueltas."},
+            {i:"⚡",t:"Gestión ágil",d:"Transferencia y trámites resueltos rápido. Vos solo te preocupás por estrenar tu nuevo vehículo."},
+            {i:"📍",t:"Presencia local",d:"Galería Mercato, Yerba Buena. Atención presencial, personalizada y sin apuros. También por WhatsApp."},
+          ].map((s,i) => <Reveal key={i} delay={i*.055}><FlipCard s={s}/></Reveal>)}
         </div>
+      </section>
+
+      {/* ── PROCESO DE COMPRA ── */}
+      <section style={{ padding:"100px 5vw", background:C.bg, borderTop:`1px solid ${C.border}` }}>
+        <Reveal><Tag>Cómo funciona</Tag></Reveal>
+        <Reveal delay={.1}><SecH style={{ marginBottom:56 }}>El proceso de <Red>compra</Red></SecH></Reveal>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(210px,1fr))", gap:1, background:C.bg }}>
+          {[
+            { n:"01", t:"Elegí tu auto",    d:"Explorá nuestro stock online o visitanos en Galería Mercato, Yerba Buena. Amplio catálogo 0km y usados." },
+            { n:"02", t:"Consultanos",       d:"Escribinos por WhatsApp o completá el formulario. Respondemos en menos de 2 horas, lunes a sábado." },
+            { n:"03", t:"Cerramos el trato", d:"Acordamos precio, método de pago y condiciones. Sin sorpresas ni letras chicas. Tu tranquilidad primero." },
+            { n:"04", t:"¡A manejar!",       d:"Trámites en orden, transferencia ágil. Ya podés salir manejando tu nuevo vehículo. Así de simple." },
+          ].map((s, i) => (
+            <Reveal key={i} delay={i * .09}>
+              <div style={{ background:C.zinc, padding:"36px 28px", position:"relative", overflow:"hidden", height:"100%" }}>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:88, fontWeight:900, color:"rgba(220,38,38,.055)", lineHeight:1, position:"absolute", top:4, right:10, letterSpacing:-5, pointerEvents:"none", userSelect:"none" }}>{s.n}</div>
+                <div style={{ width:32, height:3, background:C.red, marginBottom:20 }}/>
+                <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:10, fontFamily:"sans-serif" }}>Paso {s.n}</div>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:21, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom:12, lineHeight:1.05, position:"relative" }}>{s.t}</div>
+                <div style={{ fontSize:12, fontWeight:300, lineHeight:1.72, color:C.muted, fontFamily:"sans-serif", position:"relative" }}>{s.d}</div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+        <Reveal delay={.4}>
+          <div style={{ marginTop:38, display:"flex", gap:13, flexWrap:"wrap" }}>
+            <Btn primary onClick={() => navTo("stock")}>Ver stock disponible</Btn>
+            <Btn href="https://wa.me/5493814773142?text=Hola%2C%20quiero%20empezar%20el%20proceso%20de%20compra...">Empezar por WhatsApp</Btn>
+          </div>
+        </Reveal>
       </section>
 
       {/* ── PHOTO STRIP ── */}
@@ -895,14 +1113,6 @@ function HomePage({ navTo, setSelectedCar, stockData, config }) {
         ))}
       </div>
 
-      {/* ── REVIEWS ── */}
-      <section style={{ padding:"100px 5vw", background:C.carbon }}>
-        <Reveal><Tag>Testimonios</Tag></Reveal>
-        <Reveal delay={.1}><SecH style={{ marginBottom:48 }}>Lo que dicen <Red>nuestros clientes</Red></SecH></Reveal>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(255px,1fr))", gap:1, background:C.border }}>
-          {reviews.map((r,i) => <Reveal key={r.id} delay={i*.08}><ReviewTile r={r}/></Reveal>)}
-        </div>
-      </section>
 
       {/* ── NOSOTROS PREVIEW ── */}
       <section style={{ padding:"100px 5vw", background:"linear-gradient(to bottom,#0b0b0b,#0f0f0f)" }}>
@@ -943,13 +1153,16 @@ function HomePage({ navTo, setSelectedCar, stockData, config }) {
           <Reveal delay={.2}>
             <div style={{ border:`1px solid ${C.border}`, overflow:"hidden", aspectRatio:"4/3" }}>
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3561.5!2d-65.285!3d-26.816!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94225c3898b91b1f%3A0x2b20f1cbf1fa0e27!2sGaler%C3%ADa%20Mercato!5e0!3m2!1ses!2sar!4v1"
+                src="https://maps.google.com/maps?q=San+Lorenzo+y+Cariola,+Yerba+Buena,+Tucum%C3%A1n,+Argentina&t=&z=17&ie=UTF8&iwloc=&output=embed"
                 width="100%" height="100%" style={{ border:0, display:"block", filter:"invert(.88) hue-rotate(180deg) saturate(.55) brightness(.8)" }}
                 allowFullScreen loading="lazy"/>
             </div>
           </Reveal>
         </div>
       </section>
+
+      {/* ── FAQ ── */}
+      <FAQSection navTo={navTo}/>
 
       {/* ── IG STRIP ── */}
       <div style={{ background:"#030303", padding:"50px 5vw", textAlign:"center", borderTop:`1px solid ${C.border}` }}>
@@ -965,6 +1178,49 @@ function HomePage({ navTo, setSelectedCar, stockData, config }) {
 
       <Footer navTo={navTo}/>
     </>
+  );
+}
+
+/* ─── FAQ SECTION ───────────────────────────────────────────────────────────── */
+function FAQSection({ navTo }) {
+  const [open, setOpen] = useState(null);
+  const faqs = [
+    { q:"¿Financian la compra?",            a:"Sí, trabajamos con múltiples entidades financieras para que arranques a rodar sin preocupaciones. Consultanos y te armamos la mejor opción." },
+    { q:"¿Toman mi auto como parte de pago?",a:"¡Sí! Tomamos tu vehículo como parte de pago al mejor precio del mercado. Traélo para tasarlo sin compromiso." },
+    { q:"¿Los vehículos tienen garantía?",   a:"Los 0km tienen garantía de fábrica. Los usados tienen garantía según cada caso — te informamos antes de cerrar el trato." },
+    { q:"¿Hacen entregas a otras provincias?",a:"Coordinamos traslado a todo el país con transportistas de confianza. El envío tiene costo adicional según destino." },
+    { q:"¿Se encargan del papeleo y la transferencia?", a:"Nos encargamos de todo el papeleo de forma ágil y transparente. Vos solo manejás." },
+    { q:"¿Puedo reservar un vehículo con seña?",a:"Sí, podés reservar con una seña y lo apartamos para vos. Consultanos por WhatsApp para acordar los detalles." },
+    { q:"¿Dónde están ubicados?",            a:"📍 Galería Mercato, Casco Viejo, Yerba Buena, Tucumán. Atendemos lunes a sábado de 9:00 a 20:00hs, y por WhatsApp todo el día." },
+    { q:"¿Cuánto tarda el trámite de transferencia?",a:"Normalmente entre 24 y 72 horas hábiles una vez acordado el precio y verificada la documentación." },
+  ];
+  return (
+    <section style={{ padding:"100px 5vw", background:"#090909", borderTop:`1px solid ${C.border}` }}>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1.55fr", gap:88, alignItems:"start" }}>
+        <div style={{ position:"sticky", top:90 }}>
+          <Reveal><Tag>Preguntas frecuentes</Tag></Reveal>
+          <Reveal delay={.1}><SecH>Todo lo que<br/><Red>necesitás</Red><br/>saber</SecH></Reveal>
+          <Reveal delay={.2}><p style={{ fontSize:13, fontWeight:300, color:C.muted, lineHeight:1.75, marginTop:20, marginBottom:28, fontFamily:"sans-serif" }}>¿Tenés más dudas? Escribinos directo y respondemos a la brevedad, lunes a sábado.</p></Reveal>
+          <Reveal delay={.3}><Btn primary href="https://wa.me/5493814773142?text=Hola%2C%20tengo%20una%20consulta...">Consultanos por WhatsApp</Btn></Reveal>
+        </div>
+        <div>
+          {faqs.map((faq, i) => (
+            <Reveal key={i} delay={i * .04}>
+              <div style={{ borderBottom:`1px solid ${C.border}` }}>
+                <button onClick={() => setOpen(open === i ? null : i)}
+                  style={{ width:"100%", background:"none", border:"none", cursor:"pointer", padding:"22px 0", display:"flex", justifyContent:"space-between", alignItems:"center", gap:18, textAlign:"left" }}>
+                  <span style={{ fontSize:14, fontWeight:400, color:open===i ? C.white : "rgba(245,245,245,.58)", fontFamily:"sans-serif", transition:"color .3s", lineHeight:1.45 }}>{faq.q}</span>
+                  <span style={{ fontSize:20, color:C.red, flexShrink:0, transform:open===i?"rotate(45deg)":"rotate(0deg)", transition:"transform .32s cubic-bezier(.16,1,.3,1)", display:"inline-block", lineHeight:1 }}>+</span>
+                </button>
+                <div style={{ overflow:"hidden", maxHeight:open===i ? 200 : 0, transition:"max-height .4s cubic-bezier(.16,1,.3,1)" }}>
+                  <p style={{ fontSize:13, fontWeight:300, lineHeight:1.72, color:C.muted, fontFamily:"sans-serif", paddingBottom:20, margin:0 }}>{faq.a}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -1024,7 +1280,7 @@ function StockPage({ stockData, setSelectedCar, loading }) {
               <div style={{ fontSize:15, marginBottom:5 }}>No hay vehículos con esos filtros</div>
               <div style={{ fontSize:11, color:C.muted2 }}>Probá otros filtros o consultanos directamente</div>
             </div>
-          : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:1, background:C.border }}>
+          : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:1, background:C.bg }}>
               {filtered.map(car => <CarCard key={car.id} car={car} onClick={setSelectedCar}/>)}
             </div>
         }
@@ -1222,6 +1478,7 @@ export default function App() {
   const [stockData, setStockData] = useState(STOCK_LOCAL);
   const [config, setConfig] = useState({});
   const [loadingStock, setLoadingStock] = useState(true);
+  const [appLoading, setAppLoading] = useState(true);
 
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 48);
@@ -1255,10 +1512,14 @@ export default function App() {
   if (page === "admin") return <AdminPanel onExit={() => navTo("home")}/>;
 
   return (
-    <div style={{ background:C.bg, color:C.white, minHeight:"100vh", fontFamily:"'Barlow',sans-serif", fontWeight:300, overflowX:"hidden" }}>
+    <div style={{ background:C.bg, color:C.white, minHeight:"100vh", fontFamily:"'Barlow',sans-serif", fontWeight:300, overflowX:"hidden", cursor:"none" }}>
       <style>{`
         @keyframes dot{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+        *, *::before, *::after { cursor: none !important; }
       `}</style>
+
+      {appLoading && <LoadingScreen onDone={() => setAppLoading(false)}/>}
+      <CustomCursor/>
 
       <Nav page={page} navTo={navTo} scrolled={scrolled}/>
 
