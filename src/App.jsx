@@ -1044,8 +1044,6 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
         {/* BG car image — centrado y visible */}
         <div className="hero-bg-drift" style={{ position:"absolute", right:0, top:0, bottom:0, width:"65%", backgroundImage:`url(${IMG_BMW_FULL})`, backgroundSize:"cover", backgroundPosition:"center center", maskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)", WebkitMaskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)", filter:"brightness(.55) saturate(.7)" }}/>
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right,rgba(5,5,5,1) 18%,rgba(5,5,5,.55) 46%,rgba(5,5,5,.08) 100%)" }}/>
-        {/* Patente BMW — blur suave para privacidad */}
-        <div style={{ position:"absolute", right:"15%", bottom:"19%", width:"13%", height:"5.5%", backdropFilter:"blur(22px) saturate(0)", WebkitBackdropFilter:"blur(22px) saturate(0)", background:"rgba(12,12,12,.38)", zIndex:4, borderRadius:3 }}/>
 
         <div style={{ position:"relative", zIndex:2, padding:"0 5vw", maxWidth:820, paddingTop:0 }}>
           <div style={{ fontSize:9, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:18, display:"flex", alignItems:"center", gap:12, fontFamily:"sans-serif", animation:"fadeUp .8s .15s both", flexWrap:"wrap", overflow:"visible" }}>
