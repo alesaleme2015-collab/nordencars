@@ -1811,6 +1811,120 @@ function FAQSection({ navTo }) {
   );
 }
 
+/* ─── PAGE HEADER — header rico para subpáginas ─────────────────────── */
+function PageHeader({ tag, bgWord, subtitle, children }) {
+  return (
+    <div style={{
+      position:"relative",
+      padding:"82px 5vw 64px",
+      borderBottom:`1px solid ${C.border}`,
+      overflow:"hidden",
+      minHeight:260,
+      isolation:"isolate",
+    }}>
+      {/* Base gradient */}
+      <div style={{
+        position:"absolute", inset:0, zIndex:0,
+        background:"linear-gradient(135deg,#060606 0%,#100808 45%,#0a0a0a 100%)",
+      }}/>
+
+      {/* Grid sutil */}
+      <div style={{
+        position:"absolute", inset:0, zIndex:0,
+        backgroundImage:"linear-gradient(to right, rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.025) 1px, transparent 1px)",
+        backgroundSize:"64px 64px",
+        maskImage:"radial-gradient(ellipse at center, black 30%, transparent 80%)",
+        WebkitMaskImage:"radial-gradient(ellipse at center, black 30%, transparent 80%)",
+        pointerEvents:"none",
+      }}/>
+
+      {/* Mesh gradient rojo en esquina superior derecha */}
+      <div style={{
+        position:"absolute", top:-120, right:-100, zIndex:0,
+        width:540, height:420,
+        background:"radial-gradient(ellipse, rgba(220,38,38,.22) 0%, rgba(220,38,38,.08) 35%, transparent 70%)",
+        filter:"blur(20px)",
+        pointerEvents:"none",
+      }}/>
+      {/* Mesh gradient secundario en esquina inferior izquierda */}
+      <div style={{
+        position:"absolute", bottom:-160, left:-80, zIndex:0,
+        width:380, height:300,
+        background:"radial-gradient(ellipse, rgba(220,38,38,.12) 0%, transparent 65%)",
+        filter:"blur(28px)",
+        pointerEvents:"none",
+      }}/>
+
+      {/* Big word de fondo con drift suave */}
+      {bgWord && (
+        <div style={{
+          position:"absolute", inset:0, zIndex:0,
+          display:"flex", alignItems:"center", justifyContent:"flex-end",
+          paddingRight:"3vw",
+          overflow:"hidden",
+          pointerEvents:"none",
+          maskImage:"linear-gradient(to bottom, transparent, black 35%, black 65%, transparent)",
+          WebkitMaskImage:"linear-gradient(to bottom, transparent, black 35%, black 65%, transparent)",
+        }}>
+          <span style={{
+            fontFamily:"'Barlow Condensed',sans-serif",
+            fontSize:"clamp(160px, 26vw, 360px)",
+            fontWeight:900, letterSpacing:-12, lineHeight:.78,
+            color:"transparent",
+            WebkitTextStroke:"1px rgba(220,38,38,.20)",
+            textTransform:"uppercase",
+            whiteSpace:"nowrap",
+            animation:"bgWordDrift 22s ease-in-out infinite",
+            userSelect:"none",
+          }}>{bgWord}</span>
+        </div>
+      )}
+
+      {/* Speed lines diagonales rojas */}
+      <div style={{ position:"absolute", inset:0, zIndex:0, overflow:"hidden", pointerEvents:"none" }}>
+        {[
+          { top:"22%",  delay:"0s",   dur:"7.5s", op:.55, w:140 },
+          { top:"48%",  delay:"2.4s", dur:"9s",   op:.32, w:200 },
+          { top:"68%",  delay:"4.1s", dur:"6.8s", op:.42, w:170 },
+          { top:"86%",  delay:"1.2s", dur:"10s",  op:.22, w:240 },
+        ].map((l, i) => (
+          <div key={i} style={{
+            position:"absolute", top:l.top, left:0,
+            width:l.w, height:1,
+            background:`linear-gradient(to right, transparent, rgba(220,38,38,${l.op}), transparent)`,
+            transform:"rotate(-8deg)",
+            animation:`speedLine ${l.dur} linear ${l.delay} infinite`,
+          }}/>
+        ))}
+      </div>
+
+      {/* Partículas existentes */}
+      <Particles/>
+
+      {/* Línea roja inferior con fade lateral */}
+      <div style={{
+        position:"absolute", bottom:0, left:0, right:0, height:1, zIndex:1,
+        background:"linear-gradient(to right, transparent, rgba(220,38,38,.55) 30%, rgba(220,38,38,.55) 70%, transparent)",
+      }}/>
+
+      {/* Acento vertical izquierdo */}
+      <div style={{
+        position:"absolute", left:0, top:"22%", bottom:"22%", width:2, zIndex:1,
+        background:"linear-gradient(to bottom, transparent, #DC2626 25%, #DC2626 75%, transparent)",
+      }}/>
+
+      {/* Content */}
+      <div style={{ position:"relative", zIndex:3 }}>
+        {tag && <Tag>{tag}</Tag>}
+        <BigH sz="clamp(38px,7vw,76px)" style={{ marginBottom: subtitle ? 10 : 0 }}>{children}</BigH>
+        {subtitle && (
+          <p style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif", letterSpacing:.5 }}>{subtitle}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ─── STOCK FILTER BAR — module level ───────────────────────────────────── */
 function StockFilterBar({ label, opts, val, set }) {
   return (
@@ -1842,14 +1956,13 @@ function StockPage({ stockData, setSelectedCar, loading }) {
   });
   return (
     <div style={{ paddingTop:68 }}>
-      <div style={{ position:"relative", background:"linear-gradient(to bottom,#060606,#0f0f0f)", padding:"65px 5vw 46px", borderBottom:`1px solid ${C.border}`, overflow:"hidden" }}>
-        <Particles/>
-        <div style={{ position:"relative", zIndex:2 }}>
-          <Tag>Catálogo completo</Tag>
-          <BigH sz="clamp(38px,7vw,76px)" style={{ marginBottom:8 }}>Stock <Red>NordenCars</Red></BigH>
-          <p style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif" }}>{loading?"Cargando vehículos...":`${filtered.length} vehículo${filtered.length!==1?"s":""} disponible${filtered.length!==1?"s":""}`}</p>
-        </div>
-      </div>
+      <PageHeader
+        tag="Catálogo completo"
+        bgWord="STOCK"
+        subtitle={loading ? "Cargando vehículos..." : `${filtered.length} vehículo${filtered.length!==1?"s":""} disponible${filtered.length!==1?"s":""}`}
+      >
+        Stock <Red>NordenCars</Red>
+      </PageHeader>
       {/* Filters */}
       <div style={{ background:"#0a0a0a", padding:"18px 5vw", borderBottom:`1px solid ${C.border}`, display:"flex", gap:18, flexWrap:"wrap", alignItems:"flex-start" }}>
         <StockFilterBar label="Tipo" opts={["Todos","0km","Usado"]} val={fType} set={setFType}/>
@@ -1887,13 +2000,9 @@ function StockPage({ stockData, setSelectedCar, loading }) {
 function NosotrosPage({ navTo }) {
   return (
     <div style={{ paddingTop:68 }}>
-      <div style={{ position:"relative", background:"linear-gradient(135deg,#050505,#100808)", padding:"75px 5vw 56px", overflow:"hidden" }}>
-        <Particles/>
-        <div style={{ position:"relative", zIndex:2 }}>
-          <Tag>Quiénes somos</Tag>
-          <BigH sz="clamp(38px,7vw,76px)">La historia <Red>real</Red></BigH>
-        </div>
-      </div>
+      <PageHeader tag="Quiénes somos" bgWord="NOSOTROS">
+        La historia <Red>real</Red>
+      </PageHeader>
       <section style={{ padding:"80px 5vw", background:"#0c0c0c" }}>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:76, alignItems:"start" }}>
           <Reveal>
@@ -2003,13 +2112,9 @@ function ContactoPage({ config, navTo }) {
 
   return (
     <div style={{ paddingTop:68 }}>
-      <div style={{ position:"relative", background:"linear-gradient(135deg,#050505,#100808)", padding:"75px 5vw 56px", overflow:"hidden" }}>
-        <Particles/>
-        <div style={{ position:"relative", zIndex:2 }}>
-          <Tag>Contacto directo</Tag>
-          <BigH sz="clamp(38px,7vw,76px)">Hablemos <Red>hoy mismo</Red></BigH>
-        </div>
-      </div>
+      <PageHeader tag="Contacto directo" bgWord="CONTACTO">
+        Hablemos <Red>hoy mismo</Red>
+      </PageHeader>
       <div style={{ padding:"70px 5vw", background:"#0c0c0c" }}>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:72, alignItems:"start" }}>
           <div>
