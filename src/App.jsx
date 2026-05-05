@@ -182,20 +182,64 @@ function CustomCursor() {
   useEffect(() => {
     let x = -200, y = -200, rx = -200, ry = -200, raf;
     let clicking = false;
-    const move = e => { x = e.clientX; y = e.clientY; };
+    let hoverState = "default"; // "default" | "interactive" | "magnetic"
+    let magnetRect = null;
+
+    const isInteractive = (el) =>
+      !!el?.closest?.("a, button, [role='button'], input, textarea, select, [data-cursor='link']");
+
+    const move = (e) => {
+      x = e.clientX; y = e.clientY;
+      const t = e.target;
+      const magnet = t?.closest?.("[data-magnetic]");
+      if (magnet) {
+        magnetRect = magnet.getBoundingClientRect();
+        hoverState = "magnetic";
+      } else if (isInteractive(t)) {
+        magnetRect = null;
+        hoverState = "interactive";
+      } else {
+        magnetRect = null;
+        hoverState = "default";
+      }
+    };
     const down = () => { clicking = true; };
     const up   = () => { clicking = false; };
     window.addEventListener("mousemove", move);
     window.addEventListener("mousedown", down);
     window.addEventListener("mouseup", up);
+
     const loop = () => {
-      rx += (x - rx) * 0.1;
-      ry += (y - ry) * 0.1;
+      // Target del ring: si magnetic, centro del elemento; si no, el cursor
+      let targetX = x, targetY = y;
+      if (hoverState === "magnetic" && magnetRect) {
+        const cx = magnetRect.left + magnetRect.width / 2;
+        const cy = magnetRect.top + magnetRect.height / 2;
+        // Mezcla 70% centro + 30% cursor para no quedar 100% pegado
+        targetX = cx * 0.7 + x * 0.3;
+        targetY = cy * 0.7 + y * 0.3;
+      }
+      const ease = hoverState === "magnetic" ? 0.18 : 0.1;
+      rx += (targetX - rx) * ease;
+      ry += (targetY - ry) * ease;
+
+      // Tamaños/colores según estado
+      const ringSize = hoverState === "magnetic" ? 64 : (hoverState === "interactive" ? 48 : 36);
+      const ringOp   = hoverState === "magnetic" ? .85 : (hoverState === "interactive" ? .70 : .55);
+      const ringBg   = hoverState === "magnetic" ? "rgba(220,38,38,.10)" : "transparent";
+      const ringScale = clicking ? 1.5 : 1;
+
+      const dotScale = hoverState === "default" ? (clicking ? 0.5 : 1) : 0;
+
       if (dotRef.current) {
-        dotRef.current.style.transform = `translate(${x - 4}px, ${y - 4}px) scale(${clicking ? 0.5 : 1})`;
+        dotRef.current.style.transform = `translate(${x - 4}px, ${y - 4}px) scale(${dotScale})`;
       }
       if (ringRef.current) {
-        ringRef.current.style.transform = `translate(${rx - 18}px, ${ry - 18}px) scale(${clicking ? 1.5 : 1})`;
+        ringRef.current.style.width  = `${ringSize}px`;
+        ringRef.current.style.height = `${ringSize}px`;
+        ringRef.current.style.background = ringBg;
+        ringRef.current.style.borderColor = `rgba(220,38,38,${ringOp})`;
+        ringRef.current.style.transform = `translate(${rx - ringSize/2}px, ${ry - ringSize/2}px) scale(${ringScale})`;
       }
       raf = requestAnimationFrame(loop);
     };
@@ -204,8 +248,8 @@ function CustomCursor() {
   }, []);
   return (
     <>
-      <div ref={dotRef} style={{ position:"fixed", top:0, left:0, width:8, height:8, borderRadius:"50%", background:C.red, pointerEvents:"none", zIndex:99999, transition:"transform .08s, background .2s", willChange:"transform" }}/>
-      <div ref={ringRef} style={{ position:"fixed", top:0, left:0, width:36, height:36, borderRadius:"50%", border:`1.5px solid rgba(220,38,38,.55)`, pointerEvents:"none", zIndex:99998, transition:"transform .12s cubic-bezier(.16,1,.3,1)", willChange:"transform" }}/>
+      <div ref={dotRef} style={{ position:"fixed", top:0, left:0, width:8, height:8, borderRadius:"50%", background:C.red, pointerEvents:"none", zIndex:99999, transition:"opacity .2s, background .2s", willChange:"transform" }}/>
+      <div ref={ringRef} style={{ position:"fixed", top:0, left:0, width:36, height:36, borderRadius:"50%", border:`1.5px solid rgba(220,38,38,.55)`, pointerEvents:"none", zIndex:99998, transition:"width .25s cubic-bezier(.16,1,.3,1), height .25s cubic-bezier(.16,1,.3,1), background .25s, border-color .25s", willChange:"transform" }}/>
     </>
   );
 }
@@ -266,19 +310,46 @@ const SecH = ({ children, style = {} }) => (
 
 function Btn({ children, primary, full, small, onClick, disabled = false, href, target = "_blank" }) {
   const [hov, setHov] = useState(false);
+  const [tx, setTx] = useState(0);
+  const [ty, setTy] = useState(0);
+
+  const handleMove = (e) => {
+    if (!primary || disabled) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    // Translación máx ~6px, escalado por proximidad al centro
+    setTx((e.clientX - cx) * 0.18);
+    setTy((e.clientY - cy) * 0.22);
+  };
+  const handleLeave = () => { setHov(false); setTx(0); setTy(0); };
+
   const st = {
     width: full ? "100%" : "auto", display:"inline-block", textAlign:"center",
     fontSize: small ? 9 : 10, fontWeight:500, letterSpacing:2.5, textTransform:"uppercase",
     fontFamily:"sans-serif", padding: small ? "8px 16px" : "13px 30px",
-    cursor: disabled ? "not-allowed" : "pointer", border:"none", transition:"all .3s",
+    cursor: disabled ? "not-allowed" : "pointer", border:"none",
+    transition:"background .3s, color .3s, box-shadow .3s, transform .25s cubic-bezier(.16,1,.3,1), outline-color .3s",
     background: primary ? (hov ? C.red2 : C.red) : "transparent",
     color: C.white, opacity: disabled ? .5 : 1, textDecoration:"none",
     outline: primary ? "none" : `1px solid ${hov ? "rgba(245,245,245,.38)" : "rgba(245,245,245,.12)"}`,
-    transform: primary && hov ? "translateY(-1px)" : "none",
-    boxShadow: primary && hov ? "0 8px 28px rgba(220,38,38,.28)" : "none",
+    transform: primary
+      ? `translate(${tx}px, ${ty - (hov ? 1 : 0)}px)`
+      : "none",
+    boxShadow: primary && hov ? "0 12px 32px rgba(220,38,38,.34)" : "none",
+    willChange: primary ? "transform" : "auto",
   };
-  if (href) return <a href={href} target={target} rel="noreferrer" style={st} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>{children}</a>;
-  return <button disabled={disabled} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={onClick} style={st}>{children}</button>;
+
+  const commonProps = {
+    onMouseEnter: () => setHov(true),
+    onMouseLeave: handleLeave,
+    onMouseMove: handleMove,
+    style: st,
+    ...(primary ? { "data-magnetic": "true" } : {}),
+  };
+
+  if (href) return <a href={href} target={target} rel="noreferrer" {...commonProps}>{children}</a>;
+  return <button disabled={disabled} onClick={onClick} {...commonProps}>{children}</button>;
 }
 
 const WaSvg = ({ size = 22 }) => (
@@ -455,16 +526,53 @@ function Marquee() {
 /* ─── CAR CARD ──────────────────────────────────────────────────────────────── */
 function CarCard({ car, onClick }) {
   const [hov, setHov] = useState(false);
+  const [tilt, setTilt] = useState({ rx: 0, ry: 0, mx: 50, my: 50 });
   const img = car.fotos && car.fotos.length ? car.fotos[0] : null;
   const precio = (car.precio_ars || car.precio_usd) ? `$ ${Number(car.precio_ars || car.precio_usd).toLocaleString("es-AR")}` : "Consultar";
   const km = car.kilometraje === 0 ? "0 km" : `${Number(car.kilometraje).toLocaleString("es-AR")} km`;
+
+  const handleMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;   // 0..1
+    const py = (e.clientY - rect.top) / rect.height;   // 0..1
+    // rotateY mapea X (izq -> +°, der -> -°), rotateX mapea Y (arriba -> +°, abajo -> -°)
+    const ry = (px - 0.5) * 6;
+    const rx = (0.5 - py) * 6;
+    setTilt({ rx, ry, mx: px * 100, my: py * 100 });
+  };
+  const handleLeave = () => {
+    setHov(false);
+    setTilt({ rx: 0, ry: 0, mx: 50, my: 50 });
+  };
+
   return (
-    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={() => onClick(car)}
-      style={{ background:hov?C.zinc2:C.zinc, cursor:"pointer", position:"relative", overflow:"hidden",
-        border:`1px solid ${hov?"rgba(220,38,38,.4)":C.border}`,
-        transform:hov?"translateY(-6px)":"translateY(0)",
-        boxShadow:hov?"0 20px 60px rgba(0,0,0,.65)":"none",
-        transition:"all .4s cubic-bezier(.16,1,.3,1)" }}>
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseMove={handleMove}
+      onMouseLeave={handleLeave}
+      onClick={() => onClick(car)}
+      style={{
+        background: hov ? C.zinc2 : C.zinc,
+        cursor:"pointer", position:"relative", overflow:"hidden",
+        border:`1px solid ${hov ? "rgba(220,38,38,.4)" : C.border}`,
+        transformStyle:"preserve-3d",
+        transform: hov
+          ? `perspective(900px) rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg) translateY(-6px)`
+          : "perspective(900px) rotateX(0) rotateY(0) translateY(0)",
+        boxShadow: hov ? "0 24px 70px rgba(0,0,0,.7)" : "none",
+        transition: hov
+          ? "transform .12s linear, background .3s, border-color .3s, box-shadow .3s"
+          : "transform .55s cubic-bezier(.16,1,.3,1), background .3s, border-color .3s, box-shadow .3s",
+        willChange:"transform",
+      }}>
+      {/* Spotlight que sigue al cursor */}
+      <div style={{
+        position:"absolute", inset:0,
+        background: `radial-gradient(420px circle at ${tilt.mx}% ${tilt.my}%, rgba(220,38,38,.10), transparent 55%)`,
+        opacity: hov ? 1 : 0,
+        transition:"opacity .35s",
+        pointerEvents:"none", zIndex:3,
+      }}/>
       {/* Image */}
       <div style={{ height:200, overflow:"hidden", position:"relative", background:C.zinc3 }}>
         {img
@@ -616,43 +724,74 @@ function ReviewTile({ r }) {
   );
 }
 
-/* ─── FLIP BRAND CARD (marcas 0km) ──────────────────────────────────────────── */
-// Logos locales en /public/images/logos/<marca>.png tienen prioridad sobre Clearbit
-const BRAND_LOCAL = {
-  "Toyota":"/images/logos/toyota.png","Fiat":"/images/logos/fiat.png",
-  "Chevrolet":"/images/logos/chevrolet.png","BAIC":"/images/logos/baic.png",
-  "BYD":"/images/logos/byd.png","Jeep":"/images/logos/jeep.png",
-  "RAM":"/images/logos/ram.png","Volkswagen":"/images/logos/volkswagen.png",
-  "Peugeot":"/images/logos/peugeot.png","Ford":"/images/logos/ford.png",
-  "Haval":"/images/logos/haval.png","Citroën":"/images/logos/citroen.png",
-  "KIA":"/images/logos/kia.png","BMW":"/images/logos/bmw.png",
-  "MINI":"/images/logos/mini.png","Audi":"/images/logos/audi.png",
-  "Hyundai":"/images/logos/hyundai.png",
-};
+/* ─── BRAND CARD (marcas 0km) — estilo Apple/Porsche ───────────────────────── */
+// Logo + nombre siempre visibles. Hover: logo se ilumina, línea roja crece, leve scale up.
 function FlipBrandCard({ brand }) {
-  const [flipped, setFlipped] = useState(false);
-  const [useLocal, setUseLocal] = useState(true);
-  const localSrc = BRAND_LOCAL[brand];
+  const [hov, setHov] = useState(false);
+  const [imgOk, setImgOk] = useState(true);
   const domain = BRAND_DOMAINS[brand] || `${brand.toLowerCase()}.com`;
-  const clearbitSrc = `https://logo.clearbit.com/${domain}`;
-  const logoSrc = (useLocal && localSrc) ? localSrc : clearbitSrc;
+  const logoSrc = `https://logo.clearbit.com/${domain}`;
   return (
-    <div onMouseEnter={() => setFlipped(true)} onMouseLeave={() => setFlipped(false)}
-      style={{ perspective:700, cursor:"pointer", height:90, minWidth:100, flex:"1 1 auto" }}>
-      <div style={{ position:"relative", width:"100%", height:"100%", transformStyle:"preserve-3d", transform:flipped?"rotateY(180deg)":"rotateY(0deg)", transition:"transform .52s cubic-bezier(.16,1,.3,1)" }}>
-        {/* Front – nombre */}
-        <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center" }}>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:2, color:"#444" }}>{brand}</div>
-        </div>
-        {/* Back – logo sobre fondo oscuro (transparente si el PNG lo tiene) */}
-        <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", background:C.zinc2, transform:"rotateY(180deg)", display:"flex", alignItems:"center", justifyContent:"center", padding:14, borderTop:`2px solid ${C.red}` }}>
-          <img src={logoSrc} alt={brand}
-            style={{ maxWidth:"78%", maxHeight:"62%", objectFit:"contain", filter:"brightness(0) invert(1)" }}
-            onError={() => {
-              if (useLocal) { setUseLocal(false); }  // fallback a clearbit
-            }}/>
-        </div>
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        position:"relative",
+        background: hov
+          ? "linear-gradient(180deg,#1c1c1c 0%,#131313 100%)"
+          : "linear-gradient(180deg,#141414 0%,#0e0e0e 100%)",
+        cursor:"pointer",
+        height:130,
+        display:"flex",
+        flexDirection:"column",
+        alignItems:"center",
+        justifyContent:"center",
+        gap:14,
+        padding:"18px 14px",
+        overflow:"hidden",
+        transform: hov ? "translateY(-2px)" : "translateY(0)",
+        transition:"transform .4s cubic-bezier(.16,1,.3,1), background .4s cubic-bezier(.16,1,.3,1)",
+      }}>
+      {/* Logo */}
+      <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", width:"100%", minHeight:0 }}>
+        {imgOk ? (
+          <img
+            src={logoSrc}
+            alt={brand}
+            onError={() => setImgOk(false)}
+            style={{
+              maxWidth:"72%",
+              maxHeight:46,
+              objectFit:"contain",
+              filter:"brightness(0) invert(1)",
+              opacity: hov ? 1 : 0.42,
+              transform: hov ? "scale(1.06)" : "scale(1)",
+              transition:"opacity .4s cubic-bezier(.16,1,.3,1), transform .55s cubic-bezier(.16,1,.3,1)",
+            }}
+          />
+        ) : (
+          <div style={{
+            fontFamily:"'Barlow Condensed',sans-serif",
+            fontSize:24, fontWeight:900, letterSpacing:-1,
+            color: hov ? C.white : "rgba(245,245,245,.45)",
+            transition:"color .4s",
+          }}>{brand.toUpperCase()}</div>
+        )}
       </div>
+      {/* Nombre */}
+      <div style={{
+        fontFamily:"'Barlow Condensed',sans-serif",
+        fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:2.5,
+        color: hov ? C.white : "rgba(245,245,245,.42)",
+        transition:"color .35s",
+      }}>{brand}</div>
+      {/* Línea roja inferior creciendo */}
+      <div style={{
+        position:"absolute", bottom:0, left:0,
+        width: hov ? "100%" : "0%",
+        height:2, background:C.red,
+        transition:"width .45s cubic-bezier(.16,1,.3,1)",
+      }}/>
     </div>
   );
 }
@@ -1143,13 +1282,25 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
       </section>
 
       {/* ── BRANDS ── */}
-      <section style={{ padding:"80px 5vw", background:C.carbon, borderTop:`1px solid ${C.border}` }}>
-        <Reveal><Tag>Marcas oficiales</Tag></Reveal>
-        <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Vendemos <Red>0km</Red></SecH></Reveal>
-        <div style={{ overflowX:"auto", paddingBottom:4 }}>
-          <div style={{ display:"flex", flexWrap:"wrap", gap:1, background:C.bg, minWidth:600 }}>
-            {MARCAS_0KM.map((m,i) => <Reveal key={m} delay={i*.022}><FlipBrandCard brand={m}/></Reveal>)}
+      <section style={{ padding:"100px 5vw", background:"linear-gradient(to bottom,#0d0d0d,#0a0a0a)", borderTop:`1px solid ${C.border}` }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:44, flexWrap:"wrap", gap:18 }}>
+          <div>
+            <Reveal><Tag>Marcas oficiales</Tag></Reveal>
+            <Reveal delay={.1}><SecH>Vendemos <Red>0km</Red></SecH></Reveal>
           </div>
+          <Reveal delay={.2}>
+            <p style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif", letterSpacing:.3, lineHeight:1.6, maxWidth:340 }}>
+              Trabajamos con las marcas líderes del mercado argentino. Pasá el cursor sobre cada una.
+            </p>
+          </Reveal>
+        </div>
+        <div style={{
+          display:"grid",
+          gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",
+          gap:1,
+          background:"rgba(255,255,255,.04)",
+        }}>
+          {MARCAS_0KM.map((m,i) => <Reveal key={m} delay={i*.022}><FlipBrandCard brand={m}/></Reveal>)}
         </div>
       </section>
 
@@ -1586,6 +1737,7 @@ function ContactoPage({ config, navTo }) {
 /* ─── ROOT APP ───────────────────────────────────────────────────────────────── */
 export default function App() {
   const [page, setPage] = useState("home");
+  const [pageAnim, setPageAnim] = useState("in"); // "in" | "out"
   const [scrolled, setScrolled] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
   const [stockData, setStockData] = useState(STOCK_LOCAL);
@@ -1599,6 +1751,61 @@ export default function App() {
     const h = () => setScrolled(window.scrollY > 48);
     window.addEventListener("scroll", h);
     return () => window.removeEventListener("scroll", h);
+  }, []);
+
+  // Smooth scroll mejorado con rueda + lerp para sensación premium
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const isCoarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    if (isCoarse) return; // mobile/touch: scroll nativo
+    const html = document.documentElement;
+    const original = html.style.scrollBehavior;
+    html.style.scrollBehavior = "auto";
+
+    let target = window.scrollY;
+    let current = window.scrollY;
+    let raf = null;
+    let active = false;
+    const ease = 0.12;
+
+    const tick = () => {
+      const diff = target - current;
+      if (Math.abs(diff) < 0.5) {
+        current = target;
+        window.scrollTo(0, current);
+        active = false;
+        return;
+      }
+      current += diff * ease;
+      window.scrollTo(0, current);
+      raf = requestAnimationFrame(tick);
+    };
+
+    const onWheel = (e) => {
+      // No interceptar si hay un scroll interno (modal, chatbox)
+      const path = e.composedPath ? e.composedPath() : [];
+      for (const el of path) {
+        if (!(el instanceof HTMLElement)) continue;
+        const ov = getComputedStyle(el).overflowY;
+        if ((ov === "auto" || ov === "scroll") && el.scrollHeight > el.clientHeight && el !== document.body && el !== html) {
+          return;
+        }
+      }
+      e.preventDefault();
+      const max = (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight;
+      target = Math.max(0, Math.min(max, target + e.deltaY));
+      if (!active) { active = true; current = window.scrollY; raf = requestAnimationFrame(tick); }
+    };
+    const sync = () => { target = window.scrollY; current = window.scrollY; };
+
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("resize", sync);
+    return () => {
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("resize", sync);
+      if (raf) cancelAnimationFrame(raf);
+      html.style.scrollBehavior = original;
+    };
   }, []);
 
   useEffect(() => {
@@ -1636,9 +1843,25 @@ export default function App() {
       });
   }, []);
 
-  const navTo = (p) => { setPage(p); window.scrollTo({ top:0, behavior:"smooth" }); };
+  const navTo = (p) => {
+    if (p === page) { window.scrollTo({ top:0, behavior:"smooth" }); return; }
+    if (p === "admin") { setPage(p); return; } // admin sin animación
+    setPageAnim("out");
+    setTimeout(() => {
+      setPage(p);
+      window.scrollTo({ top:0, behavior:"auto" });
+      requestAnimationFrame(() => setPageAnim("in"));
+    }, 240);
+  };
 
-  if (page === "admin") return <AdminPanel onExit={() => navTo("home")}/>;
+  if (page === "admin") return <AdminPanel onExit={() => { setPage("home"); setPageAnim("in"); }}/>;
+
+  const pageStyle = {
+    opacity: pageAnim === "in" ? 1 : 0,
+    transform: pageAnim === "in" ? "translateY(0) scale(1)" : "translateY(14px) scale(.992)",
+    transition: "opacity .42s cubic-bezier(.16,1,.3,1), transform .55s cubic-bezier(.16,1,.3,1)",
+    willChange: "opacity, transform",
+  };
 
   return (
     <div style={{ background:C.bg, color:C.white, minHeight:"100vh", fontFamily:"'Barlow',sans-serif", fontWeight:300, overflowX:"hidden", cursor:"none" }}>
@@ -1652,10 +1875,12 @@ export default function App() {
 
       <Nav page={page} navTo={navTo} scrolled={scrolled}/>
 
-      {page==="home"     && <HomePage navTo={navTo} setSelectedCar={setSelectedCar} stockData={stockData} config={config} fotosClientes={fotosClientes} videosData={videosData}/>}
-      {page==="stock"    && <StockPage stockData={stockData} setSelectedCar={setSelectedCar} loading={loadingStock}/>}
-      {page==="nosotros" && <NosotrosPage navTo={navTo}/>}
-      {page==="contacto" && <ContactoPage config={config} navTo={navTo}/>}
+      <div style={pageStyle}>
+        {page==="home"     && <HomePage navTo={navTo} setSelectedCar={setSelectedCar} stockData={stockData} config={config} fotosClientes={fotosClientes} videosData={videosData}/>}
+        {page==="stock"    && <StockPage stockData={stockData} setSelectedCar={setSelectedCar} loading={loadingStock}/>}
+        {page==="nosotros" && <NosotrosPage navTo={navTo}/>}
+        {page==="contacto" && <ContactoPage config={config} navTo={navTo}/>}
+      </div>
 
       {selectedCar && <CarModal car={selectedCar} onClose={() => setSelectedCar(null)} waAle={config.whatsapp_ale} waGonchi={config.whatsapp_gonchi}/>}
 
