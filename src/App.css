@@ -33,6 +33,18 @@
   from { opacity: 0; transform: translateX(-24px); }
   to   { opacity: 1; transform: translateX(0); }
 }
+@keyframes heroWordRise {
+  from { opacity: 0; transform: translateY(60%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes marqueeRev {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+@keyframes loadShimmer {
+  0%   { transform: translateX(-30%); }
+  100% { transform: translateX(440%); }
+}
 
 /* ─── UTILITY CLASSES ───────────────────────────────────────────── */
 .hero-bg-drift {

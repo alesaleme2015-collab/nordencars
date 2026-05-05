@@ -155,8 +155,8 @@ function LoadingScreen({ onDone }) {
       setProgress(p => {
         if (p >= 100) {
           clearInterval(iv);
-          setTimeout(() => setFading(true), 300);
-          setTimeout(() => onDone(), 950);
+          setTimeout(() => setFading(true), 380);
+          setTimeout(() => onDone(), 1100);
           return 100;
         }
         return p + (p < 70 ? 3 : 1.2);
@@ -164,13 +164,67 @@ function LoadingScreen({ onDone }) {
     }, 40);
     return () => clearInterval(iv);
   }, [onDone]);
+  const pct = Math.floor(progress).toString().padStart(2, "0");
   return (
-    <div style={{ position:"fixed", inset:0, zIndex:9999, background:C.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:28, opacity:fading?0:1, transition:"opacity .65s ease", pointerEvents:fading?"none":"auto" }}>
-      <img src={IMG_LOGO} alt="NordenCars" style={{ height:68, animation:"fadeUp .7s .1s both" }}/>
-      <div style={{ width:200, height:2, background:"rgba(255,255,255,.08)", borderRadius:2, overflow:"hidden" }}>
-        <div style={{ height:"100%", width:`${progress}%`, background:C.red, transition:"width .04s linear", borderRadius:2 }}/>
+    <div style={{
+      position:"fixed", inset:0, zIndex:9999,
+      background:"radial-gradient(ellipse at center, #121010 0%, #060606 65%, #030303 100%)",
+      display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:36,
+      opacity: fading ? 0 : 1,
+      transform: fading ? "scale(1.05)" : "scale(1)",
+      transition:"opacity .8s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1)",
+      pointerEvents: fading ? "none" : "auto",
+      overflow:"hidden",
+    }}>
+      {/* Líneas decorativas en las esquinas */}
+      <div style={{ position:"absolute", top:24, left:24, width:40, height:1, background:C.red, opacity:.7, animation:"fadeUp .6s .1s both" }}/>
+      <div style={{ position:"absolute", top:24, left:24, width:1, height:40, background:C.red, opacity:.7, animation:"fadeUp .6s .15s both" }}/>
+      <div style={{ position:"absolute", bottom:24, right:24, width:40, height:1, background:C.red, opacity:.7, animation:"fadeUp .6s .2s both" }}/>
+      <div style={{ position:"absolute", bottom:24, right:24, width:1, height:40, background:C.red, opacity:.7, animation:"fadeUp .6s .25s both" }}/>
+
+      {/* Logo con glow */}
+      <div style={{ position:"relative", animation:"fadeUp .8s .1s both" }}>
+        <div style={{
+          position:"absolute", inset:-28,
+          background:"radial-gradient(circle, rgba(220,38,38,.18), transparent 70%)",
+          filter:"blur(14px)",
+          animation:"glowPulse 3.2s ease-in-out infinite",
+        }}/>
+        <img src={IMG_LOGO} alt="NordenCars" style={{ height:78, position:"relative", zIndex:1 }}/>
       </div>
-      <div style={{ fontSize:8, letterSpacing:5, textTransform:"uppercase", color:"rgba(255,255,255,.22)", fontFamily:"sans-serif", animation:"fadeUp .7s .3s both" }}>Cargando experiencia</div>
+
+      {/* Tag */}
+      <div style={{ fontSize:8, letterSpacing:6, textTransform:"uppercase", color:"rgba(245,245,245,.32)", fontFamily:"sans-serif", animation:"fadeUp .8s .3s both", display:"flex", alignItems:"center", gap:14 }}>
+        <span style={{ width:18, height:1, background:"rgba(220,38,38,.6)" }}/>
+        Concesionaria · Tucumán
+        <span style={{ width:18, height:1, background:"rgba(220,38,38,.6)" }}/>
+      </div>
+
+      {/* Barra de progreso con shimmer */}
+      <div style={{ width:280, animation:"fadeUp .8s .42s both" }}>
+        <div style={{ position:"relative", width:"100%", height:2, background:"rgba(255,255,255,.06)", overflow:"hidden" }}>
+          <div style={{
+            height:"100%", width:`${progress}%`, background:C.red,
+            transition:"width .08s linear",
+            boxShadow:"0 0 12px rgba(220,38,38,.6)",
+          }}/>
+          {/* Shimmer brillante recorriendo */}
+          <div style={{
+            position:"absolute", top:0, left:0, height:"100%", width:"30%",
+            background:"linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent)",
+            animation:"loadShimmer 1.4s linear infinite",
+          }}/>
+        </div>
+        {/* Porcentaje + label */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginTop:10 }}>
+          <div style={{ fontSize:8, letterSpacing:5, textTransform:"uppercase", color:"rgba(245,245,245,.32)", fontFamily:"sans-serif" }}>
+            Cargando experiencia
+          </div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, color:C.white, letterSpacing:2, fontVariantNumeric:"tabular-nums" }}>
+            {pct}<span style={{ color:C.red }}>%</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -509,15 +563,33 @@ function Nav({ page, navTo, scrolled }) {
 
 /* ─── MARQUEE ───────────────────────────────────────────────────────────────── */
 function Marquee() {
-  const items = ["Compra Garantizada","0km y Usados","Financiación","Permutas","Yerba Buena · Tucumán","Transparencia Total","Transferencia Ágil","Marcas Premium","Sin Letras Chicas"];
+  const itemsTop = ["Compra Garantizada","0km y Usados","Financiación","Permutas","Yerba Buena · Tucumán","Transparencia Total","Transferencia Ágil","Marcas Premium","Sin Letras Chicas"];
+  const itemsBot = ["NordenCars","Atención presencial","Tasamos tu auto","Stock seleccionado","Lun a Sáb 9–20hs","Galería Mercato","Casco Viejo","Confianza local","Est. 2022"];
   return (
-    <div style={{ overflow:"hidden", background:C.red, padding:"9px 0" }}>
-      <div style={{ display:"flex", width:"max-content", animation:"marquee 36s linear infinite" }}>
-        {[...Array(2)].flatMap(() => items.map((t, i) => (
-          <div key={t+i} style={{ display:"flex", alignItems:"center", gap:18, padding:"0 30px", whiteSpace:"nowrap", fontSize:10, fontWeight:600, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.88)", fontFamily:"sans-serif" }}>
-            {t}<span style={{ width:4, height:4, background:"rgba(255,255,255,.4)", borderRadius:"50%", flexShrink:0 }}/>
-          </div>
-        )))}
+    <div style={{ background:C.red, position:"relative", overflow:"hidden" }}>
+      {/* Línea superior — 36s, normal */}
+      <div style={{ overflow:"hidden", padding:"7px 0", position:"relative" }}>
+        <div style={{ display:"flex", width:"max-content", animation:"marquee 36s linear infinite" }}>
+          {[...Array(2)].flatMap(() => itemsTop.map((t, i) => (
+            <div key={"a"+t+i} style={{ display:"flex", alignItems:"center", gap:14, padding:"0 28px", whiteSpace:"nowrap", fontSize:10, fontWeight:600, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.92)", fontFamily:"sans-serif" }}>
+              <span style={{ width:3, height:3, background:"rgba(255,255,255,.65)", borderRadius:"50%", flexShrink:0 }}/>
+              {t}
+            </div>
+          )))}
+        </div>
+      </div>
+      {/* Divisor sutil */}
+      <div style={{ height:1, background:"rgba(0,0,0,.18)" }}/>
+      {/* Línea inferior — 52s, sentido inverso para dar profundidad */}
+      <div style={{ overflow:"hidden", padding:"7px 0", position:"relative", background:"rgba(0,0,0,.08)" }}>
+        <div style={{ display:"flex", width:"max-content", animation:"marqueeRev 52s linear infinite" }}>
+          {[...Array(2)].flatMap(() => itemsBot.map((t, i) => (
+            <div key={"b"+t+i} style={{ display:"flex", alignItems:"center", gap:14, padding:"0 28px", whiteSpace:"nowrap", fontSize:9, fontWeight:500, letterSpacing:2.5, textTransform:"uppercase", color:"rgba(255,255,255,.65)", fontFamily:"sans-serif" }}>
+              <span style={{ width:3, height:3, background:"rgba(255,255,255,.4)", borderRadius:"50%", flexShrink:0 }}/>
+              {t}
+            </div>
+          )))}
+        </div>
       </div>
     </div>
   );
@@ -855,36 +927,114 @@ function VideosSection({ videos = [] }) {
 }
 
 /* ─── FOOTER ────────────────────────────────────────────────────────────────── */
+function FooterLink({ children, onClick, href }) {
+  const [hov, setHov] = useState(false);
+  const style = {
+    background:"none", border:"none", cursor:"pointer", padding:0,
+    fontSize:11, fontWeight:300,
+    color: hov ? C.white : C.muted,
+    fontFamily:"sans-serif", textDecoration:"none",
+    display:"inline-flex", alignItems:"center", gap:8,
+    transition:"color .3s, gap .3s",
+  };
+  const inner = (
+    <>
+      <span style={{
+        width: hov ? 14 : 0, height:1, background:C.red,
+        transition:"width .35s cubic-bezier(.16,1,.3,1)",
+      }}/>
+      {children}
+    </>
+  );
+  if (href) return <a href={href} target="_blank" rel="noreferrer" style={style} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>{inner}</a>;
+  return <button onClick={onClick} style={style} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>{inner}</button>;
+}
+
 function Footer({ navTo }) {
+  const [logoHov, setLogoHov] = useState(false);
   return (
-    <footer style={{ background:"#040404", borderTop:`1px solid ${C.border}`, padding:"48px 5vw 28px" }}>
-      <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:48, paddingBottom:36, borderBottom:`1px solid ${C.border}`, marginBottom:24 }}>
+    <footer style={{
+      position:"relative",
+      background:"linear-gradient(to bottom, #060606 0%, #020202 100%)",
+      borderTop:`1px solid ${C.border}`,
+      padding:"58px 5vw 28px",
+      overflow:"hidden",
+    }}>
+      {/* Línea roja superior con gradient */}
+      <div style={{
+        position:"absolute", top:0, left:0, right:0, height:1,
+        background:"linear-gradient(to right, transparent, rgba(220,38,38,.55) 25%, rgba(220,38,38,.55) 75%, transparent)",
+      }}/>
+      {/* Glow rojo sutil de fondo */}
+      <div style={{
+        position:"absolute", top:-80, left:"50%", transform:"translateX(-50%)",
+        width:600, height:160,
+        background:"radial-gradient(ellipse, rgba(220,38,38,.10), transparent 70%)",
+        pointerEvents:"none",
+      }}/>
+
+      <div style={{ position:"relative", display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:48, paddingBottom:40, borderBottom:`1px solid ${C.border}`, marginBottom:26 }}>
         <div>
-          <img src={IMG_LOGO} alt="NordenCars" style={{ height:54, marginBottom:13 }}/>
-          <p style={{ fontSize:11, fontWeight:300, color:C.muted, lineHeight:1.7, maxWidth:250, fontFamily:"sans-serif" }}>Compraventa de vehículos 0km y usados premium. Galería Mercato, Casco Viejo, Yerba Buena, Tucumán.</p>
+          <button
+            onClick={() => navTo("home")}
+            onMouseEnter={() => setLogoHov(true)}
+            onMouseLeave={() => setLogoHov(false)}
+            style={{
+              background:"none", border:"none", padding:0, cursor:"pointer",
+              transform: logoHov ? "scale(1.04)" : "scale(1)",
+              filter: logoHov ? "drop-shadow(0 4px 16px rgba(220,38,38,.35))" : "none",
+              transition:"transform .35s cubic-bezier(.16,1,.3,1), filter .35s",
+              marginBottom:14, display:"block",
+            }}>
+            <img src={IMG_LOGO} alt="NordenCars" style={{ height:54 }}/>
+          </button>
+          <p style={{ fontSize:11, fontWeight:300, color:C.muted, lineHeight:1.7, maxWidth:280, fontFamily:"sans-serif" }}>
+            Compraventa de vehículos 0km y usados premium. Galería Mercato, Casco Viejo, Yerba Buena, Tucumán.
+          </p>
+          <div style={{ display:"flex", gap:14, marginTop:18 }}>
+            {[
+              { href:"https://www.instagram.com/norden.cars/", label:"IG" },
+              { href:"https://wa.me/5493814773142",            label:"WA" },
+            ].map(s => (
+              <a key={s.label} href={s.href} target="_blank" rel="noreferrer"
+                style={{
+                  width:34, height:34, borderRadius:"50%",
+                  border:`1px solid ${C.border2}`,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:9, letterSpacing:1.5, fontFamily:"sans-serif", fontWeight:600,
+                  color:C.muted, textDecoration:"none",
+                  transition:"all .3s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor=C.red; e.currentTarget.style.color="#fff"; e.currentTarget.style.background="rgba(220,38,38,.12)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor=C.border2; e.currentTarget.style.color=C.muted; e.currentTarget.style.background="transparent"; }}>
+                {s.label}
+              </a>
+            ))}
+          </div>
         </div>
         <div>
           <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:14, fontFamily:"sans-serif" }}>Navegación</div>
           {[["home","Inicio"],["stock","Stock"],["nosotros","Nosotros"],["contacto","Contacto"]].map(([p,l]) => (
-            <div key={p} style={{ marginBottom:7 }}>
-              <button onClick={() => navTo(p)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:11, fontWeight:300, color:C.muted, fontFamily:"sans-serif", padding:0, transition:"color .3s" }}
-                onMouseEnter={e => e.target.style.color=C.white} onMouseLeave={e => e.target.style.color=C.muted}>{l}</button>
+            <div key={p} style={{ marginBottom:9 }}>
+              <FooterLink onClick={() => navTo(p)}>{l}</FooterLink>
             </div>
           ))}
         </div>
         <div>
           <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:14, fontFamily:"sans-serif" }}>Contacto</div>
           {[["https://www.instagram.com/norden.cars/","@norden.cars"],["https://wa.me/5493814773142","Alejandro (WA)"],["https://wa.me/5493815184961","Gonchi (WA)"]].map(([href,l]) => (
-            <div key={l} style={{ marginBottom:7 }}>
-              <a href={href} target="_blank" rel="noreferrer" style={{ fontSize:11, fontWeight:300, color:C.muted, textDecoration:"none", transition:"color .3s" }}
-                onMouseEnter={e => e.target.style.color=C.white} onMouseLeave={e => e.target.style.color=C.muted}>{l}</a>
+            <div key={l} style={{ marginBottom:9 }}>
+              <FooterLink href={href}>{l}</FooterLink>
             </div>
           ))}
         </div>
       </div>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-        <div style={{ fontSize:9, color:"#2a2a2a", fontFamily:"sans-serif" }}>© 2025 NordenCars · Todos los derechos reservados</div>
-        <div style={{ fontSize:9, color:"#222", fontFamily:"sans-serif" }}>Yerba Buena, Tucumán</div>
+      <div style={{ position:"relative", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:8 }}>
+        <div style={{ fontSize:9, color:"#2a2a2a", fontFamily:"sans-serif", letterSpacing:.5 }}>© 2025 NordenCars · Todos los derechos reservados</div>
+        <div style={{ fontSize:9, color:"#2a2a2a", fontFamily:"sans-serif", letterSpacing:.5, display:"flex", alignItems:"center", gap:8 }}>
+          <span style={{ width:8, height:1, background:C.red, opacity:.6 }}/>
+          Yerba Buena, Tucumán
+        </div>
       </div>
     </footer>
   );
@@ -1212,11 +1362,107 @@ function ConfigEditor({ config, showToast, onRefresh }) {
   );
 }
 
+/* ─── NUMBER STAT TILE (numbers bar rojo) ───────────────────────────────── */
+function NumberStatTile({ pre, n, suf, l }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        flex:1, position:"relative", overflow:"hidden",
+        background: hov ? "rgba(0,0,0,.22)" : "rgba(0,0,0,.13)",
+        padding:"38px 16px", textAlign:"center",
+        cursor:"default",
+        transition:"background .35s",
+      }}>
+      {/* Línea blanca creciendo desde abajo en hover */}
+      <div style={{
+        position:"absolute", bottom:0, left:0, height:2,
+        width: hov ? "100%" : "0%",
+        background:"#fff",
+        transition:"width .55s cubic-bezier(.16,1,.3,1)",
+      }}/>
+      <div style={{
+        fontFamily:"'Barlow Condensed',sans-serif",
+        fontSize:50, fontWeight:900, color:"#fff", lineHeight:1, letterSpacing:-2,
+        transform: hov ? "translateY(-3px)" : "translateY(0)",
+        transition:"transform .45s cubic-bezier(.16,1,.3,1)",
+        fontVariantNumeric:"tabular-nums",
+      }}>
+        {pre}{<StatCounter value={n} duration={1600}/>}{suf}
+      </div>
+      <div style={{
+        fontSize:8, letterSpacing:3, textTransform:"uppercase",
+        color: hov ? "rgba(255,255,255,.95)" : "rgba(255,255,255,.56)",
+        marginTop:8, fontFamily:"sans-serif",
+        transition:"color .35s",
+      }}>{l}</div>
+    </div>
+  );
+}
+
+/* ─── HERO STAT ITEM (con divisor animado e indicador rojo en hover) ─────── */
+function HeroStatItem({ pre, n, suf, l, last }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        flex:1, padding:"18px 4vw", position:"relative",
+        borderRight: !last ? `1px solid ${C.border}` : "none",
+        cursor:"default",
+        background: hov ? "rgba(220,38,38,.04)" : "transparent",
+        transition:"background .35s",
+      }}>
+      {/* Línea roja superior creciendo en hover */}
+      <div style={{
+        position:"absolute", top:0, left:0, height:1,
+        width: hov ? "100%" : "0%",
+        background: C.red,
+        transition:"width .55s cubic-bezier(.16,1,.3,1)",
+      }}/>
+      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:26, fontWeight:700, color:C.white, lineHeight:1 }}>
+        {pre && <span style={{color:C.red}}>{pre}</span>}
+        {isNaN(parseInt(n)) ? n : <StatCounter value={n} duration={1400}/>}
+        {suf && <span style={{color:C.red}}>{suf}</span>}
+      </div>
+      <div style={{
+        fontSize:8, letterSpacing:2, textTransform:"uppercase",
+        color: hov ? "rgba(245,245,245,.78)" : C.muted,
+        marginTop:4, fontFamily:"sans-serif",
+        transition:"color .35s",
+      }}>{l}</div>
+    </div>
+  );
+}
+
 /* ─── HOME PAGE ─────────────────────────────────────────────────────────────── */
 function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, videosData }) {
   const waAle = config.whatsapp_ale || "5493814773142";
   const preview = stockData.filter(v => v.destacado).slice(0,4);
   const shown = preview.length >= 2 ? preview : stockData.slice(0,4);
+
+  // Parallax del hero: leemos scrollY para mover el auto + opacar texto al scrollear
+  const [heroScroll, setHeroScroll] = useState(0);
+  useEffect(() => {
+    const onScroll = () => setHeroScroll(Math.min(window.scrollY, 800));
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  const heroOpacity = Math.max(0, 1 - heroScroll / 520);
+  const heroLift = heroScroll * -0.18; // texto sube
+  const carLift  = heroScroll * 0.28;  // auto baja
+
+  // Título split por palabra para animación con stagger
+  const titleLines = [
+    { words: ["Tu", "próximo"], red: false },
+    { words: ["vehículo"],       red: false },
+    { words: ["fácil", "y"],     red: true  },
+    { words: ["seguro."],        red: true  },
+  ];
+  let wIdx = 0;
 
   return (
     <>
@@ -1227,43 +1473,64 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
         <Particles/>
         {/* Left accent */}
         <div style={{ position:"absolute", left:0, top:0, bottom:0, width:3, background:"linear-gradient(to bottom,transparent,#DC2626 22%,#DC2626 78%,transparent)" }}/>
-        {/* BG car image — centrado y visible */}
-        <div className="hero-bg-drift" style={{ position:"absolute", right:0, top:0, bottom:0, width:"65%", backgroundImage:`url(${IMG_BMW_FULL})`, backgroundSize:"cover", backgroundPosition:"center center", maskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)", WebkitMaskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)", filter:"brightness(.55) saturate(.7)" }}/>
+        {/* BG car image con parallax + drift */}
+        <div className="hero-bg-drift" style={{
+          position:"absolute", right:0, top:0, bottom:0, width:"65%",
+          backgroundImage:`url(${IMG_BMW_FULL})`, backgroundSize:"cover", backgroundPosition:"center center",
+          maskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)",
+          WebkitMaskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)",
+          filter:"brightness(.55) saturate(.7)",
+          transform:`translate3d(0, ${carLift}px, 0) scale(1.04)`,
+          willChange:"transform",
+        }}/>
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right,rgba(5,5,5,1) 18%,rgba(5,5,5,.55) 46%,rgba(5,5,5,.08) 100%)" }}/>
 
-        <div style={{ position:"relative", zIndex:2, padding:"0 5vw", maxWidth:820, paddingTop:0 }}>
+        <div style={{
+          position:"relative", zIndex:2, padding:"0 5vw", maxWidth:820, paddingTop:0,
+          transform:`translate3d(0, ${heroLift}px, 0)`,
+          opacity: heroOpacity,
+          willChange:"transform, opacity",
+        }}>
           <div style={{ fontSize:9, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:18, display:"flex", alignItems:"center", gap:12, fontFamily:"sans-serif", animation:"fadeUp .8s .15s both", flexWrap:"wrap", overflow:"visible" }}>
             <span style={{ width:24, height:1, background:C.red, flexShrink:0 }}/>Yerba Buena, Tucumán · Est. 2022
           </div>
-          <BigH sz="clamp(56px,9.5vw,112px)" style={{ marginBottom:22, animation:"fadeUp .8s .3s both" }}>
-            Tu próximo<br/>vehículo<br/><Red>fácil y</Red><br/><Red>seguro.</Red>
-          </BigH>
-          <p style={{ fontSize:14, fontWeight:300, lineHeight:1.8, color:"rgba(245,245,245,.44)", maxWidth:450, marginBottom:42, fontFamily:"sans-serif", animation:"fadeUp .8s .45s both" }}>
+          {/* Título con split + reveal palabra por palabra */}
+          <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"clamp(56px,9.5vw,112px)", fontWeight:900, lineHeight:.88, letterSpacing:-3, textTransform:"uppercase", color:C.white, marginBottom:22 }}>
+            {titleLines.map((line, li) => (
+              <div key={li} style={{ display:"block", overflow:"hidden", paddingBottom:".06em" }}>
+                {line.words.map((w, i) => {
+                  const idx = wIdx++;
+                  return (
+                    <span key={`${li}-${i}`} style={{
+                      display:"inline-block",
+                      color: line.red ? C.red : "inherit",
+                      animation:`heroWordRise .9s cubic-bezier(.16,1,.3,1) ${0.28 + idx * 0.075}s both`,
+                      marginRight:"0.22em",
+                    }}>{w}</span>
+                  );
+                })}
+              </div>
+            ))}
+          </h1>
+          <p style={{ fontSize:14, fontWeight:300, lineHeight:1.8, color:"rgba(245,245,245,.44)", maxWidth:450, marginBottom:42, fontFamily:"sans-serif", animation:"fadeUp .8s .85s both" }}>
             {config.hero_subtitulo || "Al precio justo, con la transparencia que merecés. 0km y usados seleccionados en Yerba Buena, Tucumán."}
           </p>
-          <div style={{ display:"flex", gap:13, flexWrap:"wrap", animation:"fadeUp .8s .6s both" }}>
+          <div style={{ display:"flex", gap:13, flexWrap:"wrap", animation:"fadeUp .8s 1s both" }}>
             <div className="btn-glow" style={{ display:"inline-block", borderRadius:2 }}><Btn primary onClick={() => navTo("stock")}>Ver Stock Disponible</Btn></div>
             <Btn onClick={() => navTo("contacto")}>Vender mi Auto</Btn>
           </div>
         </div>
 
         {/* Scroll indicator */}
-        <div style={{ position:"absolute", right:"5vw", bottom:88, display:"flex", flexDirection:"column", alignItems:"center", gap:9, zIndex:2 }}>
+        <div style={{ position:"absolute", right:"5vw", bottom:88, display:"flex", flexDirection:"column", alignItems:"center", gap:9, zIndex:2, opacity: heroOpacity, transition:"opacity .25s" }}>
           <span style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:"#2e2e2e", writingMode:"vertical-rl", fontFamily:"sans-serif" }}>Scroll</span>
           <div style={{ width:1, height:58, background:"linear-gradient(to bottom,#DC2626,transparent)", animation:"pulse 2s ease-in-out infinite" }}/>
         </div>
 
         {/* Stats bar */}
-        <div style={{ position:"absolute", bottom:0, left:0, right:0, display:"flex", borderTop:`1px solid ${C.border}`, background:"rgba(5,5,5,.9)", zIndex:2 }}>
+        <div style={{ position:"absolute", bottom:0, left:0, right:0, display:"flex", borderTop:`1px solid ${C.border}`, background:"rgba(5,5,5,.92)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", zIndex:2 }}>
           {[["+","100","","Vehículos vendidos"],["","100","%","Satisfacción"],["","17","","Marcas 0km"],["","Tucumán","","Yerba Buena"]].map(([pre,n,suf,l],i) => (
-            <div key={i} style={{ flex:1, padding:"17px 4vw", borderRight:i<3?`1px solid ${C.border}`:"none" }}>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:26, fontWeight:700, color:C.white, lineHeight:1 }}>
-                {pre && <span style={{color:C.red}}>{pre}</span>}
-                {isNaN(parseInt(n)) ? n : <StatCounter value={n} duration={1400}/>}
-                {suf && <span style={{color:C.red}}>{suf}</span>}
-              </div>
-              <div style={{ fontSize:8, letterSpacing:2, textTransform:"uppercase", color:C.muted, marginTop:3, fontFamily:"sans-serif" }}>{l}</div>
-            </div>
+            <HeroStatItem key={i} pre={pre} n={n} suf={suf} l={l} last={i===3}/>
           ))}
         </div>
       </section>
@@ -1305,14 +1572,18 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
       </section>
 
       {/* ── NUMBERS BAR ── */}
-      <div style={{ background:C.red, display:"flex", gap:1 }}>
+      <div style={{
+        background:"linear-gradient(135deg, #DC2626 0%, #B91C1C 50%, #DC2626 100%)",
+        display:"flex", gap:1, position:"relative", overflow:"hidden",
+      }}>
+        {/* Trama diagonal sutil para textura */}
+        <div style={{
+          position:"absolute", inset:0,
+          backgroundImage:"repeating-linear-gradient(45deg,rgba(255,255,255,.04) 0,rgba(255,255,255,.04) 1px,transparent 1px,transparent 60px)",
+          pointerEvents:"none",
+        }}/>
         {[["+","100","","Vehículos vendidos"],["","100","%","Satisfacción"],["","17","","Marcas 0km"],["","24","hs","Respuesta"]].map(([pre,n,suf,l],i) => (
-          <div key={i} style={{ flex:1, background:"rgba(0,0,0,.13)", padding:"36px 16px", textAlign:"center" }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:50, fontWeight:900, color:"#fff", lineHeight:1, letterSpacing:-2 }}>
-              {pre}{<StatCounter value={n} duration={1600}/>}{suf}
-            </div>
-            <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.56)", marginTop:7, fontFamily:"sans-serif" }}>{l}</div>
-          </div>
+          <NumberStatTile key={i} pre={pre} n={n} suf={suf} l={l}/>
         ))}
       </div>
 
@@ -1445,6 +1716,67 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
   );
 }
 
+/* ─── FAQ ITEM (acordeón refinado) ───────────────────────────────────────── */
+function FAQItem({ faq, isOpen, onToggle }) {
+  const [hov, setHov] = useState(false);
+  const contentRef = useRef(null);
+  const [maxH, setMaxH] = useState(0);
+  useEffect(() => {
+    if (!contentRef.current) return;
+    setMaxH(isOpen ? contentRef.current.scrollHeight : 0);
+  }, [isOpen, faq.a]);
+  return (
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        borderBottom:`1px solid ${isOpen || hov ? "rgba(220,38,38,.45)" : C.border}`,
+        transition:"border-color .35s",
+      }}>
+      <button
+        onClick={onToggle}
+        style={{
+          width:"100%", background:"none", border:"none", cursor:"pointer",
+          padding:"22px 0", display:"flex", justifyContent:"space-between",
+          alignItems:"center", gap:18, textAlign:"left",
+        }}>
+        <span style={{
+          fontSize:14, fontWeight:400,
+          color: isOpen ? C.white : (hov ? "rgba(245,245,245,.85)" : "rgba(245,245,245,.58)"),
+          fontFamily:"sans-serif", transition:"color .3s, transform .35s",
+          transform: isOpen || hov ? "translateX(6px)" : "translateX(0)",
+          lineHeight:1.45,
+        }}>{faq.q}</span>
+        {/* Botón circular del "+" */}
+        <span style={{
+          flexShrink:0, width:30, height:30, borderRadius:"50%",
+          background: isOpen ? C.red : (hov ? "rgba(220,38,38,.18)" : "rgba(255,255,255,.04)"),
+          border: `1px solid ${isOpen ? C.red : (hov ? "rgba(220,38,38,.45)" : C.border2)}`,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          color: isOpen ? "#fff" : C.red,
+          fontSize:18, lineHeight:1, fontFamily:"sans-serif",
+          transform: isOpen ? "rotate(45deg) scale(1.06)" : (hov ? "scale(1.08)" : "scale(1)"),
+          transition:"transform .42s cubic-bezier(.34,1.56,.64,1), background .3s, border-color .3s, color .3s",
+        }}>+</span>
+      </button>
+      <div style={{
+        overflow:"hidden",
+        maxHeight: maxH,
+        opacity: isOpen ? 1 : 0,
+        transition:"max-height .5s cubic-bezier(.16,1,.3,1), opacity .35s ease",
+      }}>
+        <div ref={contentRef}>
+          <p style={{
+            fontSize:13, fontWeight:300, lineHeight:1.72, color:C.muted,
+            fontFamily:"sans-serif", paddingBottom:20, paddingLeft:14,
+            borderLeft:`2px solid ${C.red}`, margin:0,
+          }}>{faq.a}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── FAQ SECTION ───────────────────────────────────────────────────────────── */
 function FAQSection({ navTo }) {
   const [open, setOpen] = useState(null);
@@ -1470,16 +1802,7 @@ function FAQSection({ navTo }) {
         <div>
           {faqs.map((faq, i) => (
             <Reveal key={i} delay={i * .04}>
-              <div style={{ borderBottom:`1px solid ${C.border}` }}>
-                <button onClick={() => setOpen(open === i ? null : i)}
-                  style={{ width:"100%", background:"none", border:"none", cursor:"pointer", padding:"22px 0", display:"flex", justifyContent:"space-between", alignItems:"center", gap:18, textAlign:"left" }}>
-                  <span style={{ fontSize:14, fontWeight:400, color:open===i ? C.white : "rgba(245,245,245,.58)", fontFamily:"sans-serif", transition:"color .3s", lineHeight:1.45 }}>{faq.q}</span>
-                  <span style={{ fontSize:20, color:C.red, flexShrink:0, transform:open===i?"rotate(45deg)":"rotate(0deg)", transition:"transform .32s cubic-bezier(.16,1,.3,1)", display:"inline-block", lineHeight:1 }}>+</span>
-                </button>
-                <div style={{ overflow:"hidden", maxHeight:open===i ? 200 : 0, transition:"max-height .4s cubic-bezier(.16,1,.3,1)" }}>
-                  <p style={{ fontSize:13, fontWeight:300, lineHeight:1.72, color:C.muted, fontFamily:"sans-serif", paddingBottom:20, margin:0 }}>{faq.a}</p>
-                </div>
-              </div>
+              <FAQItem faq={faq} isOpen={open === i} onToggle={() => setOpen(open === i ? null : i)}/>
             </Reveal>
           ))}
         </div>
