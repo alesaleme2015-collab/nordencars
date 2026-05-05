@@ -76,11 +76,20 @@ const FAQ = [
 ];
 
 /* ─── DESIGN TOKENS ────────────────────────────────────────────────────────── */
+// Paleta de negros con leve tonalidad azul-fría para sensación premium tipo
+// Audi/Vercel. Cada nivel tiene más diferenciación que la paleta plana anterior.
 const C = {
-  red:"#DC2626", red2:"#EF4444",
-  bg:"#0c0c0c", carbon:"#0f0f0f", zinc:"#161616", zinc2:"#1d1d1d", zinc3:"#242424",
-  white:"#F5F5F5", muted:"#888", muted2:"#444",
-  border:"rgba(255,255,255,.055)", border2:"rgba(255,255,255,.10)",
+  red:"#DC2626", red2:"#EF4444", redDeep:"#B91C1C",
+  bg:"#0a0c10",       // base global — antes #0c0c0c
+  carbon:"#0d1015",   // secciones medias — antes #0f0f0f
+  zinc:"#161a21",     // cards / superficies — antes #161616
+  zinc2:"#1c212a",    // hover de cards — antes #1d1d1d
+  zinc3:"#232a35",    // inputs / superficies altas — antes #242424
+  white:"#F5F5F5", muted:"#8a8e98", muted2:"#454953",
+  border:"rgba(255,255,255,.06)",
+  border2:"rgba(255,255,255,.11)",
+  borderStrong:"rgba(255,255,255,.18)",
+  redGlowSoft:"rgba(220,38,38,.12)",
 };
 
 /* ─── HOOKS ─────────────────────────────────────────────────────────────────── */
@@ -346,6 +355,45 @@ function Particles() {
     return () => { cancelAnimationFrame(raf); ro.disconnect(); };
   }, []);
   return <canvas ref={ref} style={{ position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none", zIndex:1 }} />;
+}
+
+/* ─── SECTION DIVIDERS ──────────────────────────────────────────────────────── */
+function SectionDivider({ color = "rgba(220,38,38,.4)", height = 1 }) {
+  return (
+    <div style={{
+      height,
+      background: `linear-gradient(to right, transparent, ${color} 28%, ${color} 72%, transparent)`,
+      pointerEvents: "none",
+    }}/>
+  );
+}
+
+// Corner brackets tipo viewfinder de cámara — 4 "L" rojas en las esquinas
+function CornerBrackets({ size = 18, color = "rgba(220,38,38,.7)", thickness = 1, inset = 14, opacity = 1 }) {
+  const corners = [
+    { top: inset, left: inset,                   bt: thickness, bl: thickness },
+    { top: inset, right: inset,                  bt: thickness, br: thickness },
+    { bottom: inset, left: inset,                bb: thickness, bl: thickness },
+    { bottom: inset, right: inset,               bb: thickness, br: thickness },
+  ];
+  return (
+    <>
+      {corners.map((c, i) => (
+        <div key={i} style={{
+          position:"absolute",
+          width: size, height: size,
+          top: c.top, bottom: c.bottom, left: c.left, right: c.right,
+          borderTop:    c.bt ? `${c.bt}px solid ${color}` : "none",
+          borderBottom: c.bb ? `${c.bb}px solid ${color}` : "none",
+          borderLeft:   c.bl ? `${c.bl}px solid ${color}` : "none",
+          borderRight:  c.br ? `${c.br}px solid ${color}` : "none",
+          opacity,
+          pointerEvents:"none",
+          zIndex: 5,
+        }}/>
+      ))}
+    </>
+  );
 }
 
 /* ─── SHARED UI ──────────────────────────────────────────────────────────────── */
@@ -1587,24 +1635,38 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
         ))}
       </div>
 
-      {/* ── SERVICES (flip cards) ── */}
-      <section style={{ padding:"100px 5vw", background:"linear-gradient(to bottom,#0b0b0b,#0f0f0f)" }}>
-        <Reveal><Tag>Por qué elegirnos</Tag></Reveal>
-        <Reveal delay={.1}><SecH style={{ marginBottom:12 }}>Nuestro <Red>compromiso</Red></SecH></Reveal>
-        <Reveal delay={.15}><p style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif", marginBottom:44, letterSpacing:.5 }}>Pasá el cursor sobre cada tarjeta para conocer más.</p></Reveal>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(198px,1fr))", gap:1, background:C.border }}>
-          {[{i:"🔍",t:"Stock seleccionado",d:"Cada auto pasa una revisión rigurosa antes de entrar al catálogo. Solo publicamos lo que recomendaríamos a un amigo."},
-            {i:"📋",t:"Transparencia total",d:"Historial completo y documentación en orden. Sin letras chicas, sin sorpresas. Lo que acordamos es lo que firmamos."},
-            {i:"💳",t:"Financiación",d:"Trabajamos con múltiples entidades. Te armamos el plan de cuotas que mejor se ajuste a tus posibilidades."},
-            {i:"🔄",t:"Permutas",d:"Tomamos tu auto como parte de pago al mejor precio del mercado. Simple, rápido y sin vueltas."},
-            {i:"⚡",t:"Gestión ágil",d:"Transferencia y trámites resueltos rápido. Vos solo te preocupás por estrenar tu nuevo vehículo."},
-            {i:"📍",t:"Presencia local",d:"Galería Mercato, Yerba Buena. Atención presencial, personalizada y sin apuros. También por WhatsApp."},
-          ].map((s,i) => <Reveal key={i} delay={i*.055}><FlipCard s={s}/></Reveal>)}
+      <SectionDivider/>
+
+      {/* ── SERVICES (flip cards) — sección VIP con corner brackets ── */}
+      <section style={{ padding:"100px 5vw", background:`linear-gradient(to bottom, ${C.bg} 0%, ${C.carbon} 100%)`, position:"relative", overflow:"hidden" }}>
+        <CornerBrackets size={22} inset={28} color="rgba(220,38,38,.55)"/>
+        {/* Mesh glow rojo arriba */}
+        <div style={{
+          position:"absolute", top:-120, left:"50%", transform:"translateX(-50%)",
+          width:680, height:240,
+          background:"radial-gradient(ellipse, rgba(220,38,38,.10), transparent 70%)",
+          filter:"blur(24px)", pointerEvents:"none",
+        }}/>
+        <div style={{ position:"relative", zIndex:1 }}>
+          <Reveal><Tag>Por qué elegirnos</Tag></Reveal>
+          <Reveal delay={.1}><SecH style={{ marginBottom:12 }}>Nuestro <Red>compromiso</Red></SecH></Reveal>
+          <Reveal delay={.15}><p style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif", marginBottom:44, letterSpacing:.5 }}>Pasá el cursor sobre cada tarjeta para conocer más.</p></Reveal>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(198px,1fr))", gap:1, background:C.borderStrong }}>
+            {[{i:"🔍",t:"Stock seleccionado",d:"Cada auto pasa una revisión rigurosa antes de entrar al catálogo. Solo publicamos lo que recomendaríamos a un amigo."},
+              {i:"📋",t:"Transparencia total",d:"Historial completo y documentación en orden. Sin letras chicas, sin sorpresas. Lo que acordamos es lo que firmamos."},
+              {i:"💳",t:"Financiación",d:"Trabajamos con múltiples entidades. Te armamos el plan de cuotas que mejor se ajuste a tus posibilidades."},
+              {i:"🔄",t:"Permutas",d:"Tomamos tu auto como parte de pago al mejor precio del mercado. Simple, rápido y sin vueltas."},
+              {i:"⚡",t:"Gestión ágil",d:"Transferencia y trámites resueltos rápido. Vos solo te preocupás por estrenar tu nuevo vehículo."},
+              {i:"📍",t:"Presencia local",d:"Galería Mercato, Yerba Buena. Atención presencial, personalizada y sin apuros. También por WhatsApp."},
+            ].map((s,i) => <Reveal key={i} delay={i*.055}><FlipCard s={s}/></Reveal>)}
+          </div>
         </div>
       </section>
 
+      <SectionDivider/>
+
       {/* ── PROCESO DE COMPRA ── */}
-      <section style={{ padding:"100px 5vw", background:C.bg, borderTop:`1px solid ${C.border}` }}>
+      <section style={{ padding:"100px 5vw", background:C.bg }}>
         <Reveal><Tag>Cómo funciona</Tag></Reveal>
         <Reveal delay={.1}><SecH style={{ marginBottom:56 }}>El proceso de <Red>compra</Red></SecH></Reveal>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(210px,1fr))", gap:1, background:C.bg }}>
@@ -1633,6 +1695,8 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
         </Reveal>
       </section>
 
+      <SectionDivider/>
+
       {/* ── PHOTO STRIP ── */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", height:210, overflow:"hidden", gap:1 }}>
         {[IMG_BMW_FULL,IMG_BMW_FRONT,IMG_VW_FRONT,IMG_VW_INT].map((img,i) => (
@@ -1642,9 +1706,10 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
         ))}
       </div>
 
+      <SectionDivider/>
 
       {/* ── NOSOTROS PREVIEW ── */}
-      <section style={{ padding:"100px 5vw", background:"linear-gradient(to bottom,#0b0b0b,#0f0f0f)" }}>
+      <section style={{ padding:"100px 5vw", background:`linear-gradient(to bottom, ${C.bg} 0%, ${C.carbon} 100%)` }}>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:72, alignItems:"center" }}>
           <Reveal>
             <div style={{ position:"relative" }}>
@@ -1671,8 +1736,17 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
       {/* ── VIDEOS ── */}
       <VideosSection videos={videosData}/>
 
+      <SectionDivider/>
+
       {/* ── LOCATION ── */}
-      <section style={{ padding:"80px 5vw", background:C.zinc2, borderTop:`1px solid ${C.border}` }}>
+      <section style={{ padding:"80px 5vw", background:C.zinc2, position:"relative", overflow:"hidden" }}>
+        <CornerBrackets size={20} inset={26} color="rgba(220,38,38,.45)" opacity={.85}/>
+        <div style={{
+          position:"absolute", top:-60, right:-60,
+          width:340, height:240,
+          background:"radial-gradient(ellipse, rgba(220,38,38,.10), transparent 70%)",
+          filter:"blur(20px)", pointerEvents:"none",
+        }}/>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:64, alignItems:"center" }}>
           <div>
             <Reveal><Tag>Ubicación</Tag></Reveal>
