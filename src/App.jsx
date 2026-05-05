@@ -17,6 +17,11 @@ const IMG_BMW_INT = "/images/img_bmw_int.jpg";
 const SUPA_URL       = "https://crwcshjhzwbqpxsdhrrm.supabase.co";
 const SUPA_KEY       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyd2NzaGpoendicXB4c2RocnJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODg1NzUsImV4cCI6MjA5MTA2NDU3NX0.dmpr2AR38XszZzbuZuJkQUyBLo8t7czRiRmthGMt8sg";
 
+// ERP de NordenCars — fuente única de verdad del stock.
+// Las tablas vehiculos / vehiculo_fotos del Supabase de la web quedaron
+// en desuso. El admin de stock de esta web tambien (ver AdminPanel).
+const ERP_URL = "https://sistema.nordencars.store";
+
 
 /* ─── SUPABASE CLIENT LIVIANO ──────────────────────────────────────────────── */
 function sbFetch(path, opts = {}) {
@@ -825,10 +830,51 @@ function AdminPanel({ onExit }) {
 
         {/* ── STOCK TAB ── */}
         {tab==="stock" && <>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:700, textTransform:"uppercase", color:C.white }}>Vehículos <Red>({vehiculos.length})</Red></div>
-            <Btn primary small onClick={() => { setEditCar(null); setShowForm(true); }}>+ Agregar vehículo</Btn>
+          {/* Aviso: el stock se gestiona ahora desde el ERP, no desde aca */}
+          <div style={{
+            background: "linear-gradient(135deg, rgba(220,38,38,.08), rgba(255,138,0,.08))",
+            border: `2px solid ${C.red}`,
+            padding: "22px 26px",
+            marginBottom: 28,
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 16
+          }}>
+            <div style={{ fontSize: 28 }}>⚠️</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:18, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom: 6, letterSpacing: 1 }}>
+                El stock se gestiona desde el ERP
+              </div>
+              <p style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif", lineHeight:1.6, margin: 0 }}>
+                Esta sección está desactivada. La carga, edición y eliminación de vehículos del catálogo público ahora se hace desde el sistema NordenCars ERP. Los autos en estado <strong style={{color:C.white}}>Disponible</strong> o <strong style={{color:C.white}}>Reservado</strong> aparecen automáticamente en esta web.
+              </p>
+              <a href="https://sistema.nordencars.store/stock" target="_blank" rel="noopener noreferrer"
+                style={{
+                  display: "inline-block",
+                  marginTop: 14,
+                  background: C.red,
+                  color: "#fff",
+                  padding: "9px 18px",
+                  fontSize: 11,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  fontFamily: "sans-serif",
+                  textDecoration: "none",
+                  fontWeight: 600
+                }}>
+                Ir al ERP →
+              </a>
+            </div>
           </div>
+
+          {/* Listado y formulario antiguos: ocultos por seguridad. El stock real
+              esta en el ERP. Si quedaran filas en la tabla `vehiculos` de este
+              Supabase, no afectan a la web pero conviene limpiarlas manualmente. */}
+          <div style={{ display: "none" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:700, textTransform:"uppercase", color:C.white }}>Vehículos <Red>({vehiculos.length})</Red></div>
+              <Btn primary small>+ Agregar vehículo</Btn>
+            </div>
           {showForm && <CarForm car={editCar} onSave={async (data) => {
             setLoading(true);
             const op = editCar
@@ -852,10 +898,11 @@ function AdminPanel({ onExit }) {
             ))}
             {vehiculos.length === 0 && !loading && (
               <div style={{ padding:"40px", color:C.muted, fontFamily:"sans-serif", fontSize:13, gridColumn:"1/-1" }}>
-                No hay vehículos cargados. Hacé click en "+ Agregar vehículo" para empezar.
+                No hay vehículos cargados. Hacé click en &quot;+ Agregar vehículo&quot; para empezar.
               </div>
             )}
           </div>
+          </div>{/* /display:none */}
         </>}
 
         {/* ── CONSULTAS TAB ── */}
@@ -1564,18 +1611,29 @@ export default function App() {
     // Cargar fotos clientes y videos en paralelo
     db.sel("fotos_clientes","activo=eq.true&order=orden.asc,created_at.desc").then(d => { if (Array.isArray(d)) setFotosClientes(d); });
     db.sel("videos","activo=eq.true&order=orden.asc,created_at.desc").then(d => { if (Array.isArray(d)) setVideosData(d); });
-    // Load stock + fotos
+    // Load stock + fotos desde el ERP (fuente unica de verdad).
+    // Si por algun motivo el ERP no responde, mantenemos STOCK_LOCAL como
+    // fallback para que la web nunca se quede sin contenido.
     setLoadingStock(true);
-    db.sel("vehiculos","activo=eq.true&order=orden.asc,created_at.desc").then(async data => {
-      if (Array.isArray(data) && data.length) {
-        const withFotos = await Promise.all(data.map(async v => {
-          const fotos = await db.sel("vehiculo_fotos", `vehiculo_id=eq.${v.id}&order=orden.asc`);
-          return { ...v, fotos: Array.isArray(fotos) ? fotos.map(f => f.url) : [] };
-        }));
-        setStockData(withFotos);
-      }
-      setLoadingStock(false);
-    }).catch(() => setLoadingStock(false));
+    fetch(`${ERP_URL}/api/publico/stock`, { headers: { Accept: "application/json" } })
+      .then(r => {
+        if (!r.ok) throw new Error("ERP respondio " + r.status);
+        return r.json();
+      })
+      .then(data => {
+        if (Array.isArray(data) && data.length) {
+          // El endpoint del ERP ya devuelve los campos en el formato que
+          // esta web espera (marca, modelo, version, anio, kilometraje,
+          // tipo, carroceria, precio_usd, color, descripcion, destacado,
+          // fotos[]). No hace falta transformar aca.
+          setStockData(data);
+        }
+        setLoadingStock(false);
+      })
+      .catch((e) => {
+        console.warn("[NordenCars] No se pudo cargar stock del ERP:", e);
+        setLoadingStock(false);
+      });
   }, []);
 
   const navTo = (p) => { setPage(p); window.scrollTo({ top:0, behavior:"smooth" }); };
