@@ -14,6 +14,10 @@ const IMG_VW_INT = "/images/img_vw_int.jpg";
 const IMG_BMW_FULL = "/images/img_bmw_full.jpg";
 const IMG_BMW_FRONT = "/images/img_bmw_front.jpg";
 const IMG_BMW_INT = "/images/img_bmw_int.jpg";
+// WhatsApp único del negocio — reemplaza los números personales de Ale y Gonchi.
+// Se centraliza acá para no volver a hardcodear el número en cada CTA.
+const WA_NORDEN      = "5493816375262";
+const WA_NORDEN_DISP = "+54 9 381 637-5262";
 const SUPA_URL       = "https://crwcshjhzwbqpxsdhrrm.supabase.co";
 const SUPA_KEY       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyd2NzaGpoendicXB4c2RocnJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODg1NzUsImV4cCI6MjA5MTA2NDU3NX0.dmpr2AR38XszZzbuZuJkQUyBLo8t7czRiRmthGMt8sg";
 
@@ -70,8 +74,8 @@ const FAQ = [
   {k:"entrega provincia envío envio",a:"Coordinamos traslado a todo el país con transportistas de confianza."},
   {k:"transferencia papeles trámite tramite",a:"Nos encargamos de todo el papeleo de forma ágil y transparente."},
   {k:"separar reservar seña seña",a:"Sí, podés reservar con una seña. Consultanos por WhatsApp."},
-  {k:"ubicación ubicacion donde dirección galería mercato",a:"📍 Galería Mercato, Casco Viejo, Yerba Buena, Tucumán. Lun–Sáb 9 a 20hs."},
-  {k:"horario atienden abren",a:"Lunes a Sábado de 9:00 a 20:00hs. También respondemos por WhatsApp."},
+  {k:"ubicación ubicacion donde dirección galería mercato",a:"📍 Galería Mercato, Casco Viejo, Yerba Buena, Tucumán. Lun a Vie 9–13 y 16:30–20:30hs · Sáb 9–12:30hs."},
+  {k:"horario atienden abren",a:"Lunes a viernes de 9 a 13 y de 16:30 a 20:30hs. Sábados de 9 a 12:30hs. También respondemos por WhatsApp."},
   {k:"precio valor costo",a:"Los precios varían por vehículo. Mirá nuestro stock o consultanos por WhatsApp para más info."},
 ];
 
@@ -552,10 +556,10 @@ function Chatbot() {
 }
 
 /* ─── FLOAT WA ──────────────────────────────────────────────────────────────── */
-function FloatWa({ waAle = "5493814773142" }) {
+function FloatWa() {
   const [hov, setHov] = useState(false);
   return (
-    <a href={`https://wa.me/${waAle}?text=Hola%2C%20vengo%20de%20la%20web%20de%20Norden%20Cars...`} target="_blank" rel="noreferrer" style={{ textDecoration:"none" }}>
+    <a href={`https://wa.me/${WA_NORDEN}?text=Hola%2C%20vengo%20de%20la%20web%20de%20Norden%20Cars...`} target="_blank" rel="noreferrer" style={{ textDecoration:"none" }}>
       <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
         position:"fixed", bottom:28, right:28, zIndex:600, width:54, height:54, borderRadius:"50%",
         background:"#128C7E", display:"flex", alignItems:"center", justifyContent:"center",
@@ -612,7 +616,7 @@ function Nav({ page, navTo, scrolled }) {
 /* ─── MARQUEE ───────────────────────────────────────────────────────────────── */
 function Marquee() {
   const itemsTop = ["Compra Garantizada","0km y Usados","Financiación","Permutas","Yerba Buena · Tucumán","Transparencia Total","Transferencia Ágil","Marcas Premium","Sin Letras Chicas"];
-  const itemsBot = ["NordenCars","Atención presencial","Tasamos tu auto","Stock seleccionado","Lun a Sáb 9–20hs","Galería Mercato","Casco Viejo","Confianza local","Est. 2022"];
+  const itemsBot = ["NordenCars","Atención presencial","Tasamos tu auto","Stock seleccionado","Lun–Vie 9–13 · 16:30–20:30","Sáb 9–12:30","Galería Mercato","Casco Viejo","Confianza local","Est. 2022"];
   return (
     <div style={{ background:C.red, position:"relative", overflow:"hidden" }}>
       {/* Línea superior — 36s, normal */}
@@ -725,7 +729,7 @@ function CarCard({ car, onClick }) {
 }
 
 /* ─── CAR MODAL ─────────────────────────────────────────────────────────────── */
-function CarModal({ car, onClose, waAle, waGonchi }) {
+function CarModal({ car, onClose }) {
   const [idx, setIdx] = useState(0);
   useEffect(() => { document.body.style.overflow="hidden"; return () => { document.body.style.overflow=""; }; }, []);
   if (!car) return null;
@@ -737,8 +741,10 @@ function CarModal({ car, onClose, waAle, waGonchi }) {
     <div onClick={onClose} style={{ position:"fixed", inset:0, zIndex:900, background:"rgba(0,0,0,.9)", display:"flex", alignItems:"center", justifyContent:"center", padding:20, backdropFilter:"blur(8px)" }}>
       <div onClick={e => e.stopPropagation()} style={{ background:C.zinc, width:"100%", maxWidth:820, maxHeight:"90vh", overflow:"auto", border:`1px solid ${C.border2}` }}>
         {fotos.length > 0 && (
-          <div style={{ position:"relative", height:320, background:C.zinc3, overflow:"hidden" }}>
-            <img src={fotos[idx]} alt={car.modelo} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+          <div style={{ position:"relative", height:"min(60vh,460px)", background:"#0a0c10", overflow:"hidden" }}>
+            {/* Fondo borroso = la misma foto, para rellenar sin recortar la real */}
+            <div style={{ position:"absolute", inset:0, backgroundImage:`url(${fotos[idx]})`, backgroundSize:"cover", backgroundPosition:"center", filter:"blur(28px) brightness(.45)", transform:"scale(1.18)" }}/>
+            <img src={fotos[idx]} alt={car.modelo} style={{ position:"relative", width:"100%", height:"100%", objectFit:"contain", display:"block" }}/>
             {fotos.length > 1 && <>
               <button onClick={() => setIdx(i => (i-1+fotos.length)%fotos.length)} style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", background:"rgba(0,0,0,.72)", border:`1px solid ${C.border2}`, color:"#fff", width:34, height:34, cursor:"pointer", fontSize:18, display:"flex", alignItems:"center", justifyContent:"center" }}>‹</button>
               <button onClick={() => setIdx(i => (i+1)%fotos.length)} style={{ position:"absolute", right:50, top:"50%", transform:"translateY(-50%)", background:"rgba(0,0,0,.72)", border:`1px solid ${C.border2}`, color:"#fff", width:34, height:34, cursor:"pointer", fontSize:18, display:"flex", alignItems:"center", justifyContent:"center" }}>›</button>
@@ -772,13 +778,9 @@ function CarModal({ car, onClose, waAle, waGonchi }) {
             ))}
           </div>
           <div style={{ display:"flex", gap:9, flexWrap:"wrap" }}>
-            <a href={`https://wa.me/${waAle||"5493814773142"}?text=Hola%20Alejandro%2C%20me%20interesa%20el%20${carEnc}`} target="_blank" rel="noreferrer"
-              style={{ flex:1, background:C.red, color:"#fff", padding:"13px", textAlign:"center", fontSize:9, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:500, textDecoration:"none", display:"block", minWidth:150 }}>
-              Consultar con Alejandro
-            </a>
-            <a href={`https://wa.me/${waGonchi||"5493815184961"}?text=Hola%20Gonchi%2C%20me%20interesa%20el%20${carEnc}`} target="_blank" rel="noreferrer"
-              style={{ flex:1, background:"rgba(255,255,255,.07)", border:`1px solid ${C.border2}`, color:"#fff", padding:"13px", textAlign:"center", fontSize:9, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:500, textDecoration:"none", display:"block", minWidth:150 }}>
-              Consultar con Gonchi
+            <a href={`https://wa.me/${WA_NORDEN}?text=Hola%20Norden%20Cars%2C%20me%20interesa%20el%20${carEnc}`} target="_blank" rel="noreferrer"
+              style={{ flex:1, background:C.red, color:"#fff", padding:"15px", textAlign:"center", fontSize:10, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600, textDecoration:"none", display:"block", minWidth:150 }}>
+              Consultar por WhatsApp
             </a>
           </div>
         </div>
@@ -1042,7 +1044,7 @@ function Footer({ navTo }) {
           <div style={{ display:"flex", gap:14, marginTop:18 }}>
             {[
               { href:"https://www.instagram.com/norden.cars/", label:"IG" },
-              { href:"https://wa.me/5493814773142",            label:"WA" },
+              { href:`https://wa.me/${WA_NORDEN}`,            label:"WA" },
             ].map(s => (
               <a key={s.label} href={s.href} target="_blank" rel="noreferrer"
                 style={{
@@ -1070,7 +1072,7 @@ function Footer({ navTo }) {
         </div>
         <div>
           <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:14, fontFamily:"sans-serif" }}>Contacto</div>
-          {[["https://www.instagram.com/norden.cars/","@norden.cars"],["https://wa.me/5493814773142","Alejandro (WA)"],["https://wa.me/5493815184961","Gonchi (WA)"]].map(([href,l]) => (
+          {[["https://www.instagram.com/norden.cars/","@norden.cars"],[`https://wa.me/${WA_NORDEN}`,"WhatsApp Norden Cars"]].map(([href,l]) => (
             <div key={l} style={{ marginBottom:9 }}>
               <FooterLink href={href}>{l}</FooterLink>
             </div>
@@ -1261,7 +1263,7 @@ function AdminPanel({ onExit }) {
                   <div style={{ fontSize:9, color:C.muted2, marginTop:7, fontFamily:"sans-serif" }}>{new Date(c.created_at).toLocaleString("es-AR")}</div>
                 </div>
                 <div style={{ display:"flex", gap:5, flexDirection:"column", flexShrink:0 }}>
-                  <a href={`https://wa.me/${(c.telefono||"").replace(/\D/g,"")||"5493814773142"}?text=Hola%20${encodeURIComponent(c.nombre)}%2C%20te%20escribo%20de%20NordenCars!`} target="_blank" rel="noreferrer"
+                  <a href={`https://wa.me/${(c.telefono||"").replace(/\D/g,"")||WA_NORDEN}?text=Hola%20${encodeURIComponent(c.nombre)}%2C%20te%20escribo%20de%20NordenCars!`} target="_blank" rel="noreferrer"
                     style={{ background:"#128C7E", color:"#fff", padding:"6px 10px", fontSize:9, fontFamily:"sans-serif", textDecoration:"none", textAlign:"center" }}>WA</a>
                   <select value={c.estado} onChange={async e => { await db.upd("consultas",{estado:e.target.value},"id",c.id); fetchAll(); }}
                     style={{ background:C.zinc2, border:`1px solid ${C.border2}`, color:C.white, padding:"5px", fontSize:9, fontFamily:"sans-serif", cursor:"pointer" }}>
@@ -1390,8 +1392,7 @@ function ConfigEditor({ config, showToast, onRefresh }) {
   };
   const items = [
     ["hero_titulo","Título del Hero"],["hero_subtitulo","Subtítulo del Hero"],
-    ["nosotros_texto","Texto de Nosotros"],["whatsapp_ale","WhatsApp Alejandro"],
-    ["whatsapp_gonchi","WhatsApp Gonchi"],["instagram","Instagram handle"],
+    ["nosotros_texto","Texto de Nosotros"],["instagram","Instagram handle"],
     ["direccion","Dirección física"],["horario","Horario de atención"],
   ];
   return (
@@ -1488,7 +1489,6 @@ function HeroStatItem({ pre, n, suf, l, last }) {
 
 /* ─── HOME PAGE ─────────────────────────────────────────────────────────────── */
 function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, videosData }) {
-  const waAle = config.whatsapp_ale || "5493814773142";
   const preview = stockData.filter(v => v.destacado).slice(0,4);
   const shown = preview.length >= 2 ? preview : stockData.slice(0,4);
 
@@ -1690,7 +1690,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
         <Reveal delay={.4}>
           <div style={{ marginTop:38, display:"flex", gap:13, flexWrap:"wrap" }}>
             <Btn primary onClick={() => navTo("stock")}>Ver stock disponible</Btn>
-            <Btn href="https://wa.me/5493814773142?text=Hola%2C%20quiero%20empezar%20el%20proceso%20de%20compra...">Empezar por WhatsApp</Btn>
+            <Btn href={`https://wa.me/${WA_NORDEN}?text=Hola%2C%20quiero%20empezar%20el%20proceso%20de%20compra...`}>Empezar por WhatsApp</Btn>
           </div>
         </Reveal>
       </section>
@@ -1754,7 +1754,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
             <Reveal delay={.2}>
               <p style={{ fontSize:14, fontWeight:300, color:"rgba(245,245,245,.46)", lineHeight:1.75, marginBottom:26, fontFamily:"sans-serif" }}>
                 📍 <strong style={{ color:C.white }}>Galería Mercato, Casco Viejo</strong><br/>Yerba Buena, Tucumán, Argentina.<br/><br/>
-                🕐 Lunes a Sábado · 9:00 a 20:00hs
+                🕐 Lunes a viernes · 9 a 13 y 16:30 a 20:30hs<br/>Sábados · 9 a 12:30hs
               </p>
               <Btn href="https://maps.google.com/?q=Galeria+Mercato+Yerba+Buena+Tucuman">Ver en Google Maps</Btn>
             </Reveal>
@@ -1861,7 +1861,7 @@ function FAQSection({ navTo }) {
     { q:"¿Hacen entregas a otras provincias?",a:"Coordinamos traslado a todo el país con transportistas de confianza. El envío tiene costo adicional según destino." },
     { q:"¿Se encargan del papeleo y la transferencia?", a:"Nos encargamos de todo el papeleo de forma ágil y transparente. Vos solo manejás." },
     { q:"¿Puedo reservar un vehículo con seña?",a:"Sí, podés reservar con una seña y lo apartamos para vos. Consultanos por WhatsApp para acordar los detalles." },
-    { q:"¿Dónde están ubicados?",            a:"📍 Galería Mercato, Casco Viejo, Yerba Buena, Tucumán. Atendemos lunes a sábado de 9:00 a 20:00hs, y por WhatsApp todo el día." },
+    { q:"¿Dónde están ubicados?",            a:"📍 Galería Mercato, Casco Viejo, Yerba Buena, Tucumán. Atendemos lunes a viernes de 9 a 13 y de 16:30 a 20:30hs, y sábados de 9 a 12:30hs. Por WhatsApp respondemos todo el día." },
     { q:"¿Cuánto tarda el trámite de transferencia?",a:"Normalmente entre 24 y 72 horas hábiles una vez acordado el precio y verificada la documentación." },
   ];
   return (
@@ -1871,7 +1871,7 @@ function FAQSection({ navTo }) {
           <Reveal><Tag>Preguntas frecuentes</Tag></Reveal>
           <Reveal delay={.1}><SecH>Todo lo que<br/><Red>necesitás</Red><br/>saber</SecH></Reveal>
           <Reveal delay={.2}><p style={{ fontSize:13, fontWeight:300, color:C.muted, lineHeight:1.75, marginTop:20, marginBottom:28, fontFamily:"sans-serif" }}>¿Tenés más dudas? Escribinos directo y respondemos a la brevedad, lunes a sábado.</p></Reveal>
-          <Reveal delay={.3}><Btn primary href="https://wa.me/5493814773142?text=Hola%2C%20tengo%20una%20consulta...">Consultanos por WhatsApp</Btn></Reveal>
+          <Reveal delay={.3}><Btn primary href={`https://wa.me/${WA_NORDEN}?text=Hola%2C%20tengo%20una%20consulta...`}>Consultanos por WhatsApp</Btn></Reveal>
         </div>
         <div>
           {faqs.map((faq, i) => (
@@ -2063,7 +2063,7 @@ function StockPage({ stockData, setSelectedCar, loading }) {
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:19, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom:3 }}>¿No encontrás lo que buscás?</div>
             <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif" }}>Consultanos y buscamos el vehículo ideal para vos.</div>
           </div>
-          <Btn primary href="https://wa.me/5493814773142?text=Hola%2C%20busco%20un%20veh%C3%ADculo%20espec%C3%ADfico...">Consultanos →</Btn>
+          <Btn primary href={`https://wa.me/${WA_NORDEN}?text=Hola%2C%20busco%20un%20veh%C3%ADculo%20espec%C3%ADfico...`}>Consultanos →</Btn>
         </div>
       </div>
     </div>
@@ -2099,19 +2099,15 @@ function NosotrosPage({ navTo }) {
             ].map((t,i) => <Reveal key={i} delay={i*.12}><p style={{ fontSize:14, fontWeight:300, lineHeight:1.85, color:"rgba(245,245,245,.46)", marginBottom:16, fontFamily:"sans-serif" }}>"{t}"</p></Reveal>)}
             <Reveal delay={.42}>
               <div style={{ display:"flex", gap:10, marginTop:28 }}>
-                {[{init:"AL",name:"Alejandro",href:"https://wa.me/5493814773142?text=Hola%20Alejandro..."},
-                  {init:"GO",name:"Gonchi",href:"https://wa.me/5493815184961?text=Hola%20Gonchi..."},
-                ].map(f => (
-                  <a key={f.name} href={f.href} target="_blank" rel="noreferrer"
-                    style={{ display:"flex", alignItems:"center", gap:10, padding:"13px 16px", border:`1px solid ${C.border}`, flex:1, textDecoration:"none", transition:"border-color .3s" }}
-                    onMouseEnter={e => e.currentTarget.style.borderColor=C.red} onMouseLeave={e => e.currentTarget.style.borderColor=C.border}>
-                    <div style={{ width:36, height:36, borderRadius:"50%", background:C.red, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, color:"#fff", flexShrink:0 }}>{f.init}</div>
-                    <div>
-                      <div style={{ fontSize:10, fontWeight:500, letterSpacing:1, textTransform:"uppercase", color:C.white, fontFamily:"sans-serif" }}>{f.name}</div>
-                      <div style={{ fontSize:9, color:C.muted, fontFamily:"sans-serif" }}>WhatsApp directo</div>
-                    </div>
-                  </a>
-                ))}
+                <a href={`https://wa.me/${WA_NORDEN}?text=Hola%20Norden%20Cars%2C%20vengo%20de%20la%20web...`} target="_blank" rel="noreferrer"
+                  style={{ display:"flex", alignItems:"center", gap:12, padding:"15px 18px", border:`1px solid ${C.border}`, flex:1, textDecoration:"none", transition:"border-color .3s" }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor=C.red} onMouseLeave={e => e.currentTarget.style.borderColor=C.border}>
+                  <div style={{ width:40, height:40, borderRadius:"50%", background:"#128C7E", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><WaSvg size={19}/></div>
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:600, letterSpacing:1, textTransform:"uppercase", color:C.white, fontFamily:"sans-serif" }}>WhatsApp Norden Cars</div>
+                    <div style={{ fontSize:10, color:C.muted, fontFamily:"sans-serif" }}>{WA_NORDEN_DISP}</div>
+                  </div>
+                </a>
               </div>
             </Reveal>
           </div>
@@ -2151,8 +2147,6 @@ function ContactFormField({ label, fkey, type = "text", form, set }) {
 
 /* ─── CONTACTO PAGE ──────────────────────────────────────────────────────────── */
 function ContactoPage({ config, navTo }) {
-  const waAle = config.whatsapp_ale || "5493814773142";
-  const waGonchi = config.whatsapp_gonchi || "5493815184961";
   const [form, setForm] = useState({ nombre:"",telefono:"",email:"",vehiculo_interes:"",mensaje:"" });
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -2173,7 +2167,7 @@ function ContactoPage({ config, navTo }) {
         style={{ display:"flex", alignItems:"center", gap:16, padding:"18px 20px", background:hov?C.zinc2:C.zinc, border:`1px solid ${hov?C.red:C.border}`, transform:hov?"translateX(6px)":"translateX(0)", transition:"all .3s", cursor:"pointer", textDecoration:"none", color:"inherit", marginBottom:2 }}>
         <div style={{ width:48, height:48, borderRadius:"50%", background:"#128C7E", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transform:hov?"scale(1.08)":"scale(1)", transition:"transform .3s" }}><WaSvg size={21}/></div>
         <div style={{ flex:1 }}>
-          <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.muted, marginBottom:3, fontFamily:"sans-serif" }}>Co-fundador</div>
+          <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.muted, marginBottom:3, fontFamily:"sans-serif" }}>WhatsApp oficial</div>
           <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:700, textTransform:"uppercase", color:C.white }}>{name}</div>
           <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif" }}>{phone}</div>
         </div>
@@ -2193,15 +2187,14 @@ function ContactoPage({ config, navTo }) {
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:72, alignItems:"start" }}>
           <div>
             <Reveal><Tag>WhatsApp directo</Tag></Reveal>
-            <Reveal delay={.1}><p style={{ fontSize:13, fontWeight:300, color:"rgba(245,245,245,.44)", lineHeight:1.7, marginBottom:30, fontFamily:"sans-serif" }}>Escribinos directo a cualquiera de los dos fundadores. Respondemos a la brevedad.</p></Reveal>
-            <Reveal delay={.2}><WaBtn href={`https://wa.me/${waAle}?text=Hola%20Alejandro%2C%20vengo%20de%20la%20web%20de%20Norden%20Cars...`} name="Alejandro" phone="+54 9 381 477-3142"/></Reveal>
-            <Reveal delay={.3}><WaBtn href={`https://wa.me/${waGonchi}?text=Hola%20Gonchi%2C%20vengo%20de%20la%20web%20de%20Norden%20Cars...`} name="Gonchi" phone="+54 9 381 518-4961"/></Reveal>
+            <Reveal delay={.1}><p style={{ fontSize:13, fontWeight:300, color:"rgba(245,245,245,.44)", lineHeight:1.7, marginBottom:30, fontFamily:"sans-serif" }}>Escribinos directo por WhatsApp. Respondemos a la brevedad.</p></Reveal>
+            <Reveal delay={.2}><WaBtn href={`https://wa.me/${WA_NORDEN}?text=Hola%20Norden%20Cars%2C%20vengo%20de%20la%20web%20de%20Norden%20Cars...`} name="Norden Cars" phone={WA_NORDEN_DISP}/></Reveal>
             <Reveal delay={.4}>
               <div style={{ marginTop:26, padding:"20px", background:C.zinc, border:`1px solid ${C.border}` }}>
                 <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:10, fontFamily:"sans-serif" }}>Ubicación</div>
                 <div style={{ fontSize:13, fontWeight:300, color:"rgba(245,245,245,.58)", lineHeight:1.7, fontFamily:"sans-serif" }}>
                   📍 Galería Mercato, Casco Viejo<br/>Yerba Buena, Tucumán, Argentina<br/><br/>
-                  🕐 Lun–Sáb: 9:00 a 20:00hs
+                  🕐 Lun a Vie: 9–13 y 16:30–20:30hs<br/>Sáb: 9–12:30hs
                 </div>
                 <a href="https://www.instagram.com/norden.cars/" target="_blank" rel="noreferrer" style={{ display:"block", marginTop:10, fontSize:12, color:C.red, fontFamily:"sans-serif", textDecoration:"none" }}>📷 @norden.cars</a>
               </div>
@@ -2384,9 +2377,9 @@ export default function App() {
         {page==="contacto" && <ContactoPage config={config} navTo={navTo}/>}
       </div>
 
-      {selectedCar && <CarModal car={selectedCar} onClose={() => setSelectedCar(null)} waAle={config.whatsapp_ale} waGonchi={config.whatsapp_gonchi}/>}
+      {selectedCar && <CarModal car={selectedCar} onClose={() => setSelectedCar(null)}/>}
 
-      <FloatWa waAle={config.whatsapp_ale}/>
+      <FloatWa/>
       <Chatbot/>
     </div>
   );
