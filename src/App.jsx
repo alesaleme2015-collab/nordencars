@@ -14,21 +14,6 @@ const IMG_VW_INT = "/images/img_vw_int.jpg";
 const IMG_BMW_FULL = "/images/img_bmw_full.jpg";
 const IMG_BMW_FRONT = "/images/img_bmw_front.jpg";
 const IMG_BMW_INT = "/images/img_bmw_int.jpg";
-// Carrusel de portada (hero): 0km que ofrecemos. Imágenes de referencia libres
-// (Wikimedia Commons) + foto propia del BMW. Para sumar/quitar/reordenar autos,
-// editá este array — el orden es el orden en que se ven.
-const HERO_SLIDES = [
-  IMG_BMW_FULL,
-  "/images/hero_bronco.jpg",
-  "/images/hero_tiguan.jpg",
-  "/images/hero_3008.jpg",
-  "/images/hero_toro.jpg",
-  "/images/hero_taos.jpg",
-  "/images/hero_2008.jpg",
-  "/images/hero_208.jpg",
-  "/images/hero_strada.jpg",
-  "/images/hero_cronos.jpg",
-];
 // WhatsApp único del negocio — reemplaza los números personales de Ale y Gonchi.
 // Se centraliza acá para no volver a hardcodear el número en cada CTA.
 const WA_NORDEN      = "5493816375262";
@@ -1095,7 +1080,7 @@ function Footer({ navTo }) {
         </div>
       </div>
       <div style={{ position:"relative", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:8 }}>
-        <div style={{ fontSize:9, color:"#2a2a2a", fontFamily:"sans-serif", letterSpacing:.5 }}>© 2025 NordenCars · Todos los derechos reservados · Imágenes de modelos 0km: Wikimedia Commons</div>
+        <div style={{ fontSize:9, color:"#2a2a2a", fontFamily:"sans-serif", letterSpacing:.5 }}>© 2025 NordenCars · Todos los derechos reservados</div>
         <div style={{ fontSize:9, color:"#2a2a2a", fontFamily:"sans-serif", letterSpacing:.5, display:"flex", alignItems:"center", gap:8 }}>
           <span style={{ width:8, height:1, background:C.red, opacity:.6 }}/>
           Yerba Buena, Tucumán
@@ -1518,13 +1503,6 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
   const heroLift = heroScroll * -0.18; // texto sube
   const carLift  = heroScroll * 0.28;  // auto baja
 
-  // Carrusel de portada: avanza solo con crossfade cada 5s
-  const [heroSlide, setHeroSlide] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setHeroSlide(s => (s + 1) % HERO_SLIDES.length), 5000);
-    return () => clearInterval(t);
-  }, []);
-
   // Título split por palabra para animación con stagger
   const titleLines = [
     { words: ["Tu", "próximo"], red: false },
@@ -1543,31 +1521,16 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
         <Particles/>
         {/* Left accent */}
         <div style={{ position:"absolute", left:0, top:0, bottom:0, width:3, background:"linear-gradient(to bottom,transparent,#DC2626 22%,#DC2626 78%,transparent)" }}/>
-        {/* BG carrusel de autos 0km con crossfade + parallax/drift */}
+        {/* BG car image con parallax + drift */}
         <div className="hero-bg-drift" style={{
           position:"absolute", right:0, top:0, bottom:0, width:"65%",
+          backgroundImage:`url(${IMG_BMW_FULL})`, backgroundSize:"cover", backgroundPosition:"center center",
           maskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)",
           WebkitMaskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)",
           filter:"brightness(.55) saturate(.7)",
           transform:`translate3d(0, ${carLift}px, 0) scale(1.04)`,
           willChange:"transform",
-        }}>
-          {HERO_SLIDES.map((src, i) => {
-            // Solo pintamos la imagen activa y sus vecinas → carga progresiva, no pesa al abrir.
-            const n = HERO_SLIDES.length;
-            const dist = Math.min((i - heroSlide + n) % n, (heroSlide - i + n) % n);
-            const near = dist <= 1;
-            return (
-              <div key={src} style={{
-                position:"absolute", inset:0,
-                backgroundImage: near ? `url(${src})` : "none",
-                backgroundSize:"cover", backgroundPosition:"center center",
-                opacity: i === heroSlide ? 1 : 0,
-                transition:"opacity 1.4s ease-in-out",
-              }}/>
-            );
-          })}
-        </div>
+        }}/>
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right,rgba(5,5,5,1) 18%,rgba(5,5,5,.55) 46%,rgba(5,5,5,.08) 100%)" }}/>
 
         <div style={{
