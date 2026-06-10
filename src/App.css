@@ -102,27 +102,25 @@
   }
 
   /* FAQ two-col */
-  [style*='gridTemplateColumns:"1fr 1.55fr"'] {
+  [style*="grid-template-columns: 1fr 1.55fr"] {
     grid-template-columns: 1fr !important;
     gap: 36px !important;
   }
 
   /* Footer grid */
-  [style*='gridTemplateColumns:"2fr 1fr 1fr"'] {
+  [style*="grid-template-columns: 2fr 1fr 1fr"] {
     grid-template-columns: 1fr !important;
     gap: 28px !important;
   }
 
   /* Sticky heading mobile: normal */
-  [style*='position:"sticky"'] {
+  [style*="position: sticky"] {
     position: static !important;
   }
 
   /* Numbers bar: wrap 2x2 */
-  [style*='background:"#DC2626"'] {
-    flex-wrap: wrap !important;
-  }
-  [style*='background:"#DC2626"'] > div {
+  .num-bar { flex-wrap: wrap !important; }
+  .num-bar > div {
     flex: 0 0 50% !important;
     padding: 22px 10px !important;
   }
@@ -176,7 +174,7 @@
   h1 { font-size: clamp(34px, 12vw, 52px) !important; }
 
   /* Numbers bar font */
-  [style*='background:"#DC2626"'] > div > div:first-child {
+  .num-bar > div > div:first-child {
     font-size: 38px !important;
   }
 

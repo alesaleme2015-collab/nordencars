@@ -897,9 +897,25 @@ function ReviewTile({ r }) {
 function FlipBrandCard({ brand }) {
   const [hov, setHov] = useState(false);
   const [imgOk, setImgOk] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const ck = () => setIsMobile(window.innerWidth < 760);
+    ck(); window.addEventListener("resize", ck);
+    return () => window.removeEventListener("resize", ck);
+  }, []);
   // Simple Icons: logo monocromo por marca. Slug = nombre sin acentos en minúscula.
   const slug = brand.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   const logoSrc = `https://cdn.simpleicons.org/${slug}`;
+  if (isMobile) {
+    return (
+      <div style={{ height:120, background:"linear-gradient(180deg,#161616,#0e0e0e)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:12, padding:14, borderBottom:`2px solid ${C.red}` }}>
+        {imgOk
+          ? <img src={logoSrc} alt={brand} onError={() => setImgOk(false)} style={{ maxWidth:"60%", maxHeight:38, objectFit:"contain", filter:"brightness(0) invert(1)" }}/>
+          : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:900, color:C.white }}>{brand}</span>}
+        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:2, color:"rgba(245,245,245,.55)" }}>{brand}</span>
+      </div>
+    );
+  }
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{ perspective:900, cursor:"pointer", height:130 }}>
@@ -1610,6 +1626,12 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
     const py = (e.clientY - r.top) / r.height - 0.5;
     setTilt({ rx: -py * 9, ry: px * 15 });
   };
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const ck = () => setIsMobile(window.innerWidth < 760);
+    ck(); window.addEventListener("resize", ck);
+    return () => window.removeEventListener("resize", ck);
+  }, []);
 
   // Título split por palabra para animación con stagger
   const titleLines = [
@@ -1623,7 +1645,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
   return (
     <>
       {/* ── HERO ── */}
-      <section onMouseMove={onHeroMove} onMouseLeave={() => setTilt({ rx:0, ry:0 })} style={{ position:"relative", height:"100vh", minHeight:680, display:"flex", alignItems:"center", overflow:"hidden" }}>
+      <section onMouseMove={onHeroMove} onMouseLeave={() => setTilt({ rx:0, ry:0 })} style={{ position:"relative", height:"100vh", minHeight: isMobile ? 560 : 680, display:"flex", alignItems: isMobile ? "flex-start" : "center", overflow:"hidden" }}>
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(135deg,#050505 0%,#100808 50%,#0c0c0c 100%)" }}/>
         <div style={{ position:"absolute", inset:0, backgroundImage:"repeating-linear-gradient(45deg,rgba(220,38,38,.01) 0,rgba(220,38,38,.01) 1px,transparent 1px,transparent 74px)", pointerEvents:"none" }}/>
         <Particles/>
@@ -1646,7 +1668,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right,rgba(5,5,5,1) 18%,rgba(5,5,5,.55) 46%,rgba(5,5,5,.08) 100%)" }}/>
 
         {/* Auto 0km: flota sobre las líneas y se inclina en 3D con el mouse */}
-        <div style={{ position:"absolute", right:0, top:0, bottom:0, width:"54%", zIndex:1, perspective:1300, pointerEvents:"none", transform:`translate3d(0, ${carLift*0.3}px, 0)` }}>
+        <div style={{ display: isMobile ? "none" : "block", position:"absolute", right:0, top:0, bottom:0, width:"54%", zIndex:1, perspective:1300, pointerEvents:"none", transform:`translate3d(0, ${carLift*0.3}px, 0)` }}>
           <div style={{ position:"absolute", bottom:"12%", left:"50%", width:"48%", height:24, transform:"translateX(-50%)", background:"radial-gradient(ellipse, rgba(0,0,0,.5), transparent 72%)", filter:"blur(8px)" }}/>
           <div style={{ position:"absolute", inset:"6% 5% 12% 5%", transformStyle:"preserve-3d", transform:`rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`, transition:"transform .2s ease-out" }}>
             <div className="hero-float" style={{ position:"absolute", inset:0 }}>
@@ -1658,7 +1680,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
         </div>
 
         <div style={{
-          position:"relative", zIndex:2, padding:"0 5vw", maxWidth:820, paddingTop:0,
+          position:"relative", zIndex:2, padding:"0 5vw", maxWidth:820, paddingTop: isMobile ? 100 : 0,
           transform:`translate3d(0, ${heroLift}px, 0)`,
           opacity: heroOpacity,
           willChange:"transform, opacity",
@@ -1744,7 +1766,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
       </section>
 
       {/* ── NUMBERS BAR ── */}
-      <div style={{
+      <div className="num-bar" style={{
         background:"linear-gradient(135deg, #DC2626 0%, #B91C1C 50%, #DC2626 100%)",
         display:"flex", gap:1, position:"relative", overflow:"hidden",
       }}>
