@@ -7,7 +7,7 @@ import './App.css';
 // ═══════════════════════════════════════════════════════════
 
 // Imágenes embebidas (reemplazables por URLs reales)
-const IMG_LOGO = "/images/img_logo.png";
+const IMG_LOGO = "/images/img_logo_tight.png";
 const IMG_GONCHI = "/images/img_gonchi.jpg";
 const IMG_VW_FRONT = "/images/img_vw_front.jpg";
 const IMG_VW_INT = "/images/img_vw_int.jpg";
@@ -24,6 +24,18 @@ const HERO_BARS = Array.from({ length: 18 }, (_, i) => ({
   h: (42 + Math.abs(Math.sin(i * 1.3)) * 44).toFixed(0),
   dur: (3.8 + (i % 5) * 0.7).toFixed(1),
   delay: (-Math.abs(Math.sin(i * 0.7)) * 4).toFixed(2),
+}));
+// Autos 0km (PNG transparentes) que flotan y rotan en el hero con tilt 3D.
+// "scale" empareja el tamaño visual: cada foto trae el auto a distinta escala.
+const HERO_CARS = [
+  { src: "/images/portada/fastback.png", scale: 1 },
+  { src: "/images/portada/amarok.png",   scale: 1 },
+  { src: "/images/portada/sw4.png",      scale: 1.18 },
+];
+// Fotos de entregas a clientes (sección "Clientes felices"), en public/images/clientes.
+// Si la tabla fotos_clientes de Supabase tiene datos, esos mandan; si no, van estas.
+const CLIENTES_LOCAL = Array.from({ length: 25 }, (_, i) => ({
+  url: `/images/clientes/entrega-${String(i + 1).padStart(2, "0")}.jpg`,
 }));
 const SUPA_URL       = "https://crwcshjhzwbqpxsdhrrm.supabase.co";
 const SUPA_KEY       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyd2NzaGpoendicXB4c2RocnJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODg1NzUsImV4cCI6MjA5MTA2NDU3NX0.dmpr2AR38XszZzbuZuJkQUyBLo8t7czRiRmthGMt8sg";
@@ -253,11 +265,13 @@ function LoadingScreen({ onDone }) {
 function CustomCursor() {
   const dotRef = useRef(null);
   const ringRef = useRef(null);
+  const labelRef = useRef(null);
   useEffect(() => {
     let x = -200, y = -200, rx = -200, ry = -200, raf;
     let clicking = false;
     let hoverState = "default"; // "default" | "interactive" | "magnetic"
     let magnetRect = null;
+    let cursorLabel = "";
 
     const isInteractive = (el) =>
       !!el?.closest?.("a, button, [role='button'], input, textarea, select, [data-cursor='link']");
@@ -265,6 +279,8 @@ function CustomCursor() {
     const move = (e) => {
       x = e.clientX; y = e.clientY;
       const t = e.target;
+      const labelEl = t?.closest?.("[data-cursor-label]");
+      cursorLabel = labelEl ? labelEl.getAttribute("data-cursor-label") : "";
       const magnet = t?.closest?.("[data-magnetic]");
       if (magnet) {
         magnetRect = magnet.getBoundingClientRect();
@@ -315,6 +331,11 @@ function CustomCursor() {
         ringRef.current.style.borderColor = `rgba(220,38,38,${ringOp})`;
         ringRef.current.style.transform = `translate(${rx - ringSize/2}px, ${ry - ringSize/2}px) scale(${ringScale})`;
       }
+      if (labelRef.current) {
+        labelRef.current.textContent = cursorLabel;
+        labelRef.current.style.opacity = cursorLabel ? "1" : "0";
+        labelRef.current.style.transform = `translate(${x + 18}px, ${y + 14}px)`;
+      }
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
@@ -324,6 +345,7 @@ function CustomCursor() {
     <>
       <div ref={dotRef} style={{ position:"fixed", top:0, left:0, width:8, height:8, borderRadius:"50%", background:C.red, pointerEvents:"none", zIndex:99999, transition:"opacity .2s, background .2s", willChange:"transform" }}/>
       <div ref={ringRef} style={{ position:"fixed", top:0, left:0, width:36, height:36, borderRadius:"50%", border:`1.5px solid rgba(220,38,38,.55)`, pointerEvents:"none", zIndex:99998, transition:"width .25s cubic-bezier(.16,1,.3,1), height .25s cubic-bezier(.16,1,.3,1), background .25s, border-color .25s", willChange:"transform" }}/>
+      <div ref={labelRef} style={{ position:"fixed", top:0, left:0, padding:"5px 11px", background:C.red, color:"#fff", fontSize:9, letterSpacing:2, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600, borderRadius:2, pointerEvents:"none", zIndex:99999, opacity:0, transition:"opacity .22s", willChange:"transform", whiteSpace:"nowrap" }}/>
     </>
   );
 }
@@ -678,6 +700,7 @@ function CarCard({ car, onClick }) {
 
   return (
     <div
+      data-cursor-label="Ver auto"
       onMouseEnter={() => setHov(true)}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
@@ -797,38 +820,54 @@ function CarModal({ car, onClose }) {
 }
 
 /* ─── FLIP CARD (services) ──────────────────────────────────────────────────── */
+// Íconos de línea finos para la sección "Nuestro compromiso" (reemplazan emojis).
+function ServiceIcon({ name, size = 30 }) {
+  const p = { width:size, height:size, viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", strokeWidth:1.5, strokeLinecap:"round", strokeLinejoin:"round" };
+  switch (name) {
+    case "stock":         return <svg {...p}><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4-4"/><path d="M11 8.5v5M8.5 11h5"/></svg>;
+    case "transparencia": return <svg {...p}><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="m9 11.5 2 2 4-4"/></svg>;
+    case "financiacion":  return <svg {...p}><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg>;
+    case "permutas":      return <svg {...p}><path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/></svg>;
+    case "agil":          return <svg {...p}><path d="M13 2.5 5 13h6l-1 8.5L19 11h-6z"/></svg>;
+    case "local":         return <svg {...p}><path d="M12 21.5s-6.5-5.5-6.5-10.5a6.5 6.5 0 1 1 13 0c0 5-6.5 10.5-6.5 10.5z"/><circle cx="12" cy="11" r="2.3"/></svg>;
+    default: return null;
+  }
+}
+
 function FlipCard({ s }) {
   const [flipped, setFlipped] = useState(false);
   return (
     <div onMouseEnter={() => setFlipped(true)} onMouseLeave={() => setFlipped(false)}
-      style={{ perspective:1000, cursor:"pointer", height:186 }}>
+      style={{ perspective:1100, cursor:"pointer", height:186 }}>
       <div style={{
         position:"relative", width:"100%", height:"100%",
         transformStyle:"preserve-3d",
         transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-        transition:"transform .55s cubic-bezier(.16,1,.3,1)",
+        transition:"transform .6s cubic-bezier(.16,1,.3,1)",
       }}>
         {/* Front */}
         <div style={{
           position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden",
-          background:C.zinc, padding:"28px 22px",
+          background:C.zinc, padding:"26px 22px",
           display:"flex", flexDirection:"column", justifyContent:"space-between",
-          borderBottom:`2px solid transparent`,
+          borderTop:`1px solid ${flipped?C.red:"rgba(255,255,255,.06)"}`, transition:"border-color .4s",
         }}>
-          <span style={{ fontSize:26, display:"block" }}>{s.i}</span>
+          <div style={{ color:C.red, height:32, display:"flex", alignItems:"center" }}><ServiceIcon name={s.i}/></div>
           <div>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:18, fontWeight:700, textTransform:"uppercase", color:C.white, lineHeight:1.1, marginBottom:8 }}>{s.t}</div>
-            <div style={{ fontSize:8, letterSpacing:2, color:C.muted2, textTransform:"uppercase", fontFamily:"sans-serif" }}>Ver más →</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:19, fontWeight:700, textTransform:"uppercase", color:C.white, lineHeight:1.08, marginBottom:9, letterSpacing:.3 }}>{s.t}</div>
+            <div style={{ fontSize:8, letterSpacing:2.5, color:C.muted2, textTransform:"uppercase", fontFamily:"sans-serif", display:"flex", alignItems:"center", gap:7 }}><span style={{ width:14, height:1, background:C.red }}/>Ver más</div>
           </div>
         </div>
         {/* Back */}
         <div style={{
           position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden",
-          background:C.red, padding:"28px 22px",
+          background:"linear-gradient(155deg,#181112 0%,#110c0d 100%)", padding:"26px 22px",
           transform:"rotateY(180deg)",
-          display:"flex", alignItems:"center",
+          display:"flex", flexDirection:"column", justifyContent:"center",
+          borderLeft:`2px solid ${C.red}`,
         }}>
-          <p style={{ fontSize:13, fontWeight:300, lineHeight:1.7, color:"rgba(255,255,255,.92)", fontFamily:"sans-serif", margin:0 }}>{s.d}</p>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, textTransform:"uppercase", letterSpacing:2, color:C.red, marginBottom:10 }}>{s.t}</div>
+          <p style={{ fontSize:12.5, fontWeight:300, lineHeight:1.7, color:"rgba(245,245,245,.74)", fontFamily:"sans-serif", margin:0 }}>{s.d}</p>
         </div>
       </div>
     </div>
@@ -858,69 +897,116 @@ function ReviewTile({ r }) {
 function FlipBrandCard({ brand }) {
   const [hov, setHov] = useState(false);
   const [imgOk, setImgOk] = useState(true);
-  const domain = BRAND_DOMAINS[brand] || `${brand.toLowerCase()}.com`;
-  const logoSrc = `https://logo.clearbit.com/${domain}`;
+  // Simple Icons: logo monocromo por marca. Slug = nombre sin acentos en minúscula.
+  const slug = brand.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const logoSrc = `https://cdn.simpleicons.org/${slug}`;
   return (
-    <div
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        position:"relative",
-        background: hov
-          ? "linear-gradient(180deg,#1c1c1c 0%,#131313 100%)"
-          : "linear-gradient(180deg,#141414 0%,#0e0e0e 100%)",
-        cursor:"pointer",
-        height:130,
-        display:"flex",
-        flexDirection:"column",
-        alignItems:"center",
-        justifyContent:"center",
-        gap:14,
-        padding:"18px 14px",
-        overflow:"hidden",
-        transform: hov ? "translateY(-2px)" : "translateY(0)",
-        transition:"transform .4s cubic-bezier(.16,1,.3,1), background .4s cubic-bezier(.16,1,.3,1)",
+    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ perspective:900, cursor:"pointer", height:130 }}>
+      <div style={{
+        position:"relative", width:"100%", height:"100%", transformStyle:"preserve-3d",
+        transform: hov ? "rotateY(180deg)" : "rotateY(0deg)",
+        transition:"transform .6s cubic-bezier(.16,1,.3,1)",
       }}>
-      {/* Logo */}
-      <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", width:"100%", minHeight:0 }}>
-        {imgOk ? (
-          <img
-            src={logoSrc}
-            alt={brand}
-            onError={() => setImgOk(false)}
-            style={{
-              maxWidth:"72%",
-              maxHeight:46,
-              objectFit:"contain",
-              filter:"brightness(0) invert(1)",
-              opacity: hov ? 1 : 0.42,
-              transform: hov ? "scale(1.06)" : "scale(1)",
-              transition:"opacity .4s cubic-bezier(.16,1,.3,1), transform .55s cubic-bezier(.16,1,.3,1)",
-            }}
-          />
-        ) : (
-          <div style={{
-            fontFamily:"'Barlow Condensed',sans-serif",
-            fontSize:24, fontWeight:900, letterSpacing:-1,
-            color: hov ? C.white : "rgba(245,245,245,.45)",
-            transition:"color .4s",
-          }}>{brand.toUpperCase()}</div>
-        )}
+        {/* Frente: nombre de la marca */}
+        <div style={{
+          position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden",
+          background:"linear-gradient(180deg,#141414 0%,#0e0e0e 100%)",
+          display:"flex", alignItems:"center", justifyContent:"center",
+        }}>
+          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:900, letterSpacing:-.5, textTransform:"uppercase", color:"rgba(245,245,245,.5)" }}>{brand}</span>
+        </div>
+        {/* Dorso: logo de la marca (se revela al girar) */}
+        <div style={{
+          position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden",
+          transform:"rotateY(180deg)",
+          background:"linear-gradient(180deg,#1d1d1d 0%,#121212 100%)",
+          display:"flex", alignItems:"center", justifyContent:"center", padding:20,
+          borderBottom:`2px solid ${C.red}`,
+        }}>
+          {imgOk ? (
+            <img src={logoSrc} alt={brand} onError={() => setImgOk(false)}
+              style={{ maxWidth:"68%", maxHeight:44, objectFit:"contain", filter:"brightness(0) invert(1)" }}/>
+          ) : (
+            <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:900, letterSpacing:-.5, textTransform:"uppercase", color:C.white }}>{brand}</span>
+          )}
+        </div>
       </div>
-      {/* Nombre */}
-      <div style={{
-        fontFamily:"'Barlow Condensed',sans-serif",
-        fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:2.5,
-        color: hov ? C.white : "rgba(245,245,245,.42)",
-        transition:"color .35s",
-      }}>{brand}</div>
-      {/* Línea roja inferior creciendo */}
-      <div style={{
-        position:"absolute", bottom:0, left:0,
-        width: hov ? "100%" : "0%",
-        height:2, background:C.red,
-        transition:"width .45s cubic-bezier(.16,1,.3,1)",
-      }}/>
+    </div>
+  );
+}
+
+/* ─── PROCESO ORBITAL (sistema solar del proceso de compra) ─────────────────── */
+function ProcesoOrbital() {
+  const steps = [
+    { n:"01", nt:"Consulta",      t:"Contacto y consulta",  d:"Te asesoramos según nuestro catálogo 0km y usados, con la propuesta ideal para vos." },
+    { n:"02", nt:"Reunión",       t:"Te mostramos el auto", d:"Vemos el vehículo y nos reunimos: financiación, pagos, permutas y papeles." },
+    { n:"03", nt:"El pago",       t:"El pago",              d:"Acordamos el pago según la opción que elijas. Claro y a tu medida." },
+    { n:"04", nt:"¡A disfrutar!", t:"¡Disfrutá tu auto!",   d:"Listo, el vehículo es tuyo. A estrenarlo y disfrutarlo." },
+    { n:"05", nt:"Post-venta",    t:"Post-venta",           d:"Seguimos a tu disposición para resolver cualquier inquietud después de la compra." },
+  ];
+  const ICON = (i) => {
+    const p = { width:30, height:30, viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", strokeWidth:1.5, strokeLinecap:"round", strokeLinejoin:"round" };
+    return [
+      <svg key="0" {...p}><path d="M21 11.5a8.38 8.38 0 0 1-9 8.3 8.5 8.5 0 0 1-3.8-.9L3 20l1.1-3.2A8.38 8.38 0 0 1 3.5 11 8.5 8.5 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>,
+      <svg key="1" {...p}><path d="M5 17h14M6 17l1.2-4.8A2 2 0 0 1 9.1 11h5.8a2 2 0 0 1 1.9 1.2L18 17"/><circle cx="8" cy="17" r="1.3"/><circle cx="16" cy="17" r="1.3"/></svg>,
+      <svg key="2" {...p}><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg>,
+      <svg key="3" {...p}><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15 19 4M16 5l3 3M18.5 6.5l1.5 1.5"/></svg>,
+      <svg key="4" {...p}><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><path d="M5 13h2v5H6a2 2 0 0 1-2-2zM19 13h-2v5h1a2 2 0 0 0 2-2z"/><path d="M19 16v1.5a3 3 0 0 1-3 3h-3"/></svg>,
+    ][i];
+  };
+  const [active, setActive] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const ck = () => setIsMobile(window.innerWidth < 760);
+    ck(); window.addEventListener("resize", ck);
+    return () => window.removeEventListener("resize", ck);
+  }, []);
+
+  if (isMobile) {
+    return (
+      <div style={{ display:"flex", flexDirection:"column", gap:1, background:C.borderStrong }}>
+        {steps.map((s,i) => (
+          <div key={i} style={{ background:C.zinc, padding:"24px 22px", display:"flex", gap:16, alignItems:"flex-start" }}>
+            <div style={{ width:48, height:48, borderRadius:"50%", border:`1px solid ${C.red}`, color:C.red, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{ICON(i)}</div>
+            <div>
+              <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:6, fontFamily:"sans-serif" }}>Paso {s.n}</div>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom:7 }}>{s.t}</div>
+              <div style={{ fontSize:12.5, fontWeight:300, lineHeight:1.7, color:C.muted, fontFamily:"sans-serif" }}>{s.d}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const SIZE = 580, R = 230, CC = SIZE / 2;
+  const angles = [-90, -18, 54, 126, 198];
+  return (
+    <div style={{ position:"relative", width:SIZE, height:SIZE, margin:"0 auto", maxWidth:"100%" }}>
+      <div className="orbit-spin" style={{ position:"absolute", left:CC-R, top:CC-R, width:R*2, height:R*2, borderRadius:"50%", border:"1px solid rgba(255,255,255,.07)" }}>
+        <div style={{ position:"absolute", top:-3.5, left:"50%", width:7, height:7, borderRadius:"50%", background:C.red, boxShadow:"0 0 14px 2px rgba(220,38,38,.8)", transform:"translateX(-50%)" }}/>
+        <div style={{ position:"absolute", bottom:-2.5, left:"32%", width:5, height:5, borderRadius:"50%", background:"rgba(255,255,255,.5)" }}/>
+      </div>
+      <div style={{ position:"absolute", left:CC-160, top:CC-160, width:320, height:320, borderRadius:"50%", background:"radial-gradient(circle, rgba(220,38,38,.15), transparent 62%)", pointerEvents:"none" }}/>
+      <div style={{ position:"absolute", left:CC-130, top:CC-130, width:260, height:260, borderRadius:"50%", background:"radial-gradient(circle at 50% 35%, #1a1d24, #0c0e13 70%)", border:"1px solid rgba(255,255,255,.08)", boxShadow:"inset 0 0 40px rgba(0,0,0,.6), 0 0 60px rgba(220,38,38,.12)", display:"flex", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"0 32px" }}>
+        <div key={active} style={{ animation:"fadeUp .45s both" }}>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, letterSpacing:3, color:C.red, marginBottom:6 }}>PASO {steps[active].n}</div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:27, fontWeight:900, textTransform:"uppercase", color:C.white, lineHeight:1, marginBottom:12, letterSpacing:-.5 }}>{steps[active].t}</div>
+          <div style={{ fontSize:12.5, fontWeight:300, lineHeight:1.65, color:"rgba(245,245,245,.6)", fontFamily:"sans-serif" }}>{steps[active].d}</div>
+        </div>
+      </div>
+      {steps.map((s,i) => {
+        const a = angles[i] * Math.PI / 180;
+        const x = CC + R * Math.cos(a), y = CC + R * Math.sin(a);
+        const on = i === active;
+        return (
+          <div key={i} onMouseEnter={() => setActive(i)} style={{ position:"absolute", left:x-50, top:y-50, width:100, display:"flex", flexDirection:"column", alignItems:"center", gap:10, cursor:"pointer" }}>
+            <div style={{ width:66, height:66, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", background: on?C.red:"rgba(20,22,28,.92)", color: on?"#fff":"rgba(245,245,245,.55)", border:`1px solid ${on?C.red:"rgba(255,255,255,.12)"}`, boxShadow: on?"0 0 26px rgba(220,38,38,.6)":"none", transform: on?"scale(1.12)":"scale(1)", transition:"all .4s cubic-bezier(.16,1,.3,1)" }}>{ICON(i)}</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:12.5, fontWeight:700, textTransform:"uppercase", letterSpacing:1, color: on?C.white:"rgba(245,245,245,.5)", transition:"color .35s", textAlign:"center", lineHeight:1 }}>{s.nt}</div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -933,12 +1019,13 @@ function ClientesCarousel({ fotos = [] }) {
     <section style={{ padding:"80px 0 60px", background:C.carbon, borderTop:`1px solid ${C.border}`, overflow:"hidden" }}>
       <Reveal><div style={{ padding:"0 5vw", marginBottom:40 }}>
         <Tag>Clientes felices</Tag>
-        <SecH>Entregas <Red>recientes</Red></SecH>
+        <SecH>Una gran <Red>comunidad</Red></SecH>
+        <p style={{ fontSize:14, fontWeight:300, color:"rgba(245,245,245,.52)", lineHeight:1.75, maxWidth:560, marginTop:14, fontFamily:"sans-serif" }}>Somos una gran comunidad. Muchos clientes ya confían en nuestros servicios y productos. <span style={{ color:C.white, fontWeight:400 }}>¿Qué esperás para sumarte?</span></p>
       </div></Reveal>
       <div style={{ display:"flex", width:"max-content", animation:"marquee 50s linear infinite", gap:3 }}>
         {doubled.map((f,i) => (
-          <div key={i} style={{ flexShrink:0, width:300, height:220, overflow:"hidden" }}>
-            <img src={f.url} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", filter:"brightness(.82) saturate(.9)", transition:"filter .4s" }}
+          <div key={i} style={{ flexShrink:0, width:238, height:330, overflow:"hidden" }}>
+            <img src={f.url} alt="" loading="lazy" style={{ width:"100%", height:"100%", objectFit:"cover", filter:"brightness(.82) saturate(.9)", transition:"filter .4s" }}
               onMouseEnter={e => e.currentTarget.style.filter="brightness(1) saturate(1)"}
               onMouseLeave={e => e.currentTarget.style.filter="brightness(.82) saturate(.9)"}/>
           </div>
@@ -1510,6 +1597,20 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
   const heroLift = heroScroll * -0.18; // texto sube
   const carLift  = heroScroll * 0.28;  // auto baja
 
+  // Hero: auto 0km que rota solo + se inclina en 3D siguiendo el mouse
+  const [heroCar, setHeroCar] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setHeroCar(c => (c + 1) % HERO_CARS.length), 4800);
+    return () => clearInterval(t);
+  }, []);
+  const [tilt, setTilt] = useState({ rx: 0, ry: 0 });
+  const onHeroMove = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    setTilt({ rx: -py * 9, ry: px * 15 });
+  };
+
   // Título split por palabra para animación con stagger
   const titleLines = [
     { words: ["Tu", "próximo"], red: false },
@@ -1522,7 +1623,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
   return (
     <>
       {/* ── HERO ── */}
-      <section style={{ position:"relative", height:"100vh", minHeight:680, display:"flex", alignItems:"center", overflow:"hidden" }}>
+      <section onMouseMove={onHeroMove} onMouseLeave={() => setTilt({ rx:0, ry:0 })} style={{ position:"relative", height:"100vh", minHeight:680, display:"flex", alignItems:"center", overflow:"hidden" }}>
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(135deg,#050505 0%,#100808 50%,#0c0c0c 100%)" }}/>
         <div style={{ position:"absolute", inset:0, backgroundImage:"repeating-linear-gradient(45deg,rgba(220,38,38,.01) 0,rgba(220,38,38,.01) 1px,transparent 1px,transparent 74px)", pointerEvents:"none" }}/>
         <Particles/>
@@ -1543,6 +1644,18 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
           ))}
         </div>
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right,rgba(5,5,5,1) 18%,rgba(5,5,5,.55) 46%,rgba(5,5,5,.08) 100%)" }}/>
+
+        {/* Auto 0km: flota sobre las líneas y se inclina en 3D con el mouse */}
+        <div style={{ position:"absolute", right:0, top:0, bottom:0, width:"54%", zIndex:1, perspective:1300, pointerEvents:"none", transform:`translate3d(0, ${carLift*0.3}px, 0)` }}>
+          <div style={{ position:"absolute", bottom:"12%", left:"50%", width:"48%", height:24, transform:"translateX(-50%)", background:"radial-gradient(ellipse, rgba(0,0,0,.5), transparent 72%)", filter:"blur(8px)" }}/>
+          <div style={{ position:"absolute", inset:"6% 5% 12% 5%", transformStyle:"preserve-3d", transform:`rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`, transition:"transform .2s ease-out" }}>
+            <div className="hero-float" style={{ position:"absolute", inset:0 }}>
+              {HERO_CARS.map((c, i) => (
+                <img key={c.src} src={c.src} alt="" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", transform:`scale(${c.scale})`, opacity: i === heroCar ? 1 : 0, transition:"opacity 1s ease-in-out", filter:"drop-shadow(0 26px 36px rgba(0,0,0,.55))" }}/>
+              ))}
+            </div>
+          </div>
+        </div>
 
         <div style={{
           position:"relative", zIndex:2, padding:"0 5vw", maxWidth:820, paddingTop:0,
@@ -1616,7 +1729,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
           </div>
           <Reveal delay={.2}>
             <p style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif", letterSpacing:.3, lineHeight:1.6, maxWidth:340 }}>
-              Trabajamos con las marcas líderes del mercado argentino. Pasá el cursor sobre cada una.
+              Trabajamos con las marcas líderes del mercado argentino.
             </p>
           </Reveal>
         </div>
@@ -1660,15 +1773,14 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
         }}/>
         <div style={{ position:"relative", zIndex:1 }}>
           <Reveal><Tag>Por qué elegirnos</Tag></Reveal>
-          <Reveal delay={.1}><SecH style={{ marginBottom:12 }}>Nuestro <Red>compromiso</Red></SecH></Reveal>
-          <Reveal delay={.15}><p style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif", marginBottom:44, letterSpacing:.5 }}>Pasá el cursor sobre cada tarjeta para conocer más.</p></Reveal>
+          <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Nuestro <Red>compromiso</Red></SecH></Reveal>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(198px,1fr))", gap:1, background:C.borderStrong }}>
-            {[{i:"🔍",t:"Stock seleccionado",d:"Cada auto pasa una revisión rigurosa antes de entrar al catálogo. Solo publicamos lo que recomendaríamos a un amigo."},
-              {i:"📋",t:"Transparencia total",d:"Historial completo y documentación en orden. Sin letras chicas, sin sorpresas. Lo que acordamos es lo que firmamos."},
-              {i:"💳",t:"Financiación",d:"Trabajamos con múltiples entidades. Te armamos el plan de cuotas que mejor se ajuste a tus posibilidades."},
-              {i:"🔄",t:"Permutas",d:"Tomamos tu auto como parte de pago al mejor precio del mercado. Simple, rápido y sin vueltas."},
-              {i:"⚡",t:"Gestión ágil",d:"Transferencia y trámites resueltos rápido. Vos solo te preocupás por estrenar tu nuevo vehículo."},
-              {i:"📍",t:"Presencia local",d:"Galería Mercato, Yerba Buena. Atención presencial, personalizada y sin apuros. También por WhatsApp."},
+            {[{i:"stock",t:"Stock seleccionado",d:"Cada auto pasa una revisión rigurosa antes de entrar al catálogo. Solo publicamos lo que recomendaríamos a un amigo."},
+              {i:"transparencia",t:"Transparencia total",d:"Historial completo y documentación en orden. Sin letras chicas, sin sorpresas. Lo que acordamos es lo que firmamos."},
+              {i:"financiacion",t:"Financiación",d:"Trabajamos con múltiples entidades. Te armamos el plan de cuotas que mejor se ajuste a tus posibilidades."},
+              {i:"permutas",t:"Permutas",d:"Tomamos tu auto como parte de pago al mejor precio del mercado. Simple, rápido y sin vueltas."},
+              {i:"agil",t:"Gestión ágil",d:"Transferencia y trámites resueltos rápido. Vos solo te preocupás por estrenar tu nuevo vehículo."},
+              {i:"local",t:"Presencia local",d:"Galería Mercato, Yerba Buena. Atención presencial, personalizada y sin apuros. También por WhatsApp."},
             ].map((s,i) => <Reveal key={i} delay={i*.055}><FlipCard s={s}/></Reveal>)}
           </div>
         </div>
@@ -1680,24 +1792,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
       <section style={{ padding:"100px 5vw", background:C.bg }}>
         <Reveal><Tag>Cómo funciona</Tag></Reveal>
         <Reveal delay={.1}><SecH style={{ marginBottom:56 }}>El proceso de <Red>compra</Red></SecH></Reveal>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(210px,1fr))", gap:1, background:C.bg }}>
-          {[
-            { n:"01", t:"Elegí tu auto",    d:"Explorá nuestro stock online o visitanos en Galería Mercato, Yerba Buena. Amplio catálogo 0km y usados." },
-            { n:"02", t:"Consultanos",       d:"Escribinos por WhatsApp o completá el formulario. Respondemos en menos de 2 horas, lunes a sábado." },
-            { n:"03", t:"Cerramos el trato", d:"Acordamos precio, método de pago y condiciones. Sin sorpresas ni letras chicas. Tu tranquilidad primero." },
-            { n:"04", t:"¡A manejar!",       d:"Trámites en orden, transferencia ágil. Ya podés salir manejando tu nuevo vehículo. Así de simple." },
-          ].map((s, i) => (
-            <Reveal key={i} delay={i * .09}>
-              <div style={{ background:C.zinc, padding:"36px 28px", position:"relative", overflow:"hidden", height:"100%" }}>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:88, fontWeight:900, color:"rgba(220,38,38,.055)", lineHeight:1, position:"absolute", top:4, right:10, letterSpacing:-5, pointerEvents:"none", userSelect:"none" }}>{s.n}</div>
-                <div style={{ width:32, height:3, background:C.red, marginBottom:20 }}/>
-                <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:10, fontFamily:"sans-serif" }}>Paso {s.n}</div>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:21, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom:12, lineHeight:1.05, position:"relative" }}>{s.t}</div>
-                <div style={{ fontSize:12, fontWeight:300, lineHeight:1.72, color:C.muted, fontFamily:"sans-serif", position:"relative" }}>{s.d}</div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+        <ProcesoOrbital/>
         <Reveal delay={.4}>
           <div style={{ marginTop:38, display:"flex", gap:13, flexWrap:"wrap" }}>
             <Btn primary onClick={() => navTo("stock")}>Ver stock disponible</Btn>
@@ -2082,6 +2177,63 @@ function StockPage({ stockData, setSelectedCar, loading }) {
 }
 
 /* ─── NOSOTROS PAGE ──────────────────────────────────────────────────────────── */
+/* ─── HISTORIA TIMELINE (recorrido) ─────────────────────────────────────────── */
+function HistoriaTimeline() {
+  const hitos = [
+    { k:"2022", t:"El comienzo",           d:"Ale y Gonchi formalizan años de pasión y de compra-venta de autos. Nace NordenCars." },
+    { k:"Sede", t:"Oficina en Yerba Buena", d:"Abrimos en Galería Mercato, Casco Viejo: atención presencial, personalizada y sin apuros." },
+    { k:"+100", t:"Vehículos entregados",   d:"Más de cien clientes ya eligieron NordenCars para su próximo 0km o usado." },
+    { k:"Hoy",  t:"Una comunidad",          d:"Cientos de personas que confían en nuestro servicio. Y vos, ¿qué esperás para sumarte?" },
+  ];
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const ck = () => setIsMobile(window.innerWidth < 760);
+    ck(); window.addEventListener("resize", ck);
+    return () => window.removeEventListener("resize", ck);
+  }, []);
+
+  const Dot = ({ k, size = 46 }) => (
+    <div style={{ width:size, height:size, borderRadius:"50%", background:C.bg, border:`1px solid ${C.red}`, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 0 22px rgba(220,38,38,.35)" }}>
+      <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:12, fontWeight:900, color:C.red, letterSpacing:-.3 }}>{k}</span>
+    </div>
+  );
+  const Card = ({ h, align }) => (
+    <div style={{ background:C.zinc, border:`1px solid ${C.border}`, padding:"20px 22px", textAlign:align, borderLeft: align==="left"?`2px solid ${C.red}`:undefined, borderRight: align==="right"?`2px solid ${C.red}`:undefined }}>
+      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom:8 }}>{h.t}</div>
+      <div style={{ fontSize:12.5, fontWeight:300, lineHeight:1.7, color:C.muted, fontFamily:"sans-serif" }}>{h.d}</div>
+    </div>
+  );
+
+  return (
+    <div style={{ marginTop:isMobile?70:96 }}>
+      <Reveal><Tag>Nuestro camino</Tag></Reveal>
+      <Reveal delay={.1}><SecH style={{ marginBottom:isMobile?36:54 }}>La <Red>historia</Red></SecH></Reveal>
+      <div style={{ position:"relative", paddingLeft:isMobile?34:0 }}>
+        <div style={{ position:"absolute", left:isMobile?22:"50%", top:6, bottom:6, width:2, background:`linear-gradient(to bottom, transparent, ${C.red} 12%, ${C.red} 88%, transparent)`, transform:isMobile?"none":"translateX(-50%)" }}/>
+        {hitos.map((h,i) => {
+          const left = i % 2 === 0;
+          if (isMobile) return (
+            <Reveal key={i} delay={i*.07}>
+              <div style={{ position:"relative", marginBottom:24 }}>
+                <div style={{ position:"absolute", left:-34, top:0 }}><Dot k={h.k} size={44}/></div>
+                <div style={{ marginLeft:22 }}><Card h={h} align="left"/></div>
+              </div>
+            </Reveal>
+          );
+          return (
+            <Reveal key={i} delay={i*.08}>
+              <div style={{ display:"flex", justifyContent: left?"flex-start":"flex-end", marginBottom:30, position:"relative" }}>
+                <div style={{ position:"absolute", left:"50%", top:16, transform:"translateX(-50%)", zIndex:2 }}><Dot k={h.k}/></div>
+                <div style={{ width:"43%" }}><Card h={h} align={left?"left":"right"}/></div>
+              </div>
+            </Reveal>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function NosotrosPage({ navTo }) {
   return (
     <div style={{ paddingTop:68 }}>
@@ -2123,6 +2275,8 @@ function NosotrosPage({ navTo }) {
             </Reveal>
           </div>
         </div>
+
+        <HistoriaTimeline/>
 
         {/* Photo grid */}
         <div style={{ marginTop:72, display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:1, background:C.border }}>
@@ -2250,7 +2404,7 @@ export default function App() {
   const [config, setConfig] = useState({});
   const [loadingStock, setLoadingStock] = useState(true);
   const [appLoading, setAppLoading] = useState(true);
-  const [fotosClientes, setFotosClientes] = useState([]);
+  const [fotosClientes, setFotosClientes] = useState(CLIENTES_LOCAL);
   const [videosData, setVideosData] = useState([]);
 
   useEffect(() => {
@@ -2322,7 +2476,7 @@ export default function App() {
       }
     });
     // Cargar fotos clientes y videos en paralelo
-    db.sel("fotos_clientes","activo=eq.true&order=orden.asc,created_at.desc").then(d => { if (Array.isArray(d)) setFotosClientes(d); });
+    db.sel("fotos_clientes","activo=eq.true&order=orden.asc,created_at.desc").then(d => { if (Array.isArray(d) && d.length) setFotosClientes(d); });
     db.sel("videos","activo=eq.true&order=orden.asc,created_at.desc").then(d => { if (Array.isArray(d)) setVideosData(d); });
     // Load stock + fotos desde el ERP (fuente unica de verdad).
     // Si por algun motivo el ERP no responde, mantenemos STOCK_LOCAL como
