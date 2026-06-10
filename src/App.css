@@ -118,10 +118,9 @@
     position: static !important;
   }
 
-  /* Numbers bar: wrap 2x2 */
-  .num-bar { flex-wrap: wrap !important; }
+  /* Numbers bar: 2x2 real en mobile */
+  .num-bar { display: grid !important; grid-template-columns: 1fr 1fr !important; }
   .num-bar > div {
-    flex: 0 0 50% !important;
     padding: 22px 10px !important;
   }
 }

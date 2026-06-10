@@ -267,6 +267,13 @@ function CustomCursor() {
   const ringRef = useRef(null);
   const labelRef = useRef(null);
   useEffect(() => {
+    // En pantallas táctiles no hay cursor: ocultamos el punto/anillo y no corremos nada.
+    if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) {
+      if (dotRef.current) dotRef.current.style.display = "none";
+      if (ringRef.current) ringRef.current.style.display = "none";
+      if (labelRef.current) labelRef.current.style.display = "none";
+      return;
+    }
     let x = -200, y = -200, rx = -200, ry = -200, raf;
     let clicking = false;
     let hoverState = "default"; // "default" | "interactive" | "magnetic"
@@ -910,7 +917,7 @@ function FlipBrandCard({ brand }) {
     return (
       <div style={{ height:120, background:"linear-gradient(180deg,#161616,#0e0e0e)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:12, padding:14, borderBottom:`2px solid ${C.red}` }}>
         {imgOk
-          ? <img src={logoSrc} alt={brand} onError={() => setImgOk(false)} style={{ maxWidth:"60%", maxHeight:38, objectFit:"contain", filter:"brightness(0) invert(1)" }}/>
+          ? <img src={logoSrc} alt={brand} onError={() => setImgOk(false)} style={{ maxWidth:"70%", maxHeight:50, objectFit:"contain", filter:"brightness(0) invert(1)" }}/>
           : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:900, color:C.white }}>{brand}</span>}
         <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:2, color:"rgba(245,245,245,.55)" }}>{brand}</span>
       </div>
@@ -1645,7 +1652,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
   return (
     <>
       {/* ── HERO ── */}
-      <section onMouseMove={onHeroMove} onMouseLeave={() => setTilt({ rx:0, ry:0 })} style={{ position:"relative", height:"100vh", minHeight: isMobile ? 560 : 680, display:"flex", alignItems: isMobile ? "flex-start" : "center", overflow:"hidden" }}>
+      <section onMouseMove={onHeroMove} onMouseLeave={() => setTilt({ rx:0, ry:0 })} style={{ position:"relative", height:"100vh", minHeight: isMobile ? 820 : 680, display:"flex", alignItems: isMobile ? "flex-start" : "center", overflow:"hidden" }}>
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(135deg,#050505 0%,#100808 50%,#0c0c0c 100%)" }}/>
         <div style={{ position:"absolute", inset:0, backgroundImage:"repeating-linear-gradient(45deg,rgba(220,38,38,.01) 0,rgba(220,38,38,.01) 1px,transparent 1px,transparent 74px)", pointerEvents:"none" }}/>
         <Particles/>
@@ -1668,7 +1675,9 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right,rgba(5,5,5,1) 18%,rgba(5,5,5,.55) 46%,rgba(5,5,5,.08) 100%)" }}/>
 
         {/* Auto 0km: flota sobre las líneas y se inclina en 3D con el mouse */}
-        <div style={{ display: isMobile ? "none" : "block", position:"absolute", right:0, top:0, bottom:0, width:"54%", zIndex:1, perspective:1300, pointerEvents:"none", transform:`translate3d(0, ${carLift*0.3}px, 0)` }}>
+        <div style={isMobile
+          ? { position:"absolute", left:"5%", right:"5%", top:"60%", bottom:"4%", zIndex:1, perspective:1000, pointerEvents:"none" }
+          : { position:"absolute", right:0, top:0, bottom:0, width:"54%", zIndex:1, perspective:1300, pointerEvents:"none", transform:`translate3d(0, ${carLift*0.3}px, 0)` }}>
           <div style={{ position:"absolute", bottom:"12%", left:"50%", width:"48%", height:24, transform:"translateX(-50%)", background:"radial-gradient(ellipse, rgba(0,0,0,.5), transparent 72%)", filter:"blur(8px)" }}/>
           <div style={{ position:"absolute", inset:"6% 5% 12% 5%", transformStyle:"preserve-3d", transform:`rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`, transition:"transform .2s ease-out" }}>
             <div className="hero-float" style={{ position:"absolute", inset:0 }}>
