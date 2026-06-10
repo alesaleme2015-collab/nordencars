@@ -18,6 +18,13 @@ const IMG_BMW_INT = "/images/img_bmw_int.jpg";
 // Se centraliza acá para no volver a hardcodear el número en cada CTA.
 const WA_NORDEN      = "5493816375262";
 const WA_NORDEN_DISP = "+54 9 381 637-5262";
+// Barras del fondo del hero (líneas de luz animadas, estilo "shader").
+// Valores deterministas: cada barra titila con su propio ritmo, altura y desfase.
+const HERO_BARS = Array.from({ length: 18 }, (_, i) => ({
+  h: (42 + Math.abs(Math.sin(i * 1.3)) * 44).toFixed(0),
+  dur: (3.8 + (i % 5) * 0.7).toFixed(1),
+  delay: (-Math.abs(Math.sin(i * 0.7)) * 4).toFixed(2),
+}));
 const SUPA_URL       = "https://crwcshjhzwbqpxsdhrrm.supabase.co";
 const SUPA_KEY       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyd2NzaGpoendicXB4c2RocnJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODg1NzUsImV4cCI6MjA5MTA2NDU3NX0.dmpr2AR38XszZzbuZuJkQUyBLo8t7czRiRmthGMt8sg";
 
@@ -1521,16 +1528,20 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
         <Particles/>
         {/* Left accent */}
         <div style={{ position:"absolute", left:0, top:0, bottom:0, width:3, background:"linear-gradient(to bottom,transparent,#DC2626 22%,#DC2626 78%,transparent)" }}/>
-        {/* BG car image con parallax + drift */}
-        <div className="hero-bg-drift" style={{
-          position:"absolute", right:0, top:0, bottom:0, width:"65%",
-          backgroundImage:`url(${IMG_BMW_FULL})`, backgroundSize:"cover", backgroundPosition:"center center",
-          maskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)",
-          WebkitMaskImage:"linear-gradient(to right,transparent,rgba(0,0,0,.05) 12%,black 38%)",
-          filter:"brightness(.55) saturate(.7)",
-          transform:`translate3d(0, ${carLift}px, 0) scale(1.04)`,
-          willChange:"transform",
-        }}/>
+        {/* BG del hero: líneas de luz animadas (estilo shader) */}
+        <div style={{
+          position:"absolute", inset:0, display:"flex", gap:"1.4vw",
+          justifyContent:"center", alignItems:"center", padding:"0 4vw",
+          transform:`translate3d(0, ${carLift*0.22}px, 0)`, willChange:"transform",
+        }}>
+          {HERO_BARS.map((b, i) => (
+            <div key={i} style={{
+              flex:1, height:`${b.h}%`, transformOrigin:"center", borderRadius:3, opacity:.2,
+              background:"linear-gradient(to top, transparent, #b81026 26%, #ff3b46 54%, #ffd2d6 80%, #ffffff 93%, transparent)",
+              animation:`heroLineShimmer ${b.dur}s ease-in-out ${b.delay}s infinite`,
+            }}/>
+          ))}
+        </div>
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right,rgba(5,5,5,1) 18%,rgba(5,5,5,.55) 46%,rgba(5,5,5,.08) 100%)" }}/>
 
         <div style={{

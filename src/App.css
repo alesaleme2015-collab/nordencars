@@ -55,6 +55,11 @@
   88%  { opacity: 1; }
   100% { transform: translate3d(140vw, 0, 0) rotate(-8deg); opacity: 0; }
 }
+/* Líneas de luz del hero (estilo shader): cada barra titila en alto y opacidad */
+@keyframes heroLineShimmer {
+  0%, 100% { transform: scaleY(.36); opacity: .14; }
+  50%      { transform: scaleY(1);   opacity: .85; }
+}
 
 /* ─── UTILITY CLASSES ───────────────────────────────────────────── */
 .hero-bg-drift {
