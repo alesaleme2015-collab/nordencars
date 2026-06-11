@@ -837,6 +837,7 @@ function ServiceIcon({ name, size = 30 }) {
     case "permutas":      return <svg {...p}><path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/></svg>;
     case "agil":          return <svg {...p}><path d="M13 2.5 5 13h6l-1 8.5L19 11h-6z"/></svg>;
     case "local":         return <svg {...p}><path d="M12 21.5s-6.5-5.5-6.5-10.5a6.5 6.5 0 1 1 13 0c0 5-6.5 10.5-6.5 10.5z"/><circle cx="12" cy="11" r="2.3"/></svg>;
+    case "inspeccion":    return <svg {...p}><path d="M9 4H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/><rect x="9" y="2.5" width="6" height="3.5" rx="1"/><path d="m9.5 13 1.8 1.8 3.5-3.9"/></svg>;
     default: return null;
   }
 }
@@ -1807,6 +1808,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
           <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Nuestro <Red>compromiso</Red></SecH></Reveal>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(198px,1fr))", gap:1, background:C.borderStrong }}>
             {[{i:"stock",t:"Stock seleccionado",d:"Cada auto pasa una revisión rigurosa antes de entrar al catálogo. Solo publicamos lo que recomendaríamos a un amigo."},
+              {i:"inspeccion",t:"Inspección pre-compra",d:"Revisión técnica completa del vehículo: te mostramos el estado real, sin sorpresas, antes de que compres."},
               {i:"transparencia",t:"Transparencia total",d:"Historial completo y documentación en orden. Sin letras chicas, sin sorpresas. Lo que acordamos es lo que firmamos."},
               {i:"financiacion",t:"Financiación",d:"Trabajamos con múltiples entidades. Te armamos el plan de cuotas que mejor se ajuste a tus posibilidades."},
               {i:"permutas",t:"Permutas",d:"Tomamos tu auto como parte de pago al mejor precio del mercado. Simple, rápido y sin vueltas."},
@@ -2385,6 +2387,17 @@ function ContactoPage({ config, navTo }) {
             <Reveal><Tag>WhatsApp directo</Tag></Reveal>
             <Reveal delay={.1}><p style={{ fontSize:13, fontWeight:300, color:"rgba(245,245,245,.44)", lineHeight:1.7, marginBottom:30, fontFamily:"sans-serif" }}>Escribinos directo por WhatsApp. Respondemos a la brevedad.</p></Reveal>
             <Reveal delay={.2}><WaBtn href={`https://wa.me/${WA_NORDEN}?text=Hola%20Norden%20Cars%2C%20vengo%20de%20la%20web%20de%20Norden%20Cars...`} name="Norden Cars" phone={WA_NORDEN_DISP}/></Reveal>
+            <Reveal delay={.3}>
+              <div style={{ marginTop:14, display:"flex", alignItems:"center", gap:18, padding:"16px 18px", background:C.zinc, border:`1px solid ${C.border}` }}>
+                <div style={{ background:"#fff", padding:8, borderRadius:4, flexShrink:0, lineHeight:0 }}>
+                  <img src="/images/qr-whatsapp.png" alt="QR WhatsApp Norden Cars" style={{ width:96, height:96, display:"block" }}/>
+                </div>
+                <div>
+                  <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:6, fontFamily:"sans-serif" }}>Escaneá y escribinos</div>
+                  <div style={{ fontSize:13, fontWeight:300, color:"rgba(245,245,245,.6)", lineHeight:1.6, fontFamily:"sans-serif" }}>Apuntá la cámara de tu celular al código y se abre el chat de WhatsApp.</div>
+                </div>
+              </div>
+            </Reveal>
             <Reveal delay={.4}>
               <div style={{ marginTop:26, padding:"20px", background:C.zinc, border:`1px solid ${C.border}` }}>
                 <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:10, fontFamily:"sans-serif" }}>Ubicación</div>
