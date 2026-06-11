@@ -1769,7 +1769,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
           display:"grid",
           gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",
           gap:1,
-          background:"rgba(255,255,255,.04)",
+          background:"transparent",
         }}>
           {MARCAS_0KM.map((m,i) => <Reveal key={m} delay={i*.022}><FlipBrandCard brand={m}/></Reveal>)}
         </div>
@@ -1806,7 +1806,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
         <div style={{ position:"relative", zIndex:1 }}>
           <Reveal><Tag>Por qué elegirnos</Tag></Reveal>
           <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Nuestro <Red>compromiso</Red></SecH></Reveal>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(198px,1fr))", gap:1, background:C.borderStrong }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(198px,1fr))", gap:1, background:"transparent" }}>
             {[{i:"stock",t:"Stock seleccionado",d:"Cada auto pasa una revisión rigurosa antes de entrar al catálogo. Solo publicamos lo que recomendaríamos a un amigo."},
               {i:"inspeccion",t:"Inspección pre-compra",d:"Revisión técnica completa del vehículo: te mostramos el estado real, sin sorpresas, antes de que compres."},
               {i:"transparencia",t:"Transparencia total",d:"Historial completo y documentación en orden. Sin letras chicas, sin sorpresas. Lo que acordamos es lo que firmamos."},
