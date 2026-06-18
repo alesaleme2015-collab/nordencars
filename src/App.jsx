@@ -2447,7 +2447,7 @@ export default function App() {
   const [stockData, setStockData] = useState(STOCK_LOCAL);
   const [config, setConfig] = useState({});
   const [loadingStock, setLoadingStock] = useState(true);
-  const [appLoading, setAppLoading] = useState(true);
+  const [appLoading, setAppLoading] = useState(() => { try { return !sessionStorage.getItem("nc_splash_seen"); } catch { return true; } });
   const [fotosClientes, setFotosClientes] = useState(CLIENTES_LOCAL);
   const [videosData, setVideosData] = useState([]);
 
@@ -2456,6 +2456,10 @@ export default function App() {
     window.addEventListener("scroll", h);
     return () => window.removeEventListener("scroll", h);
   }, []);
+
+  // Splash una sola vez por sesión de pestaña: 1ª carga se ve; refresh / volver al
+  // menú no lo repite; al cerrar la pestaña y volver, se ve de nuevo. (sessionStorage)
+  useEffect(() => { try { sessionStorage.setItem("nc_splash_seen", "1"); } catch {} }, []);
 
   // Smooth scroll mejorado con rueda + lerp para sensación premium
   useEffect(() => {
