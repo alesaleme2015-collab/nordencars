@@ -768,12 +768,28 @@ function CarCard({ car, onClick }) {
 /* ─── CAR MODAL ─────────────────────────────────────────────────────────────── */
 function CarModal({ car, onClose }) {
   const [idx, setIdx] = useState(0);
+  const [copied, setCopied] = useState(false);
   useEffect(() => { document.body.style.overflow="hidden"; return () => { document.body.style.overflow=""; }; }, []);
   if (!car) return null;
   const fotos = car.fotos || [];
   const precio = (car.precio_ars || car.precio_usd) ? `$ ${Number(car.precio_ars || car.precio_usd).toLocaleString("es-AR")}` : "Consultar";
   const km = car.kilometraje===0 ? "0 km" : `${Number(car.kilometraje).toLocaleString("es-AR")} km`;
   const carEnc = encodeURIComponent(`${car.marca} ${car.modelo} ${car.anio}`);
+
+  // Compartir esta publicación: link directo al auto (?auto=<id>) para mandar por
+  // WhatsApp/redes. En celular abre el menú nativo; en PC copia el link.
+  const shareUrl = `${typeof window !== "undefined" ? window.location.origin : "https://nordencars.com.ar"}/?auto=${car.id}`;
+  const shareMsg = `Mirá este ${car.marca} ${car.modelo} ${car.anio} en Norden Cars — ${precio}`;
+  const doShare = async () => {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try { await navigator.share({ title: `${car.marca} ${car.modelo}`, text: shareMsg, url: shareUrl }); } catch {}
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(`${shareMsg}\n${shareUrl}`);
+      setCopied(true); setTimeout(() => setCopied(false), 2200);
+    } catch { try { window.prompt("Copiá el link para compartir:", shareUrl); } catch {} }
+  };
   return (
     <div onClick={onClose} style={{ position:"fixed", inset:0, zIndex:900, background:"rgba(0,0,0,.9)", display:"flex", alignItems:"center", justifyContent:"center", padding:20, backdropFilter:"blur(8px)" }}>
       <div onClick={e => e.stopPropagation()} style={{ background:C.zinc, width:"100%", maxWidth:820, maxHeight:"90vh", overflow:"auto", border:`1px solid ${C.border2}` }}>
@@ -816,9 +832,14 @@ function CarModal({ car, onClose }) {
           </div>
           <div style={{ display:"flex", gap:9, flexWrap:"wrap" }}>
             <a href={`https://wa.me/${WA_NORDEN}?text=Hola%20Norden%20Cars%2C%20me%20interesa%20el%20${carEnc}`} target="_blank" rel="noreferrer"
-              style={{ flex:1, background:C.red, color:"#fff", padding:"15px", textAlign:"center", fontSize:10, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600, textDecoration:"none", display:"block", minWidth:150 }}>
+              style={{ flex:1, background:C.red, color:"#fff", padding:"15px", textAlign:"center", fontSize:10, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600, textDecoration:"none", display:"flex", alignItems:"center", justifyContent:"center", gap:9, minWidth:150 }}>
               Consultar por WhatsApp
             </a>
+            <button onClick={doShare} data-cursor-label="Compartir"
+              style={{ flex:"0 0 auto", background:"transparent", color:C.white, padding:"15px 22px", border:`1px solid ${C.border2}`, cursor:"pointer", fontSize:10, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600, display:"flex", alignItems:"center", justifyContent:"center", gap:9, minWidth:132 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              {copied ? "¡Copiado!" : "Compartir"}
+            </button>
           </div>
         </div>
       </div>
@@ -2460,6 +2481,19 @@ export default function App() {
   // Splash una sola vez por sesión de pestaña: 1ª carga se ve; refresh / volver al
   // menú no lo repite; al cerrar la pestaña y volver, se ve de nuevo. (sessionStorage)
   useEffect(() => { try { sessionStorage.setItem("nc_splash_seen", "1"); } catch {} }, []);
+
+  // Deep-link: si la URL trae ?auto=<id> (link compartido), abrir ese vehículo al cargar.
+  const deepLinkDone = useRef(false);
+  useEffect(() => {
+    if (deepLinkDone.current) return;
+    let id = null;
+    try { id = new URLSearchParams(window.location.search).get("auto"); } catch {}
+    if (!id) { deepLinkDone.current = true; return; }
+    if (stockData && stockData.length) {
+      const car = stockData.find(c => String(c.id) === String(id));
+      if (car) { setSelectedCar(car); setPage("stock"); deepLinkDone.current = true; }
+    }
+  }, [stockData]);
 
   // Smooth scroll mejorado con rueda + lerp para sensación premium
   useEffect(() => {
