@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
+import HistoriaCompra from "./HistoriaCompra";
 import './App.css';
 
 // ═══════════════════════════════════════════════════════════
@@ -1632,6 +1633,7 @@ function HeroStatItem({ pre, n, suf, l, last }) {
 function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, videosData, abrirTeilen }) {
   const preview = stockData.filter(v => v.destacado).slice(0,4);
   const shown = preview.length >= 2 ? preview : stockData.slice(0,4);
+  const mob = useIsMobile();
 
   // Parallax del hero: leemos scrollY para mover el auto + opacar texto al scrollear
   const [heroScroll, setHeroScroll] = useState(0);
@@ -1870,9 +1872,9 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
 
       {/* ── PROCESO DE COMPRA ── */}
       <section style={{ padding:"100px 5vw", background:C.bg }}>
-        <Reveal><Tag>Cómo funciona</Tag></Reveal>
-        <Reveal delay={.1}><SecH style={{ marginBottom:56 }}>El proceso de <Red>compra</Red></SecH></Reveal>
-        <ProcesoOrbital/>
+        <Reveal><Tag>Cómo funciona · La historia de Martín</Tag></Reveal>
+        <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Así se compra en <Red>Norden</Red></SecH></Reveal>
+        <Reveal delay={.2}><HistoriaCompra mobile={mob}/></Reveal>
         <Reveal delay={.4}>
           <div style={{ marginTop:38, display:"flex", gap:13, flexWrap:"wrap" }}>
             <Btn primary onClick={() => navTo("stock")}>Ver stock disponible</Btn>
