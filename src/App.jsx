@@ -667,8 +667,8 @@ function Marquee() {
       {/* Línea superior — 36s, normal */}
       <div style={{ overflow:"hidden", padding:"7px 0", position:"relative" }}>
         <div style={{ display:"flex", width:"max-content", animation:"marquee 36s linear infinite" }}>
-          {[...Array(2)].flatMap(() => itemsTop.map((t, i) => (
-            <div key={"a"+t+i} style={{ display:"flex", alignItems:"center", gap:14, padding:"0 28px", whiteSpace:"nowrap", fontSize:10, fontWeight:600, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.92)", fontFamily:"sans-serif" }}>
+          {[...Array(2)].flatMap((_, r) => itemsTop.map((t, i) => (
+            <div key={"a"+r+t+i} style={{ display:"flex", alignItems:"center", gap:14, padding:"0 28px", whiteSpace:"nowrap", fontSize:10, fontWeight:600, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.92)", fontFamily:"sans-serif" }}>
               <span style={{ width:3, height:3, background:"rgba(255,255,255,.65)", borderRadius:"50%", flexShrink:0 }}/>
               {t}
             </div>
@@ -680,8 +680,8 @@ function Marquee() {
       {/* Línea inferior — 52s, sentido inverso para dar profundidad */}
       <div style={{ overflow:"hidden", padding:"7px 0", position:"relative", background:"rgba(0,0,0,.08)" }}>
         <div style={{ display:"flex", width:"max-content", animation:"marqueeRev 52s linear infinite" }}>
-          {[...Array(2)].flatMap(() => itemsBot.map((t, i) => (
-            <div key={"b"+t+i} style={{ display:"flex", alignItems:"center", gap:14, padding:"0 28px", whiteSpace:"nowrap", fontSize:9, fontWeight:500, letterSpacing:2.5, textTransform:"uppercase", color:"rgba(255,255,255,.65)", fontFamily:"sans-serif" }}>
+          {[...Array(2)].flatMap((_, r) => itemsBot.map((t, i) => (
+            <div key={"b"+r+t+i} style={{ display:"flex", alignItems:"center", gap:14, padding:"0 28px", whiteSpace:"nowrap", fontSize:9, fontWeight:500, letterSpacing:2.5, textTransform:"uppercase", color:"rgba(255,255,255,.65)", fontFamily:"sans-serif" }}>
               <span style={{ width:3, height:3, background:"rgba(255,255,255,.4)", borderRadius:"50%", flexShrink:0 }}/>
               {t}
             </div>
