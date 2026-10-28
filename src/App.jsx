@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import './App.css';
 
 // ═══════════════════════════════════════════════════════════
@@ -611,7 +612,7 @@ function FloatWa() {
 function Nav({ page, navTo, scrolled }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const go = (p) => { navTo(p); setMenuOpen(false); };
-  const links = [["home","Inicio"],["stock","Stock"],["vender","Vendé tu auto"],["nosotros","Nosotros"],["contacto","Contacto"]];
+  const links = [["home","Inicio"],["stock","Stock"],["okm","0km"],["vender","Vendé tu auto"],["nosotros","Nosotros"],["contacto","Contacto"]];
 
   return (
     <>
@@ -1204,7 +1205,7 @@ function Footer({ navTo }) {
         </div>
         <div>
           <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:14, fontFamily:"sans-serif" }}>Navegación</div>
-          {[["home","Inicio"],["stock","Stock"],["nosotros","Nosotros"],["contacto","Contacto"]].map(([p,l]) => (
+          {[["home","Inicio"],["stock","Stock"],["okm","0km"],["vender","Vendé tu auto"],["nosotros","Nosotros"],["contacto","Contacto"]].map(([p,l]) => (
             <div key={p} style={{ marginBottom:9 }}>
               <FooterLink onClick={() => navTo(p)}>{l}</FooterLink>
             </div>
@@ -1628,7 +1629,7 @@ function HeroStatItem({ pre, n, suf, l, last }) {
 }
 
 /* ─── HOME PAGE ─────────────────────────────────────────────────────────────── */
-function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, videosData }) {
+function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, videosData, abrirTeilen }) {
   const preview = stockData.filter(v => v.destacado).slice(0,4);
   const shown = preview.length >= 2 ? preview : stockData.slice(0,4);
 
@@ -1785,6 +1786,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
             <p style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif", letterSpacing:.3, lineHeight:1.6, maxWidth:340 }}>
               Trabajamos con las marcas líderes del mercado argentino.
             </p>
+            <div style={{ marginTop:14 }}><Btn primary small onClick={() => navTo("okm")}>Ver precios 0km →</Btn></div>
           </Reveal>
         </div>
         <div style={{
@@ -1861,6 +1863,8 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
           </div>
         </Reveal>
       </section>
+
+      <AlianzaTeilen abrirTeilen={abrirTeilen}/>
 
       <SectionDivider/>
 
@@ -1955,17 +1959,8 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
       {/* ── FAQ ── */}
       <FAQSection navTo={navTo}/>
 
-      {/* ── IG STRIP ── */}
-      <div style={{ background:"#030303", padding:"50px 5vw", textAlign:"center", borderTop:`1px solid ${C.border}` }}>
-        <Reveal>
-          <div style={{ fontSize:8, letterSpacing:5, textTransform:"uppercase", color:C.muted, marginBottom:10, fontFamily:"sans-serif" }}>Seguinos en Instagram</div>
-          <a href="https://www.instagram.com/norden.cars/" target="_blank" rel="noreferrer"
-            style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"clamp(36px,6vw,70px)", fontWeight:900, textTransform:"uppercase", letterSpacing:-2, color:C.white, display:"inline-block", transition:"color .3s", textDecoration:"none" }}
-            onMouseEnter={e => e.currentTarget.style.color=C.red} onMouseLeave={e => e.currentTarget.style.color=C.white}>
-            @norden.cars
-          </a>
-        </Reveal>
-      </div>
+      {/* ── INSTAGRAM ── */}
+      <InstagramPerfil/>
 
       <Footer navTo={navTo}/>
     </>
@@ -2481,6 +2476,440 @@ function ContactoPage({ config, navTo }) {
   );
 }
 
+/* ─── 0KM (precios del sistema) ─────────────────────────────────────────────── */
+// Vienen del ERP (/api/publico/okm): solo versiones con lista vigente, con el
+// mismo precio final que ve el equipo en Precios 0km. Si el ERP no tiene foto
+// del modelo, se usa la propia de acá (public/images/0km/<marca>-<modelo>.png).
+const OKM_FOTOS_LOCAL = {
+  "volkswagen-amarok":"/images/0km/volkswagen-amarok.png", "toyota-hilux":"/images/0km/toyota-hilux.png",
+  "toyota-sw4":"/images/0km/toyota-sw4.png", "toyota-corolla":"/images/0km/toyota-corolla.png",
+  "toyota-yaris-cross":"/images/0km/toyota-yaris-cross.png", "volkswagen-t-cross":"/images/0km/volkswagen-t-cross.png",
+  "fiat-fastback":"/images/0km/fiat-fastback.png",
+};
+const slugOkm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const fotoOkm = (m) => m.foto || OKM_FOTOS_LOCAL[`${slugOkm(m.marca)}-${slugOkm(m.modelo)}`] || null;
+const fmtPrecio = (v, moneda) => v == null ? "" : `${moneda === "USD" ? "US$" : "$"} ${Math.round(Number(v)).toLocaleString("es-AR")}`;
+const fmtFecha = (iso) => { if (!iso) return ""; const [y, m, d] = String(iso).slice(0, 10).split("-"); return `${d}/${m}/${y}`; };
+const LEYENDA_OKM = "Precios finales sujetos a stock y a la lista vigente de cada marca. Pueden cambiar sin previo aviso. Consultanos antes de decidir.";
+const TEILEN_URL = "https://teilen.com.ar/cotizador.php";
+
+function useOkm() {
+  const [okm, setOkm] = useState({ modelos: [], cargando: true, error: false });
+  useEffect(() => {
+    let vivo = true;
+    fetch(`${ERP_URL}/api/publico/okm`, { headers: { Accept: "application/json" } })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => { if (vivo) setOkm({ modelos: Array.isArray(d.modelos) ? d.modelos : [], cargando: false, error: false }); })
+      .catch(() => { if (vivo) setOkm({ modelos: [], cargando: false, error: true }); });
+    return () => { vivo = false; };
+  }, []);
+  return okm;
+}
+
+function LogoMarcaOkm({ src, marca, size = 28 }) {
+  const [falla, setFalla] = useState(false);
+  if (!src || falla) return marca ? <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:size * .5, letterSpacing:1, color:"rgba(255,255,255,.55)", textTransform:"uppercase" }}>{marca}</span> : null;
+  // Logo en sus colores sobre una pastilla clara (en blanco puro, Fiat y Ford quedaban como manchas).
+  return (
+    <span style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", height:size + 8, minWidth:size + 8, padding:"0 6px", borderRadius:size, background:"rgba(255,255,255,.92)" }}>
+      <img src={src} alt={marca} onError={() => setFalla(true)} style={{ height:size, width:"auto", maxWidth:size * 2.4, objectFit:"contain" }}/>
+    </span>
+  );
+}
+
+function OkmCard({ m, onClick }) {
+  const [hov, setHov] = useState(false);
+  const [p, setP] = useState({ x: 50, y: 50 });
+  const foto = fotoOkm(m);
+  return (
+    <div data-cursor-label="Ver versiones" onClick={() => onClick(m)}
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => { setHov(false); setP({ x:50, y:50 }); }}
+      onMouseMove={e => { const r = e.currentTarget.getBoundingClientRect(); setP({ x:(e.clientX - r.left) / r.width * 100, y:(e.clientY - r.top) / r.height * 100 }); }}
+      style={{ position:"relative", overflow:"hidden", cursor:"pointer", background: hov ? C.zinc2 : C.zinc, border:`1px solid ${hov ? "rgba(220,38,38,.45)" : C.border}`,
+        transform: hov ? `perspective(900px) rotateX(${(50 - p.y) / 18}deg) rotateY(${(p.x - 50) / 18}deg) translateY(-6px)` : "none",
+        boxShadow: hov ? "0 26px 70px rgba(0,0,0,.7)" : "none",
+        transition: hov ? "transform .12s linear, background .3s, border-color .3s, box-shadow .3s" : "all .55s cubic-bezier(.16,1,.3,1)" }}>
+      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:2, opacity: hov ? 1 : 0, transition:"opacity .35s",
+        background:`radial-gradient(380px circle at ${p.x}% ${p.y}%, rgba(220,38,38,.12), transparent 55%)` }}/>
+      {/* Escenario del auto */}
+      <div style={{ position:"relative", height:190, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden",
+        background:"radial-gradient(ellipse at 50% 85%, rgba(220,38,38,.16), transparent 60%), linear-gradient(180deg,#10131a,#0b0d12)" }}>
+        <div style={{ position:"absolute", left:"12%", right:"12%", bottom:26, height:14, borderRadius:"50%", background:"rgba(0,0,0,.65)", filter:"blur(10px)" }}/>
+        <div style={{ position:"absolute", top:14, left:16, zIndex:1 }}><LogoMarcaOkm src={m.logo} marca={m.marca} size={22}/></div>
+        {foto
+          ? <img src={foto} alt={`${m.marca} ${m.modelo}`} loading="lazy" style={{ position:"relative", maxWidth:"82%", maxHeight:150, objectFit:"contain", marginTop:18,
+              transform: hov ? "scale(1.08) translateX(6px)" : "scale(1)", transition:"transform .7s cubic-bezier(.16,1,.3,1)", filter:"drop-shadow(0 14px 18px rgba(0,0,0,.55))" }}/>
+          : <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:54, letterSpacing:-2, textTransform:"uppercase", color:"transparent", WebkitTextStroke:"1px rgba(255,255,255,.14)", marginTop:16, textAlign:"center", lineHeight:.9, padding:"0 12px" }}>{m.modelo}</div>}
+        {/* Barrido de luz */}
+        <div style={{ position:"absolute", top:0, bottom:0, width:"40%", left: hov ? "130%" : "-60%", transition: hov ? "left .9s cubic-bezier(.16,1,.3,1)" : "none",
+          background:"linear-gradient(105deg, transparent, rgba(255,255,255,.08), transparent)", pointerEvents:"none" }}/>
+      </div>
+      <div style={{ padding:"16px 18px 18px", position:"relative", zIndex:3 }}>
+        <div style={{ fontSize:9, letterSpacing:3, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{m.marca}</div>
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:28, fontWeight:800, textTransform:"uppercase", color:C.white, lineHeight:1, margin:"4px 0 10px" }}>{m.modelo}</div>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", gap:10 }}>
+          <div>
+            <div style={{ fontSize:9, letterSpacing:2, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>Desde</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:700, color: hov ? C.red2 : C.white, transition:"color .3s" }}>{fmtPrecio(m.desde.precio, m.desde.moneda)}</div>
+          </div>
+          <span style={{ fontSize:10, letterSpacing:1.5, textTransform:"uppercase", color: hov ? C.white : C.muted, fontFamily:"sans-serif", whiteSpace:"nowrap", transition:"color .3s" }}>
+            {m.versiones.length} {m.versiones.length === 1 ? "versión" : "versiones"} →
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OkmModal({ m, onClose, abrirTeilen }) {
+  const mob = useIsMobile();
+  const foto = fotoOkm(m);
+  useEffect(() => {
+    const k = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", k);
+    const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", k); document.body.style.overflow = prev; };
+  }, [onClose]);
+  const wa = (v) => `https://wa.me/${WA_NORDEN}?text=${encodeURIComponent(`Hola Norden Cars! Quiero consultar por el 0km ${m.marca} ${m.modelo}${v ? ` ${v.version}` : ""} que vi en la web.`)}`;
+  return (
+    <div onClick={onClose} style={{ position:"fixed", inset:0, zIndex:700, background:"rgba(0,0,0,.82)", backdropFilter:"blur(6px)", display:"flex", alignItems: mob ? "flex-end" : "center", justifyContent:"center", padding: mob ? 0 : 24, animation:"okmFade .3s ease" }}>
+      <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:880, maxHeight: mob ? "92vh" : "88vh", overflowY:"auto", background:C.carbon, border:`1px solid ${C.border2}`, position:"relative", animation:"okmUp .45s cubic-bezier(.16,1,.3,1)" }}>
+        <button onClick={onClose} aria-label="Cerrar" style={{ position:"absolute", top:12, right:12, zIndex:3, width:36, height:36, borderRadius:"50%", border:`1px solid ${C.border2}`, background:"rgba(0,0,0,.5)", color:"#fff", fontSize:18, cursor:"pointer" }}>×</button>
+        <div style={{ display:"grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr" }}>
+          <div style={{ position: mob ? "relative" : "sticky", top:0, alignSelf:"start", minHeight: mob ? 200 : 380, display:"flex", alignItems:"center", justifyContent:"center", padding:24,
+            background:"radial-gradient(ellipse at 50% 80%, rgba(220,38,38,.22), transparent 60%), linear-gradient(180deg,#121620,#0a0c10)" }}>
+            <div style={{ position:"absolute", top:18, left:20 }}><LogoMarcaOkm src={m.logo} marca={m.marca} size={26}/></div>
+            {foto
+              ? <img src={foto} alt="" style={{ maxWidth:"100%", maxHeight: mob ? 170 : 240, objectFit:"contain", filter:"drop-shadow(0 18px 22px rgba(0,0,0,.6))", animation:"okmCar .8s cubic-bezier(.16,1,.3,1)" }}/>
+              : <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:64, textTransform:"uppercase", color:"transparent", WebkitTextStroke:"1px rgba(255,255,255,.18)", textAlign:"center", lineHeight:.9 }}>{m.modelo}</div>}
+          </div>
+          <div style={{ padding: mob ? "22px 18px" : "34px 30px" }}>
+            <Tag>0km · {m.marca}</Tag>
+            <SecH style={{ fontSize:"clamp(34px,4vw,48px)", marginBottom:6 }}>{m.modelo}</SecH>
+            <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif", marginBottom:18 }}>Lista vigente al {fmtFecha(m.vigente_al)}</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:1, background:C.border, marginBottom:18 }}>
+              {m.versiones.map(v => (
+                <div key={v.id} style={{ background:C.carbon, padding:"12px 0", display:"flex", justifyContent:"space-between", alignItems:"center", gap:12 }}>
+                  <div style={{ minWidth:0 }}>
+                    <div style={{ fontSize:13, color:C.white, fontFamily:"sans-serif" }}>{v.version || m.modelo}{v.anio ? <span style={{ color:C.muted }}> · {v.anio}</span> : null}</div>
+                    {v.cuota ? <div style={{ fontSize:11, color:"#4ade80", fontFamily:"sans-serif", marginTop:2 }}>{v.anticipo ? `Anticipo ${fmtPrecio(v.anticipo, v.moneda)} + ` : ""}{v.cuotas ? `${v.cuotas} cuotas de ` : "cuotas desde "}{fmtPrecio(v.cuota, "ARS")}</div> : null}
+                  </div>
+                  <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
+                    <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:700, color:C.white }}>{fmtPrecio(v.precio, v.moneda)}</span>
+                    <a href={wa(v)} target="_blank" rel="noreferrer" aria-label="Consultar por WhatsApp" style={{ width:32, height:32, borderRadius:"50%", background:"#128C7E", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><WaSvg size={15}/></a>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:16 }}>
+              <Btn primary href={wa(null)}>Consultar por WhatsApp</Btn>
+              <Btn onClick={() => { onClose(); abrirTeilen(m.desde.moneda === "ARS" ? m.desde.precio : undefined); }}>Simulá tu crédito</Btn>
+            </div>
+            <p style={{ fontSize:10.5, color:C.muted, fontFamily:"sans-serif", lineHeight:1.6 }}>{LEYENDA_OKM}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Alianza con Teilen (crédito prendario). Teilen pidió que figure su marca. */
+function TeilenSello({ small }) {
+  return (
+    <div style={{ display:"inline-flex", alignItems:"center", gap: small ? 10 : 16 }}>
+      <img src={IMG_LOGO} alt="Norden Cars" style={{ height: small ? 20 : 30 }}/>
+      <span style={{ fontFamily:"sans-serif", fontWeight:300, fontSize: small ? 14 : 20, color:C.red }}>×</span>
+      <img src="/images/aliados/teilen-blanco.png" alt="Teilen" style={{ height: small ? 18 : 28 }}/>
+    </div>
+  );
+}
+
+function AlianzaTeilen({ abrirTeilen }) {
+  const mob = useIsMobile();
+  return (
+    <section style={{ position:"relative", overflow:"hidden", padding: mob ? "64px 16px" : "84px 5vw", background:"linear-gradient(120deg,#0a0c12 0%,#0d1220 55%,#0a0c10 100%)", borderTop:`1px solid ${C.border}`, isolation:"isolate" }}>
+      <div style={{ position:"absolute", right:"-8%", top:"-30%", width:"55%", height:"160%", background:"radial-gradient(ellipse, rgba(59,130,246,.12), transparent 65%)", zIndex:-1 }}/>
+      <div style={{ display:"grid", gridTemplateColumns: mob ? "1fr" : "1.1fr .9fr", gap: mob ? 30 : 60, alignItems:"center" }}>
+        <div>
+          <Reveal><Tag>Financiación · Crédito prendario</Tag></Reveal>
+          <Reveal delay={.08}><div style={{ marginBottom:20 }}><TeilenSello/></div></Reveal>
+          <Reveal delay={.14}><SecH style={{ marginBottom:14 }}>Simulá tu crédito con <Red>Teilen</Red></SecH></Reveal>
+          <Reveal delay={.2}>
+            <p style={{ fontSize:15, fontWeight:300, color:"rgba(245,245,245,.62)", lineHeight:1.7, maxWidth:520, marginBottom:26, fontFamily:"sans-serif" }}>
+              Trabajamos con Teilen para financiar tu 0km o usado con crédito prendario. Simulá anticipo y cuota a través de Norden Cars, y nosotros nos ocupamos de toda la gestión.
+            </p>
+          </Reveal>
+          <Reveal delay={.26}>
+            <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+              <Btn primary onClick={() => abrirTeilen()}>Simular mi crédito</Btn>
+              <Btn href={`https://wa.me/${WA_NORDEN}?text=${encodeURIComponent("Hola Norden Cars, quiero consultar por financiación con Teilen")}`}>Consultar financiación</Btn>
+            </div>
+          </Reveal>
+        </div>
+        <Reveal delay={.2}>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:1, background:C.border, border:`1px solid ${C.border}` }}>
+            {[["1","Elegí el auto","0km o usado de nuestro stock."],["2","Simulá","Anticipo y cuota que te queden cómodos."],["3","Lo gestionamos","Carpeta y firma del crédito con Teilen."],["4","Te lo llevás","Con los papeles para circular."]].map(([n, t, d]) => (
+              <div key={n} style={{ background:"#0b0e15", padding:"20px 18px" }}>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:26, fontWeight:800, color:C.red, lineHeight:1 }}>{n}</div>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700, textTransform:"uppercase", color:C.white, margin:"8px 0 4px" }}>{t}</div>
+                <div style={{ fontSize:12, color:"rgba(245,245,245,.5)", lineHeight:1.5, fontFamily:"sans-serif" }}>{d}</div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+// Simulador propio con los números de Teilen (el ERP le consulta a su cotizador).
+function TeilenModal({ onClose, precio }) {
+  const mob = useIsMobile();
+  const [precioAuto, setPrecioAuto] = useState(precio ? String(Math.round(precio)) : "");
+  const [anticipo, setAnticipo] = useState("");
+  const [montoLibre, setMontoLibre] = useState("");
+  const [res, setRes] = useState(null);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState("");
+  const [tasa, setTasa] = useState(0);
+  const conAuto = !!precio;
+  const monto = conAuto ? Math.max(0, Number(precioAuto || 0) - Number(anticipo || 0)) : Number(montoLibre || 0);
+  const miles = (s) => s ? Number(s).toLocaleString("es-AR") : "";
+  const soloNum = (v) => v.replace(/\D/g, "").slice(0, 11);
+
+  useEffect(() => {
+    const k = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", k);
+    const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", k); document.body.style.overflow = prev; };
+  }, [onClose]);
+
+  // Calcula solo, medio segundo después de dejar de tipear.
+  useEffect(() => {
+    if (monto < 500000) return;
+    const t = setTimeout(() => {
+      setCargando(true); setError("");
+      fetch(`${ERP_URL}/api/publico/teilen?monto=${monto}`).then(r => r.json())
+        .then(d => { if (d.planes) setRes(d); else { setRes(null); setError(d.error || "No pudimos calcular."); } })
+        .catch(() => setError("No pudimos conectar con el simulador. Probá de nuevo."))
+        .finally(() => setCargando(false));
+    }, 550);
+    return () => clearTimeout(t);
+  }, [monto]);
+
+  const vigente = monto >= 500000 ? res : null;
+  const plan = vigente?.planes?.[Math.min(tasa, vigente.planes.length - 1)];
+  const waPlan = (f) => `https://wa.me/${WA_NORDEN}?text=${encodeURIComponent(`Hola Norden Cars! Simulé en la web un crédito con Teilen: financiar $${monto.toLocaleString("es-AR")} en ${f.meses} cuotas (${plan.tasa.toLowerCase()}) de $${Math.round(f.cuota).toLocaleString("es-AR")}. Quiero avanzar.`)}`;
+  const campo = (label, val, set, ph) => (
+    <VField label={label}>
+      <div style={{ position:"relative" }}>
+        <span style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", color:C.muted, fontFamily:"sans-serif", fontSize:15 }}>$</span>
+        <input inputMode="numeric" value={miles(val)} onChange={e => set(soloNum(e.target.value))} placeholder={ph} style={{ ...vInput, paddingLeft:30 }} {...vFocus}/>
+      </div>
+    </VField>
+  );
+
+  return (
+    <div onClick={onClose} style={{ position:"fixed", inset:0, zIndex:720, background:"rgba(0,0,0,.85)", backdropFilter:"blur(6px)", display:"flex", alignItems: mob ? "flex-end" : "center", justifyContent:"center", padding: mob ? 0 : 24, animation:"okmFade .3s ease" }}>
+      <style>{`@keyframes okmFade{from{opacity:0}to{opacity:1}}@keyframes okmUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+        .tl-cuota{transition:border-color .25s, background .25s, transform .25s}.tl-cuota:hover{border-color:${C.red}!important;background:rgba(220,38,38,.08)!important;transform:translateY(-2px)}`}</style>
+      <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:760, maxHeight: mob ? "94vh" : "90vh", overflowY:"auto", background:C.carbon, border:`1px solid ${C.border2}`, animation:"okmUp .45s cubic-bezier(.16,1,.3,1)" }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, padding: mob ? "14px 16px" : "16px 24px", borderBottom:`1px solid ${C.border}` }}>
+          <TeilenSello small/>
+          <button onClick={onClose} aria-label="Cerrar" style={{ width:34, height:34, borderRadius:"50%", border:`1px solid ${C.border2}`, background:"none", color:"#fff", fontSize:18, cursor:"pointer", flexShrink:0 }}>×</button>
+        </div>
+        <div style={{ padding: mob ? "22px 16px" : "28px 28px 24px" }}>
+          <Tag>Crédito prendario</Tag>
+          <SecH style={{ fontSize:"clamp(28px,3.6vw,40px)", marginBottom:8 }}>Simulá tu crédito con <Red>Teilen</Red></SecH>
+          <p style={{ fontSize:13, color:"rgba(245,245,245,.6)", fontFamily:"sans-serif", lineHeight:1.6, marginBottom:22 }}>A través de Norden Cars: vos elegís la cuota y nosotros gestionamos todo el crédito.</p>
+
+          {conAuto ? (
+            <div style={{ display:"grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: mob ? 0 : 12 }}>
+              {campo("Precio del auto", precioAuto, setPrecioAuto, "45.000.000")}
+              {campo("Tu anticipo", anticipo, setAnticipo, "20.000.000")}
+            </div>
+          ) : campo("Monto a financiar", montoLibre, setMontoLibre, "15.000.000")}
+          {conAuto && monto > 0 && (
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", padding:"12px 0 18px", borderBottom:`1px solid ${C.border}`, marginBottom:18 }}>
+              <span style={{ fontSize:10, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>A financiar</span>
+              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:30, fontWeight:800, color:C.white }}>$ {monto.toLocaleString("es-AR")}</span>
+            </div>
+          )}
+
+          {monto > 0 && monto < 500000 && <p style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif" }}>El monto mínimo para simular es $500.000.</p>}
+          {error && <div style={{ padding:"11px 14px", background:"rgba(220,38,38,.1)", border:`1px solid rgba(220,38,38,.4)`, color:"#fca5a5", fontSize:13, fontFamily:"sans-serif", marginBottom:12 }}>{error}</div>}
+          {cargando && !plan && <p style={{ fontSize:13, color:C.muted, fontFamily:"sans-serif", padding:"18px 0" }}>Consultando a Teilen…</p>}
+
+          {plan && (
+            <div style={{ opacity: cargando ? .5 : 1, transition:"opacity .25s" }}>
+              <div style={{ display:"flex", gap:6, marginBottom:14 }}>
+                {vigente.planes.map((p, i) => (
+                  <button key={p.tasa} onClick={() => setTasa(i)} style={{ flex:1, padding:"11px 10px", cursor:"pointer", fontFamily:"sans-serif", fontSize:11, letterSpacing:2, textTransform:"uppercase",
+                    background: tasa === i ? "rgba(220,38,38,.14)" : "rgba(255,255,255,.03)", border:`1px solid ${tasa === i ? C.red : C.border2}`, color: tasa === i ? C.white : C.muted }}>{p.tasa}</button>
+                ))}
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns: mob ? "1fr 1fr" : "repeat(auto-fill,minmax(130px,1fr))", gap:8 }}>
+                {plan.filas.map((f, i) => (
+                  <a key={`${plan.tasa}-${f.meses}`} href={waPlan(f)} target="_blank" rel="noreferrer" className="tl-cuota"
+                    style={{ display:"block", padding:"14px 14px 12px", border:`1px solid ${C.border2}`, background:"rgba(255,255,255,.025)", textDecoration:"none", animation:`okmUp .45s ${i * .05}s both cubic-bezier(.16,1,.3,1)` }}>
+                    <div style={{ fontSize:10, letterSpacing:2, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{f.meses} cuotas de</div>
+                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:800, color:C.white, margin:"4px 0 6px" }}>$ {Math.round(f.cuota).toLocaleString("es-AR")}</div>
+                    <div style={{ fontSize:10, letterSpacing:1.5, textTransform:"uppercase", color:"#4ade80", fontFamily:"sans-serif" }}>Quiero esta →</div>
+                  </a>
+                ))}
+              </div>
+              <p style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif", lineHeight:1.6, marginTop:14 }}>
+                {plan.tasa.toUpperCase().includes("UVA") ? "Tasa UVA: la cuota se ajusta por inflación; el valor es estimado al día de hoy." : "Tasa fija: cuota promedio estimada."}
+              </p>
+            </div>
+          )}
+
+          <p style={{ fontSize:10.5, color:C.muted2, fontFamily:"sans-serif", lineHeight:1.6, marginTop:18, paddingTop:14, borderTop:`1px solid ${C.border}` }}>
+            Valores aproximados calculados por Teilen, sujetos a modificaciones y a aprobación crediticia. La cuota no incluye el seguro del automotor.{" "}
+            <a href={TEILEN_URL} target="_blank" rel="noreferrer" style={{ color:C.muted }}>teilen.com.ar</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OkmPage({ navTo, okm, abrirTeilen }) {
+  const mob = useIsMobile();
+  const [marca, setMarca] = useState("Todas");
+  const [q, setQ] = useState("");
+  const [sel, setSel] = useState(null);
+  const marcas = ["Todas", ...Array.from(new Set(okm.modelos.map(m => m.marca)))];
+  const logoDe = Object.fromEntries(okm.modelos.map(m => [m.marca, m.logo]));
+  const filtro = slugOkm(q);
+  const lista = okm.modelos.filter(m => (marca === "Todas" || m.marca === marca) && (!filtro || slugOkm(`${m.marca} ${m.modelo} ${m.versiones.map(v => v.version).join(" ")}`).includes(filtro)));
+  const ultima = okm.modelos.reduce((mx, m) => (m.vigente_al && m.vigente_al > mx ? m.vigente_al : mx), "");
+
+  return (
+    <div style={{ paddingTop:68 }}>
+      <style>{`@keyframes okmFade{from{opacity:0}to{opacity:1}}@keyframes okmUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}@keyframes okmCar{from{opacity:0;transform:translateX(-60px) scale(.94)}to{opacity:1;transform:none}}.okm-chips::-webkit-scrollbar{display:none}`}</style>
+      <PageHeader tag="Precios 0km" bgWord="0KM" subtitle="Precio final para Tucumán, actualizado con las listas de cada marca.">
+        Tu 0km <Red>al mejor precio</Red>
+      </PageHeader>
+      <div style={{ padding: mob ? "26px 16px 70px" : "48px 5vw 100px", background:"#0c0c0c" }}>
+        {/* Leyenda siempre visible */}
+        <div style={{ display:"flex", gap:12, alignItems:"flex-start", padding:"14px 16px", marginBottom:26, border:`1px solid rgba(220,38,38,.35)`, background:"rgba(220,38,38,.06)" }}>
+          <span style={{ color:C.red, fontSize:16, lineHeight:1 }}>ⓘ</span>
+          <p style={{ fontSize:12, color:"rgba(245,245,245,.72)", fontFamily:"sans-serif", lineHeight:1.6 }}>
+            {LEYENDA_OKM}{ultima ? <> <b style={{ color:C.white }}>Lista vigente al {fmtFecha(ultima)}.</b></> : null}
+          </p>
+        </div>
+
+        {/* Filtros */}
+        <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center", marginBottom:28 }}>
+          <div className="okm-chips" style={{ display:"flex", gap:6, scrollbarWidth:"none", flexWrap: mob ? "nowrap" : "wrap", overflowX: mob ? "auto" : "visible", flex: mob ? "1 1 100%" : "1 1 auto", paddingBottom: mob ? 4 : 0 }}>
+            {marcas.map(mc => {
+              const on = marca === mc;
+              return (
+                <button key={mc} onClick={() => setMarca(mc)} style={{ display:"flex", alignItems:"center", gap:8, padding:"9px 14px", cursor:"pointer", whiteSpace:"nowrap", flexShrink:0,
+                  background: on ? "rgba(220,38,38,.14)" : "rgba(255,255,255,.03)", border:`1px solid ${on ? C.red : C.border2}`, color: on ? C.white : "rgba(245,245,245,.6)",
+                  fontSize:11, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", transition:"all .25s" }}>
+                  {mc !== "Todas" && <LogoMarcaOkm src={logoDe[mc]} marca="" size={14}/>}{mc}
+                </button>
+              );
+            })}
+          </div>
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar modelo o versión…" style={{ ...vInput, maxWidth: mob ? "100%" : 280, fontSize:13, padding:"10px 14px" }} {...vFocus}/>
+        </div>
+
+        {okm.cargando ? (
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(270px,1fr))", gap:1 }}>
+            {Array.from({ length: 6 }).map((_, i) => <div key={i} style={{ height:300, background:`linear-gradient(90deg,${C.zinc},${C.zinc2},${C.zinc})`, backgroundSize:"200% 100%", animation:"shimmer 1.4s infinite" }}/>)}
+          </div>
+        ) : lista.length === 0 ? (
+          <div style={{ padding:"60px 20px", textAlign:"center", border:`1px solid ${C.border}`, fontFamily:"sans-serif" }}>
+            <p style={{ fontSize:15, color:C.white, marginBottom:8 }}>{okm.error || okm.modelos.length === 0 ? "Estamos actualizando las listas de precios." : "No encontramos ese modelo."}</p>
+            <p style={{ fontSize:13, color:C.muted, marginBottom:22 }}>Escribinos y te pasamos el precio actualizado al momento.</p>
+            <Btn primary href={`https://wa.me/${WA_NORDEN}?text=${encodeURIComponent(`Hola Norden Cars! Quiero consultar precio de un 0km${q ? `: ${q}` : ""}`)}`}>Consultar por WhatsApp</Btn>
+          </div>
+        ) : (
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(270px,1fr))", gap:1 }}>
+            {lista.map((m, i) => <Reveal key={`${m.marca}-${m.modelo}`} delay={Math.min(i, 8) * .05}><OkmCard m={m} onClick={setSel}/></Reveal>)}
+          </div>
+        )}
+      </div>
+      <AlianzaTeilen abrirTeilen={abrirTeilen}/>
+      {/* Portal: el contenedor de la página tiene transform y descentraba lo fijo */}
+      {sel && createPortal(<OkmModal m={sel} onClose={() => setSel(null)} abrirTeilen={abrirTeilen}/>, document.body)}
+      <Footer navTo={navTo}/>
+    </div>
+  );
+}
+
+/* ─── INSTAGRAM (vista previa del perfil) ───────────────────────────────────── */
+function InstagramPerfil() {
+  const mob = useIsMobile();
+  const [ig, setIg] = useState(null);
+  useEffect(() => {
+    fetch(`${ERP_URL}/api/publico/instagram`).then(r => r.ok ? r.json() : null).then(d => { if (d && d.usuario) setIg(d); }).catch(() => {});
+  }, []);
+  const url = "https://www.instagram.com/norden.cars/";
+  const num = (n) => n == null ? "—" : n >= 10000 ? `${(n / 1000).toFixed(1).replace(".", ",")}k` : Number(n).toLocaleString("es-AR");
+  const posts = (ig?.posts || []).slice(0, mob ? 6 : 12);
+  return (
+    <section style={{ padding: mob ? "64px 16px" : "90px 5vw", background:"#050608", borderTop:`1px solid ${C.border}` }}>
+      <div style={{ maxWidth:980, margin:"0 auto" }}>
+        <Reveal><Tag>Seguinos en Instagram</Tag></Reveal>
+        <Reveal delay={.08}>
+          <div style={{ display:"flex", alignItems:"center", gap: mob ? 16 : 34, flexWrap:"wrap", padding: mob ? "18px 0 22px" : "22px 0 30px" }}>
+            <a href={url} target="_blank" rel="noreferrer" style={{ position:"relative", width: mob ? 78 : 112, height: mob ? 78 : 112, borderRadius:"50%", padding:3, flexShrink:0,
+              background:"conic-gradient(from 210deg, #f58529, #dd2a7b, #8134af, #515bd4, #f58529)" }}>
+              <div style={{ width:"100%", height:"100%", borderRadius:"50%", background:"#050608", padding:3 }}>
+                {ig?.foto
+                  ? <img src={ig.foto} alt="@norden.cars" style={{ width:"100%", height:"100%", borderRadius:"50%", objectFit:"cover", display:"block" }}/>
+                  : <div style={{ width:"100%", height:"100%", borderRadius:"50%", background:C.zinc, display:"flex", alignItems:"center", justifyContent:"center" }}><img src={IMG_LOGO} alt="" style={{ width:"70%" }}/></div>}
+              </div>
+            </a>
+            <div style={{ flex:1, minWidth:220 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:14, flexWrap:"wrap", marginBottom:12 }}>
+                <a href={url} target="_blank" rel="noreferrer" style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize: mob ? 30 : 40, fontWeight:800, color:C.white, textDecoration:"none", letterSpacing:-.5 }}>@{ig?.usuario || "norden.cars"}</a>
+                <a href={url} target="_blank" rel="noreferrer" style={{ padding:"8px 18px", background:"linear-gradient(90deg,#dd2a7b,#8134af)", color:"#fff", fontSize:11, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600, textDecoration:"none" }}>Seguir</a>
+              </div>
+              {ig && (
+                <div style={{ display:"flex", gap: mob ? 18 : 30, fontFamily:"sans-serif", fontSize:13, color:"rgba(245,245,245,.7)", marginBottom:10 }}>
+                  <span><b style={{ color:C.white }}>{num(ig.publicaciones)}</b> publicaciones</span>
+                  <span><b style={{ color:C.white }}>{num(ig.seguidores)}</b> seguidores</span>
+                </div>
+              )}
+              <p style={{ fontSize:13, color:"rgba(245,245,245,.55)", fontFamily:"sans-serif", lineHeight:1.6, whiteSpace:"pre-line", maxWidth:520 }}>
+                {ig?.bio || "0km y usados seleccionados en Yerba Buena, Tucumán. Entregas, novedades y precios todas las semanas."}
+              </p>
+            </div>
+          </div>
+        </Reveal>
+        {posts.length > 0 ? (
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap: mob ? 3 : 6 }}>
+            {posts.map((p, i) => (
+              <Reveal key={p.id} delay={Math.min(i, 8) * .04}>
+                <a href={p.link} target="_blank" rel="noreferrer" className="ig-tile" style={{ position:"relative", display:"block", aspectRatio:"1", overflow:"hidden", background:C.zinc }}>
+                  <img src={p.imagen} alt={p.texto || "Publicación de Norden Cars"} loading="lazy" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block", transition:"transform .6s cubic-bezier(.16,1,.3,1)" }}/>
+                  {p.tipo === "VIDEO" && <span style={{ position:"absolute", top:8, right:8, color:"#fff", fontSize:14, textShadow:"0 1px 4px rgba(0,0,0,.6)" }}>▶</span>}
+                  {p.tipo === "CAROUSEL_ALBUM" && <span style={{ position:"absolute", top:8, right:8, color:"#fff", fontSize:13, textShadow:"0 1px 4px rgba(0,0,0,.6)" }}>❐</span>}
+                  <span className="ig-tile-ov" style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(0,0,0,.75), transparent 60%)", opacity:0, transition:"opacity .35s", display:"flex", alignItems:"flex-end", padding:10, fontSize:11, color:"#fff", fontFamily:"sans-serif", lineHeight:1.4 }}>
+                    {p.texto ? p.texto.slice(0, 90) : "Ver en Instagram"}
+                  </span>
+                </a>
+              </Reveal>
+            ))}
+          </div>
+        ) : (
+          <Reveal delay={.12}>
+            <a href={url} target="_blank" rel="noreferrer" style={{ display:"block", padding:"34px 20px", textAlign:"center", border:`1px solid ${C.border2}`, color:C.white, textDecoration:"none", fontFamily:"sans-serif", fontSize:13 }}>
+              Mirá entregas, ingresos y precios en nuestro perfil →
+            </a>
+          </Reveal>
+        )}
+        <style>{`.ig-tile:hover img{transform:scale(1.07)}.ig-tile:hover .ig-tile-ov{opacity:1!important}`}</style>
+      </div>
+    </section>
+  );
+}
+
 /* ─── VENDÉ TU AUTO ──────────────────────────────────────────────────────────── */
 // Formulario → ERP (/api/publico/vender-auto). Llega a "Autos ofrecidos" del
 // sistema con sus fotos y crea el cliente con origen "Web propia".
@@ -2835,6 +3264,9 @@ export default function App() {
   const [appLoading, setAppLoading] = useState(() => { try { return !sessionStorage.getItem("nc_splash_seen"); } catch { return true; } });
   const [fotosClientes, setFotosClientes] = useState(CLIENTES_LOCAL);
   const [videosData, setVideosData] = useState([]);
+  const okm = useOkm();
+  const [teilen, setTeilen] = useState(false);
+  const abrirTeilen = (precio) => setTeilen({ precio: typeof precio === "number" ? precio : null });
 
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 48);
@@ -2982,7 +3414,8 @@ export default function App() {
       <Nav page={page} navTo={navTo} scrolled={scrolled}/>
 
       <div style={pageStyle}>
-        {page==="home"     && <HomePage navTo={navTo} setSelectedCar={setSelectedCar} stockData={stockData} config={config} fotosClientes={fotosClientes} videosData={videosData}/>}
+        {page==="home"     && <HomePage navTo={navTo} setSelectedCar={setSelectedCar} stockData={stockData} config={config} fotosClientes={fotosClientes} videosData={videosData} abrirTeilen={abrirTeilen}/>}
+        {page==="okm"      && <OkmPage navTo={navTo} okm={okm} abrirTeilen={abrirTeilen}/>}
         {page==="stock"    && <StockPage stockData={stockData} setSelectedCar={setSelectedCar} loading={loadingStock}/>}
         {page==="nosotros" && <NosotrosPage navTo={navTo}/>}
         {page==="contacto" && <ContactoPage config={config} navTo={navTo}/>}
@@ -2990,6 +3423,7 @@ export default function App() {
       </div>
 
       {selectedCar && <CarModal car={selectedCar} onClose={() => setSelectedCar(null)}/>}
+      {teilen && createPortal(<TeilenModal precio={teilen.precio} onClose={() => setTeilen(false)}/>, document.body)}
 
       {page !== "vender" && <FloatVender onClick={() => navTo("vender")}/>}
       <FloatWa/>
