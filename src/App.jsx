@@ -2549,8 +2549,8 @@ function OkmCard({ m, onClick }) {
         <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:28, fontWeight:800, textTransform:"uppercase", color:C.white, lineHeight:1, margin:"4px 0 10px" }}>{m.modelo}</div>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", gap:10 }}>
           <div>
-            <div style={{ fontSize:9, letterSpacing:2, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>Desde</div>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:700, color: hov ? C.red2 : C.white, transition:"color .3s" }}>{fmtPrecio(m.desde.precio, m.desde.moneda)}</div>
+            <div style={{ fontSize:9, letterSpacing:2, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{m.desde ? "Desde" : "Precio"}</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:700, color: hov ? C.red2 : C.white, transition:"color .3s" }}>{m.desde ? fmtPrecio(m.desde.precio, m.desde.moneda) : "Consultanos"}</div>
           </div>
           <span style={{ fontSize:10, letterSpacing:1.5, textTransform:"uppercase", color: hov ? C.white : C.muted, fontFamily:"sans-serif", whiteSpace:"nowrap", transition:"color .3s" }}>
             {m.versiones.length} {m.versiones.length === 1 ? "versión" : "versiones"} →
@@ -2595,7 +2595,9 @@ function OkmModal({ m, onClose, abrirTeilen }) {
                     {v.cuota ? <div style={{ fontSize:11, color:"#4ade80", fontFamily:"sans-serif", marginTop:2 }}>{v.anticipo ? `Anticipo ${fmtPrecio(v.anticipo, v.moneda)} + ` : ""}{v.cuotas ? `${v.cuotas} cuotas de ` : "cuotas desde "}{fmtPrecio(v.cuota, "ARS")}</div> : null}
                   </div>
                   <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
-                    <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:700, color:C.white }}>{fmtPrecio(v.precio, v.moneda)}</span>
+                    {v.precio != null
+                      ? <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:700, color:C.white }}>{fmtPrecio(v.precio, v.moneda)}</span>
+                      : <span style={{ fontSize:11, letterSpacing:1.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>Consultá precio</span>}
                     <a href={wa(v)} target="_blank" rel="noreferrer" aria-label="Consultar por WhatsApp" style={{ width:32, height:32, borderRadius:"50%", background:"#128C7E", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><WaSvg size={15}/></a>
                   </div>
                 </div>
@@ -2603,7 +2605,7 @@ function OkmModal({ m, onClose, abrirTeilen }) {
             </div>
             <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:16 }}>
               <Btn primary href={wa(null)}>Consultar por WhatsApp</Btn>
-              <Btn onClick={() => { onClose(); abrirTeilen(m.desde.moneda === "ARS" ? m.desde.precio : undefined); }}>Simulá tu crédito</Btn>
+              <Btn onClick={() => { onClose(); abrirTeilen(m.desde?.moneda === "ARS" ? m.desde.precio : undefined); }}>Simulá tu crédito</Btn>
             </div>
             <p style={{ fontSize:10.5, color:C.muted, fontFamily:"sans-serif", lineHeight:1.6 }}>{LEYENDA_OKM}</p>
           </div>
