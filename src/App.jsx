@@ -111,7 +111,7 @@ const C = {
   zinc:"#161a21",     // cards / superficies — antes #161616
   zinc2:"#1c212a",    // hover de cards — antes #1d1d1d
   zinc3:"#232a35",    // inputs / superficies altas — antes #242424
-  white:"#F5F5F5", muted:"#8a8e98", muted2:"#454953",
+  white:"#F5F5F5", muted:"#9a9ea8", muted2:"#727783",
   border:"rgba(255,255,255,.06)",
   border2:"rgba(255,255,255,.11)",
   borderStrong:"rgba(255,255,255,.18)",
@@ -229,7 +229,7 @@ function LoadingScreen({ onDone }) {
       </div>
 
       {/* Tag */}
-      <div style={{ fontSize:8, letterSpacing:6, textTransform:"uppercase", color:"rgba(245,245,245,.32)", fontFamily:"sans-serif", animation:"fadeUp .8s .3s both", display:"flex", alignItems:"center", gap:14 }}>
+      <div style={{ fontSize:11, letterSpacing:6, textTransform:"uppercase", color:"rgba(245,245,245,.32)", fontFamily:"sans-serif", animation:"fadeUp .8s .3s both", display:"flex", alignItems:"center", gap:14 }}>
         <span style={{ width:18, height:1, background:"rgba(220,38,38,.6)" }}/>
         Concesionaria · Tucumán
         <span style={{ width:18, height:1, background:"rgba(220,38,38,.6)" }}/>
@@ -252,7 +252,7 @@ function LoadingScreen({ onDone }) {
         </div>
         {/* Porcentaje + label */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginTop:10 }}>
-          <div style={{ fontSize:8, letterSpacing:5, textTransform:"uppercase", color:"rgba(245,245,245,.32)", fontFamily:"sans-serif" }}>
+          <div style={{ fontSize:11, letterSpacing:5, textTransform:"uppercase", color:"rgba(245,245,245,.32)", fontFamily:"sans-serif" }}>
             Cargando experiencia
           </div>
           <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, color:C.white, letterSpacing:2, fontVariantNumeric:"tabular-nums" }}>
@@ -355,7 +355,7 @@ function CustomCursor() {
     <>
       <div ref={dotRef} style={{ position:"fixed", top:0, left:0, width:8, height:8, borderRadius:"50%", background:C.red, pointerEvents:"none", zIndex:99999, transition:"opacity .2s, background .2s", willChange:"transform" }}/>
       <div ref={ringRef} style={{ position:"fixed", top:0, left:0, width:36, height:36, borderRadius:"50%", border:`1.5px solid rgba(220,38,38,.55)`, pointerEvents:"none", zIndex:99998, transition:"width .25s cubic-bezier(.16,1,.3,1), height .25s cubic-bezier(.16,1,.3,1), background .25s, border-color .25s", willChange:"transform" }}/>
-      <div ref={labelRef} style={{ position:"fixed", top:0, left:0, padding:"5px 11px", background:C.red, color:"#fff", fontSize:9, letterSpacing:2, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600, borderRadius:2, pointerEvents:"none", zIndex:99999, opacity:0, transition:"opacity .22s", willChange:"transform", whiteSpace:"nowrap" }}/>
+      <div ref={labelRef} style={{ position:"fixed", top:0, left:0, padding:"5px 11px", background:C.red, color:"#fff", fontSize:11.5, letterSpacing:2, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600, borderRadius:2, pointerEvents:"none", zIndex:99999, opacity:0, transition:"opacity .22s", willChange:"transform", whiteSpace:"nowrap" }}/>
     </>
   );
 }
@@ -441,8 +441,8 @@ function CornerBrackets({ size = 18, color = "rgba(220,38,38,.7)", thickness = 1
 
 /* ─── SHARED UI ──────────────────────────────────────────────────────────────── */
 const Tag = ({ children }) => (
-  <div style={{ fontSize:9, letterSpacing:5, textTransform:"uppercase", color:C.red, marginBottom:12, display:"flex", alignItems:"center", gap:10, fontFamily:"sans-serif" }}>
-    <span style={{ width:22, height:1, background:C.red, flexShrink:0 }}/>{children}
+  <div style={{ fontSize:13, fontWeight:600, letterSpacing:3.5, textTransform:"uppercase", color:C.red2, marginBottom:14, display:"flex", alignItems:"center", gap:12, fontFamily:"sans-serif" }}>
+    <span style={{ width:28, height:2, background:C.red, flexShrink:0 }}/>{children}
   </div>
 );
 const Red = ({ children }) => <span style={{ color:C.red }}>{children}</span>;
@@ -548,7 +548,7 @@ function Chatbot() {
             : <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           }
         </svg>
-        {!open && <span style={{ position:"absolute", top:-3, right:-3, width:15, height:15, borderRadius:"50%", background:"#22c55e", border:"2px solid #090909", fontSize:7, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontFamily:"sans-serif" }}>?</span>}
+        {!open && <span style={{ position:"absolute", top:-3, right:-3, width:15, height:15, borderRadius:"50%", background:"#22c55e", border:"2px solid #090909", fontSize:10.5, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontFamily:"sans-serif" }}>?</span>}
       </button>
 
       {open && (
@@ -560,7 +560,7 @@ function Chatbot() {
             </div>
             <div>
               <div style={{ fontSize:12, fontWeight:600, color:"#fff", fontFamily:"sans-serif" }}>Asistente NordenCars</div>
-              <div style={{ fontSize:9, color:"rgba(255,255,255,.7)", display:"flex", alignItems:"center", gap:4, fontFamily:"sans-serif" }}>
+              <div style={{ fontSize:11.5, color:"rgba(255,255,255,.7)", display:"flex", alignItems:"center", gap:4, fontFamily:"sans-serif" }}>
                 <span style={{ width:5, height:5, background:"#4ade80", borderRadius:"50%", display:"inline-block" }}/>En línea
               </div>
             </div>
@@ -568,7 +568,7 @@ function Chatbot() {
           {/* Quick chips */}
           <div style={{ padding:"8px 10px", borderBottom:`1px solid ${C.border}`, display:"flex", flexWrap:"wrap", gap:5 }}>
             {["Financiación","Permutas","Garantía","Ubicación","Entregas"].map(t => (
-              <button key={t} onClick={() => send(t)} style={{ fontSize:9, padding:"4px 9px", background:"rgba(220,38,38,.1)", border:"1px solid rgba(220,38,38,.22)", color:C.red, cursor:"pointer", fontFamily:"sans-serif", borderRadius:2 }}>{t}</button>
+              <button key={t} onClick={() => send(t)} style={{ fontSize:11.5, padding:"4px 9px", background:"rgba(220,38,38,.1)", border:"1px solid rgba(220,38,38,.22)", color:C.red, cursor:"pointer", fontFamily:"sans-serif", borderRadius:2 }}>{t}</button>
             ))}
           </div>
           {/* Messages */}
@@ -651,8 +651,8 @@ function Nav({ page, navTo, scrolled }) {
           </button>
         ))}
         <div style={{ height:1, background:C.border, margin:"14px 0" }}/>
-        <button onClick={() => go("contacto")} style={{ background:C.red, border:"none", color:"#fff", padding:"14px 18px", cursor:"pointer", fontSize:10, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600 }}>Consultar ahora</button>
-        <button onClick={() => go("admin")} style={{ background:"none", border:`1px solid ${C.border}`, color:"rgba(255,255,255,.22)", padding:"10px 18px", cursor:"pointer", fontSize:9, letterSpacing:2, textTransform:"uppercase", fontFamily:"sans-serif", marginTop:6 }}>⚙ Admin</button>
+        <button onClick={() => go("contacto")} style={{ background:C.red, border:"none", color:"#fff", padding:"14px 18px", cursor:"pointer", fontSize:12, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600 }}>Consultar ahora</button>
+        <button onClick={() => go("admin")} style={{ background:"none", border:`1px solid ${C.border}`, color:"rgba(255,255,255,.22)", padding:"10px 18px", cursor:"pointer", fontSize:11.5, letterSpacing:2, textTransform:"uppercase", fontFamily:"sans-serif", marginTop:6 }}>⚙ Admin</button>
       </div>
     </>
   );
@@ -668,7 +668,7 @@ function Marquee() {
       <div style={{ overflow:"hidden", padding:"7px 0", position:"relative" }}>
         <div style={{ display:"flex", width:"max-content", animation:"marquee 36s linear infinite" }}>
           {[...Array(2)].flatMap((_, r) => itemsTop.map((t, i) => (
-            <div key={"a"+r+t+i} style={{ display:"flex", alignItems:"center", gap:14, padding:"0 28px", whiteSpace:"nowrap", fontSize:10, fontWeight:600, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.92)", fontFamily:"sans-serif" }}>
+            <div key={"a"+r+t+i} style={{ display:"flex", alignItems:"center", gap:14, padding:"0 28px", whiteSpace:"nowrap", fontSize:12, fontWeight:600, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.92)", fontFamily:"sans-serif" }}>
               <span style={{ width:3, height:3, background:"rgba(255,255,255,.65)", borderRadius:"50%", flexShrink:0 }}/>
               {t}
             </div>
@@ -681,7 +681,7 @@ function Marquee() {
       <div style={{ overflow:"hidden", padding:"7px 0", position:"relative", background:"rgba(0,0,0,.08)" }}>
         <div style={{ display:"flex", width:"max-content", animation:"marqueeRev 52s linear infinite" }}>
           {[...Array(2)].flatMap((_, r) => itemsBot.map((t, i) => (
-            <div key={"b"+r+t+i} style={{ display:"flex", alignItems:"center", gap:14, padding:"0 28px", whiteSpace:"nowrap", fontSize:9, fontWeight:500, letterSpacing:2.5, textTransform:"uppercase", color:"rgba(255,255,255,.65)", fontFamily:"sans-serif" }}>
+            <div key={"b"+r+t+i} style={{ display:"flex", alignItems:"center", gap:14, padding:"0 28px", whiteSpace:"nowrap", fontSize:11.5, fontWeight:500, letterSpacing:2.5, textTransform:"uppercase", color:"rgba(255,255,255,.65)", fontFamily:"sans-serif" }}>
               <span style={{ width:3, height:3, background:"rgba(255,255,255,.4)", borderRadius:"50%", flexShrink:0 }}/>
               {t}
             </div>
@@ -760,16 +760,16 @@ function CarCard({ car, onClick, comparar }) {
               transition:"transform .9s cubic-bezier(.16,1,.3,1), clip-path 1.1s cubic-bezier(.77,0,.18,1)" }}/>
           : <div style={{ width:"100%", height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6 }}>
               <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:46, fontWeight:900, color:"rgba(255,255,255,.03)", letterSpacing:-3 }}>{car.marca}</div>
-              <div style={{ fontSize:9, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.11)", fontFamily:"sans-serif" }}>Foto próximamente</div>
+              <div style={{ fontSize:11.5, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.11)", fontFamily:"sans-serif" }}>Foto próximamente</div>
             </div>
         }
-        <span style={{ position:"absolute", top:11, left:11, fontSize:8, letterSpacing:2, textTransform:"uppercase", padding:"4px 9px", background:car.tipo==="0km"?C.red:"rgba(0,0,0,.82)", color:car.tipo==="0km"?"#fff":"rgba(255,255,255,.62)", border:car.tipo==="0km"?"none":`1px solid ${C.border2}`, fontFamily:"sans-serif" }}>{car.tipo}</span>
-        {car.carroceria && <span style={{ position:"absolute", top:11, right:11, fontSize:8, letterSpacing:1.5, textTransform:"uppercase", padding:"4px 9px", background:"rgba(0,0,0,.78)", color:"rgba(255,255,255,.48)", fontFamily:"sans-serif" }}>{car.carroceria}</span>}
+        <span style={{ position:"absolute", top:11, left:11, fontSize:11, letterSpacing:2, textTransform:"uppercase", padding:"4px 9px", background:car.tipo==="0km"?C.red:"rgba(0,0,0,.82)", color:car.tipo==="0km"?"#fff":"rgba(255,255,255,.62)", border:car.tipo==="0km"?"none":`1px solid ${C.border2}`, fontFamily:"sans-serif" }}>{car.tipo}</span>
+        {car.carroceria && <span style={{ position:"absolute", top:11, right:11, fontSize:11, letterSpacing:1.5, textTransform:"uppercase", padding:"4px 9px", background:"rgba(0,0,0,.78)", color:"rgba(255,255,255,.48)", fontFamily:"sans-serif" }}>{car.carroceria}</span>}
         <div style={{ position:"absolute", bottom:0, left:0, width:hov?"100%":"0%", height:2, background:C.red, transition:"width .42s cubic-bezier(.16,1,.3,1)" }}/>
         {comparar && (
           <button onClick={e => { e.stopPropagation(); comparar.toggle(car.id); }} data-cursor-label={comparar.on ? "Quitar" : "Comparar"}
             disabled={!comparar.on && comparar.lleno} title={!comparar.on && comparar.lleno ? "Podés comparar hasta 3 autos" : ""}
-            style={{ position:"absolute", bottom:10, right:10, zIndex:4, display:"flex", alignItems:"center", gap:6, padding:"6px 11px", borderRadius:20, fontSize:9, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600,
+            style={{ position:"absolute", bottom:10, right:10, zIndex:4, display:"flex", alignItems:"center", gap:6, padding:"6px 11px", borderRadius:20, fontSize:11.5, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600,
               background: comparar.on ? C.red : "rgba(0,0,0,.72)", color: comparar.on ? "#fff" : "rgba(255,255,255,.8)", border:`1px solid ${comparar.on ? C.red : "rgba(255,255,255,.22)"}`,
               opacity: !comparar.on && comparar.lleno ? .35 : 1, backdropFilter:"blur(6px)", transition:"all .25s" }}>
             {comparar.on ? "✓ Comparando" : "⇄ Comparar"}
@@ -778,16 +778,16 @@ function CarCard({ car, onClick, comparar }) {
       </div>
       {/* Body */}
       <div style={{ padding:"18px 20px" }}>
-        <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:4, fontFamily:"sans-serif" }}>{car.marca}</div>
+        <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:4, fontFamily:"sans-serif" }}>{car.marca}</div>
         <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:25, fontWeight:700, textTransform:"uppercase", color:C.white, lineHeight:1, letterSpacing:-.5, marginBottom:2 }}>{car.modelo}</div>
-        {car.version && <div style={{ fontSize:10, color:C.muted, marginBottom:2, fontFamily:"sans-serif" }}>{car.version}</div>}
-        <div style={{ fontSize:10, color:C.muted2, marginBottom:15, fontFamily:"sans-serif" }}>{car.anio} · {km} · {car.color||""}</div>
+        {car.version && <div style={{ fontSize:12, color:C.muted, marginBottom:2, fontFamily:"sans-serif" }}>{car.version}</div>}
+        <div style={{ fontSize:12, color:C.muted2, marginBottom:15, fontFamily:"sans-serif" }}>{car.anio} · {km} · {car.color||""}</div>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:13, borderTop:`1px solid ${C.border}` }}>
           <div>
-            <div style={{ fontSize:8, letterSpacing:2, textTransform:"uppercase", color:C.muted2, fontFamily:"sans-serif", marginBottom:2 }}>Precio</div>
+            <div style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", color:C.muted2, fontFamily:"sans-serif", marginBottom:2 }}>Precio</div>
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:21, fontWeight:700, color:C.white }}>{precio}</div>
           </div>
-          <div style={{ fontSize:9, letterSpacing:2, textTransform:"uppercase", color:hov?C.red:C.muted, fontFamily:"sans-serif", transition:"color .3s" }}>Ver más →</div>
+          <div style={{ fontSize:11.5, letterSpacing:2, textTransform:"uppercase", color:hov?C.red:C.muted, fontFamily:"sans-serif", transition:"color .3s" }}>Ver más →</div>
         </div>
       </div>
     </div>
@@ -840,12 +840,12 @@ function CarModal({ car, onClose }) {
         <div style={{ padding:26 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:18, flexWrap:"wrap", gap:14 }}>
             <div>
-              <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif", marginBottom:6 }}>{car.marca} · {car.carroceria||""}</div>
+              <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif", marginBottom:6 }}>{car.marca} · {car.carroceria||""}</div>
               <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:42, fontWeight:900, textTransform:"uppercase", color:C.white, lineHeight:.9, letterSpacing:-1 }}>{car.modelo}</div>
               {car.version && <div style={{ fontSize:13, color:C.muted, marginTop:6, fontFamily:"sans-serif" }}>{car.version} · {car.anio}</div>}
             </div>
             <div style={{ textAlign:"right" }}>
-              <div style={{ fontSize:8, letterSpacing:2, textTransform:"uppercase", color:C.muted2, fontFamily:"sans-serif", marginBottom:3 }}>Precio</div>
+              <div style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", color:C.muted2, fontFamily:"sans-serif", marginBottom:3 }}>Precio</div>
               <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:32, fontWeight:700, color:C.white }}>{precio}</div>
               <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif" }}>{km}</div>
             </div>
@@ -854,18 +854,18 @@ function CarModal({ car, onClose }) {
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:1, background:C.border, marginBottom:22 }}>
             {[["Año",car.anio],["Kilómetros",km],["Color",car.color||"—"],["Tipo",car.tipo],["Carrocería",car.carroceria||"—"],["Marca",car.marca]].map(([k,v]) => (
               <div key={k} style={{ background:C.zinc, padding:"11px 14px" }}>
-                <div style={{ fontSize:8, letterSpacing:2, textTransform:"uppercase", color:C.muted2, fontFamily:"sans-serif" }}>{k}</div>
+                <div style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", color:C.muted2, fontFamily:"sans-serif" }}>{k}</div>
                 <div style={{ fontSize:12, color:C.white, marginTop:3, fontFamily:"sans-serif" }}>{v}</div>
               </div>
             ))}
           </div>
           <div style={{ display:"flex", gap:9, flexWrap:"wrap" }}>
             <a href={`https://wa.me/${WA_NORDEN}?text=Hola%20Norden%20Cars%2C%20me%20interesa%20el%20${carEnc}`} target="_blank" rel="noreferrer"
-              style={{ flex:1, background:C.red, color:"#fff", padding:"15px", textAlign:"center", fontSize:10, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600, textDecoration:"none", display:"flex", alignItems:"center", justifyContent:"center", gap:9, minWidth:150 }}>
+              style={{ flex:1, background:C.red, color:"#fff", padding:"15px", textAlign:"center", fontSize:12, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600, textDecoration:"none", display:"flex", alignItems:"center", justifyContent:"center", gap:9, minWidth:150 }}>
               Consultar por WhatsApp
             </a>
             <button onClick={doShare} data-cursor-label="Compartir"
-              style={{ flex:"0 0 auto", background:"transparent", color:C.white, padding:"15px 22px", border:`1px solid ${C.border2}`, cursor:"pointer", fontSize:10, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600, display:"flex", alignItems:"center", justifyContent:"center", gap:9, minWidth:132 }}>
+              style={{ flex:"0 0 auto", background:"transparent", color:C.white, padding:"15px 22px", border:`1px solid ${C.border2}`, cursor:"pointer", fontSize:12, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600, display:"flex", alignItems:"center", justifyContent:"center", gap:9, minWidth:132 }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
               {copied ? "¡Copiado!" : "Compartir"}
             </button>
@@ -913,7 +913,7 @@ function FlipCard({ s }) {
           <div style={{ color:C.red, height:32, display:"flex", alignItems:"center" }}><ServiceIcon name={s.i}/></div>
           <div>
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:19, fontWeight:700, textTransform:"uppercase", color:C.white, lineHeight:1.08, marginBottom:9, letterSpacing:.3 }}>{s.t}</div>
-            <div style={{ fontSize:8, letterSpacing:2.5, color:C.muted2, textTransform:"uppercase", fontFamily:"sans-serif", display:"flex", alignItems:"center", gap:7 }}><span style={{ width:14, height:1, background:C.red }}/>Ver más</div>
+            <div style={{ fontSize:11, letterSpacing:2.5, color:C.muted2, textTransform:"uppercase", fontFamily:"sans-serif", display:"flex", alignItems:"center", gap:7 }}><span style={{ width:14, height:1, background:C.red }}/>Ver más</div>
           </div>
         </div>
         {/* Back */}
@@ -942,8 +942,8 @@ function ReviewTile({ r }) {
       <div style={{ display:"flex", alignItems:"center", gap:10, borderTop:`1px solid ${C.border}`, paddingTop:15 }}>
         <div style={{ width:32, height:32, borderRadius:"50%", background:C.red, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Barlow Condensed',sans-serif", fontSize:12, fontWeight:700, color:"#fff", flexShrink:0 }}>{(r.nombre||"?").substring(0,2).toUpperCase()}</div>
         <div>
-          <div style={{ fontSize:10, fontWeight:500, textTransform:"uppercase", letterSpacing:.5, color:C.white, fontFamily:"sans-serif" }}>{r.nombre}</div>
-          <div style={{ fontSize:9, color:C.muted2, fontFamily:"sans-serif" }}>{r.detalle}</div>
+          <div style={{ fontSize:12, fontWeight:500, textTransform:"uppercase", letterSpacing:.5, color:C.white, fontFamily:"sans-serif" }}>{r.nombre}</div>
+          <div style={{ fontSize:11.5, color:C.muted2, fontFamily:"sans-serif" }}>{r.detalle}</div>
         </div>
       </div>
     </div>
@@ -1044,7 +1044,7 @@ function ProcesoOrbital() {
           <div key={i} style={{ background:C.zinc, padding:"24px 22px", display:"flex", gap:16, alignItems:"flex-start" }}>
             <div style={{ width:48, height:48, borderRadius:"50%", border:`1px solid ${C.red}`, color:C.red, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{ICON(i)}</div>
             <div>
-              <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:6, fontFamily:"sans-serif" }}>Paso {s.n}</div>
+              <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:6, fontFamily:"sans-serif" }}>Paso {s.n}</div>
               <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom:7 }}>{s.t}</div>
               <div style={{ fontSize:12.5, fontWeight:300, lineHeight:1.7, color:C.muted, fontFamily:"sans-serif" }}>{s.d}</div>
             </div>
@@ -1219,7 +1219,7 @@ function Footer({ navTo }) {
                   width:34, height:34, borderRadius:"50%",
                   border:`1px solid ${C.border2}`,
                   display:"flex", alignItems:"center", justifyContent:"center",
-                  fontSize:9, letterSpacing:1.5, fontFamily:"sans-serif", fontWeight:600,
+                  fontSize:11.5, letterSpacing:1.5, fontFamily:"sans-serif", fontWeight:600,
                   color:C.muted, textDecoration:"none",
                   transition:"all .3s",
                 }}
@@ -1231,7 +1231,7 @@ function Footer({ navTo }) {
           </div>
         </div>
         <div>
-          <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:14, fontFamily:"sans-serif" }}>Navegación</div>
+          <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:14, fontFamily:"sans-serif" }}>Navegación</div>
           {[["home","Inicio"],["stock","Stock"],["okm","0km"],["vender","Vendé tu auto"],["nosotros","Nosotros"],["contacto","Contacto"]].map(([p,l]) => (
             <div key={p} style={{ marginBottom:9 }}>
               <FooterLink onClick={() => navTo(p)}>{l}</FooterLink>
@@ -1239,7 +1239,7 @@ function Footer({ navTo }) {
           ))}
         </div>
         <div>
-          <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:14, fontFamily:"sans-serif" }}>Contacto</div>
+          <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:14, fontFamily:"sans-serif" }}>Contacto</div>
           {[["https://www.instagram.com/norden.cars/","@norden.cars"],[`https://wa.me/${WA_NORDEN}`,"WhatsApp Norden Cars"]].map(([href,l]) => (
             <div key={l} style={{ marginBottom:9 }}>
               <FooterLink href={href}>{l}</FooterLink>
@@ -1248,8 +1248,8 @@ function Footer({ navTo }) {
         </div>
       </div>
       <div style={{ position:"relative", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:8 }}>
-        <div style={{ fontSize:9, color:"#2a2a2a", fontFamily:"sans-serif", letterSpacing:.5 }}>© 2025 NordenCars · Todos los derechos reservados</div>
-        <div style={{ fontSize:9, color:"#2a2a2a", fontFamily:"sans-serif", letterSpacing:.5, display:"flex", alignItems:"center", gap:8 }}>
+        <div style={{ fontSize:11.5, color:"#2a2a2a", fontFamily:"sans-serif", letterSpacing:.5 }}>© 2025 NordenCars · Todos los derechos reservados</div>
+        <div style={{ fontSize:11.5, color:"#2a2a2a", fontFamily:"sans-serif", letterSpacing:.5, display:"flex", alignItems:"center", gap:8 }}>
           <span style={{ width:8, height:1, background:C.red, opacity:.6 }}/>
           Yerba Buena, Tucumán
         </div>
@@ -1304,7 +1304,7 @@ function AdminPanel({ onExit }) {
           onKeyDown={e => e.key==="Enter" && (pass===ADMIN_PASS ? setAuth(true) : showToast("Contraseña incorrecta",false))}
           style={{ width:"100%", background:"rgba(255,255,255,.04)", border:`1px solid ${C.border2}`, color:C.white, padding:"11px 13px", fontSize:13, fontFamily:"sans-serif", outline:"none", marginBottom:11, boxSizing:"border-box" }}/>
         <Btn primary full onClick={() => pass===ADMIN_PASS ? setAuth(true) : showToast("Contraseña incorrecta",false)}>Ingresar</Btn>
-        <button onClick={onExit} style={{ marginTop:10, background:"none", border:"none", color:C.muted, fontSize:10, cursor:"pointer", fontFamily:"sans-serif", width:"100%" }}>← Volver a la página</button>
+        <button onClick={onExit} style={{ marginTop:10, background:"none", border:"none", color:C.muted, fontSize:12, cursor:"pointer", fontFamily:"sans-serif", width:"100%" }}>← Volver a la página</button>
         {toast && <div style={{ marginTop:10, padding:"10px 13px", background:toast.ok?"#16a34a":C.red, color:"#fff", fontSize:12, fontFamily:"sans-serif" }}>{toast.msg}</div>}
       </div>
     </div>
@@ -1321,8 +1321,8 @@ function AdminPanel({ onExit }) {
           <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:14, fontWeight:700, textTransform:"uppercase", color:C.white, letterSpacing:1 }}>Panel de Administración</span>
         </div>
         <div style={{ display:"flex", gap:7 }}>
-          <button onClick={fetchAll} style={{ background:"rgba(255,255,255,.06)", border:`1px solid ${C.border2}`, color:C.white, padding:"6px 13px", cursor:"pointer", fontSize:9, fontFamily:"sans-serif" }}>{loading?"Cargando...":"↻ Actualizar"}</button>
-          <button onClick={onExit} style={{ background:C.red, border:"none", color:"#fff", padding:"6px 13px", cursor:"pointer", fontSize:9, fontFamily:"sans-serif" }}>← Salir</button>
+          <button onClick={fetchAll} style={{ background:"rgba(255,255,255,.06)", border:`1px solid ${C.border2}`, color:C.white, padding:"6px 13px", cursor:"pointer", fontSize:11.5, fontFamily:"sans-serif" }}>{loading?"Cargando...":"↻ Actualizar"}</button>
+          <button onClick={onExit} style={{ background:C.red, border:"none", color:"#fff", padding:"6px 13px", cursor:"pointer", fontSize:11.5, fontFamily:"sans-serif" }}>← Salir</button>
         </div>
       </div>
 
@@ -1422,19 +1422,19 @@ function AdminPanel({ onExit }) {
                 <div style={{ flex:1 }}>
                   <div style={{ display:"flex", gap:9, alignItems:"center", marginBottom:5, flexWrap:"wrap" }}>
                     <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700, color:C.white }}>{c.nombre}</span>
-                    <span style={{ fontSize:8, letterSpacing:2, textTransform:"uppercase", padding:"3px 8px", background:c.estado==="nueva"?C.red:"rgba(255,255,255,.07)", color:"#fff", fontFamily:"sans-serif" }}>{c.estado}</span>
+                    <span style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", padding:"3px 8px", background:c.estado==="nueva"?C.red:"rgba(255,255,255,.07)", color:"#fff", fontFamily:"sans-serif" }}>{c.estado}</span>
                   </div>
                   {c.telefono && <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif" }}>📱 {c.telefono}</div>}
                   {c.email && <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif" }}>✉️ {c.email}</div>}
                   {c.vehiculo_interes && <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif" }}>🚗 {c.vehiculo_interes}</div>}
                   {c.mensaje && <div style={{ fontSize:12, color:"rgba(245,245,245,.45)", marginTop:7, fontFamily:"sans-serif", lineHeight:1.5 }}>{c.mensaje}</div>}
-                  <div style={{ fontSize:9, color:C.muted2, marginTop:7, fontFamily:"sans-serif" }}>{new Date(c.created_at).toLocaleString("es-AR")}</div>
+                  <div style={{ fontSize:11.5, color:C.muted2, marginTop:7, fontFamily:"sans-serif" }}>{new Date(c.created_at).toLocaleString("es-AR")}</div>
                 </div>
                 <div style={{ display:"flex", gap:5, flexDirection:"column", flexShrink:0 }}>
                   <a href={`https://wa.me/${(c.telefono||"").replace(/\D/g,"")||WA_NORDEN}?text=Hola%20${encodeURIComponent(c.nombre)}%2C%20te%20escribo%20de%20NordenCars!`} target="_blank" rel="noreferrer"
-                    style={{ background:"#128C7E", color:"#fff", padding:"6px 10px", fontSize:9, fontFamily:"sans-serif", textDecoration:"none", textAlign:"center" }}>WA</a>
+                    style={{ background:"#128C7E", color:"#fff", padding:"6px 10px", fontSize:11.5, fontFamily:"sans-serif", textDecoration:"none", textAlign:"center" }}>WA</a>
                   <select value={c.estado} onChange={async e => { await db.upd("consultas",{estado:e.target.value},"id",c.id); fetchAll(); }}
-                    style={{ background:C.zinc2, border:`1px solid ${C.border2}`, color:C.white, padding:"5px", fontSize:9, fontFamily:"sans-serif", cursor:"pointer" }}>
+                    style={{ background:C.zinc2, border:`1px solid ${C.border2}`, color:C.white, padding:"5px", fontSize:11.5, fontFamily:"sans-serif", cursor:"pointer" }}>
                     {["nueva","vista","respondida","cerrada"].map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
@@ -1451,11 +1451,11 @@ function AdminPanel({ onExit }) {
               <div key={r.id} style={{ background:C.zinc, padding:"14px 18px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:14 }}>
                 <div>
                   <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:700, color:C.white }}>{r.nombre}</div>
-                  <div style={{ fontSize:10, color:C.muted, fontFamily:"sans-serif" }}>{r.detalle} · {"★".repeat(r.estrellas)}{"☆".repeat(5-r.estrellas)}</div>
+                  <div style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif" }}>{r.detalle} · {"★".repeat(r.estrellas)}{"☆".repeat(5-r.estrellas)}</div>
                   <div style={{ fontSize:12, color:"rgba(245,245,245,.42)", marginTop:4, fontFamily:"sans-serif" }}>{r.texto}</div>
                 </div>
                 <button onClick={async () => { await db.upd("resenas",{activo:!r.activo},"id",r.id); fetchAll(); }}
-                  style={{ background:r.activo?"rgba(22,163,74,.1)":"rgba(255,255,255,.04)", border:`1px solid ${r.activo?"#16a34a":C.border2}`, color:r.activo?"#4ade80":C.muted, padding:"5px 11px", cursor:"pointer", fontSize:9, fontFamily:"sans-serif", whiteSpace:"nowrap" }}>
+                  style={{ background:r.activo?"rgba(22,163,74,.1)":"rgba(255,255,255,.04)", border:`1px solid ${r.activo?"#16a34a":C.border2}`, color:r.activo?"#4ade80":C.muted, padding:"5px 11px", cursor:"pointer", fontSize:11.5, fontFamily:"sans-serif", whiteSpace:"nowrap" }}>
                   {r.activo?"✓ Activa":"○ Inactiva"}
                 </button>
               </div>
@@ -1479,16 +1479,16 @@ function AdminCarCard({ v, onEdit, onDelete, onToggle }) {
     <div style={{ background:C.zinc, padding:"16px 18px", opacity:v.activo?1:.45 }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
         <div>
-          <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif" }}>{v.marca}</div>
+          <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif" }}>{v.marca}</div>
           <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:700, textTransform:"uppercase", color:C.white }}>{v.modelo}</div>
-          <div style={{ fontSize:10, color:C.muted, fontFamily:"sans-serif" }}>{v.version||""} · {v.anio} · {v.tipo}</div>
+          <div style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif" }}>{v.version||""} · {v.anio} · {v.tipo}</div>
         </div>
         <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700, color:C.white }}>{v.precio_usd?`USD ${Number(v.precio_usd).toLocaleString("es-AR")}`:"—"}</div>
       </div>
       <div style={{ display:"flex", gap:5 }}>
-        <button onClick={onEdit} style={{ background:"rgba(255,255,255,.06)", border:`1px solid ${C.border2}`, color:C.white, padding:"5px 12px", cursor:"pointer", fontSize:9, fontFamily:"sans-serif", flex:1 }}>✏️ Editar</button>
-        <button onClick={onToggle} style={{ background:v.activo?"rgba(255,255,255,.04)":"rgba(22,163,74,.1)", border:`1px solid ${v.activo?C.border2:"#16a34a"}`, color:v.activo?C.muted:"#4ade80", padding:"5px 10px", cursor:"pointer", fontSize:9, fontFamily:"sans-serif" }}>{v.activo?"Ocultar":"Mostrar"}</button>
-        <button onClick={onDelete} style={{ background:"rgba(220,38,38,.1)", border:"1px solid rgba(220,38,38,.28)", color:"#f87171", padding:"5px 10px", cursor:"pointer", fontSize:10 }}>🗑</button>
+        <button onClick={onEdit} style={{ background:"rgba(255,255,255,.06)", border:`1px solid ${C.border2}`, color:C.white, padding:"5px 12px", cursor:"pointer", fontSize:11.5, fontFamily:"sans-serif", flex:1 }}>✏️ Editar</button>
+        <button onClick={onToggle} style={{ background:v.activo?"rgba(255,255,255,.04)":"rgba(22,163,74,.1)", border:`1px solid ${v.activo?C.border2:"#16a34a"}`, color:v.activo?C.muted:"#4ade80", padding:"5px 10px", cursor:"pointer", fontSize:11.5, fontFamily:"sans-serif" }}>{v.activo?"Ocultar":"Mostrar"}</button>
+        <button onClick={onDelete} style={{ background:"rgba(220,38,38,.1)", border:"1px solid rgba(220,38,38,.28)", color:"#f87171", padding:"5px 10px", cursor:"pointer", fontSize:12 }}>🗑</button>
       </div>
     </div>
   );
@@ -1498,7 +1498,7 @@ function AdminCarCard({ v, onEdit, onDelete, onToggle }) {
 function FormField({ label, k, type = "text", opts = null, d, set }) {
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:4, marginBottom:10 }}>
-      <label style={{ fontSize:8, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{label}</label>
+      <label style={{ fontSize:11, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{label}</label>
       {opts
         ? <select value={d[k]||""} onChange={e => set(k, e.target.value)}
             style={{ background:C.zinc3, border:`1px solid ${C.border2}`, color:C.white, padding:"9px 11px", fontSize:11, fontFamily:"sans-serif", outline:"none" }}>
@@ -1535,7 +1535,7 @@ function CarForm({ car, onSave, onCancel }) {
       </div>
       <FormField label="Color" k="color" d={d} set={set}/>
       <div style={{ display:"flex", flexDirection:"column", gap:4, marginBottom:10 }}>
-        <label style={{ fontSize:8, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>Descripción</label>
+        <label style={{ fontSize:11, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>Descripción</label>
         <textarea value={d.descripcion||""} onChange={e => set("descripcion",e.target.value)} rows={3}
           style={{ background:C.zinc3, border:`1px solid ${C.border2}`, color:C.white, padding:"9px 11px", fontSize:11, fontFamily:"sans-serif", resize:"vertical", outline:"none" }}/>
       </div>
@@ -1567,11 +1567,11 @@ function ConfigEditor({ config, showToast, onRefresh }) {
     <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
       {items.map(([k,label]) => (
         <div key={k} style={{ background:C.zinc, padding:"15px 18px", border:`1px solid ${C.border}` }}>
-          <div style={{ fontSize:8, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif", marginBottom:6 }}>{label}</div>
+          <div style={{ fontSize:11, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif", marginBottom:6 }}>{label}</div>
           <div style={{ display:"flex", gap:9 }}>
             <input value={vals[k]||""} onChange={e => setVals(p => ({...p,[k]:e.target.value}))}
               style={{ flex:1, background:C.zinc2, border:`1px solid ${C.border2}`, color:C.white, padding:"9px 13px", fontSize:12, fontFamily:"sans-serif", outline:"none" }}/>
-            <button onClick={() => save(k,vals[k])} style={{ background:C.red, border:"none", color:"#fff", padding:"9px 16px", cursor:"pointer", fontSize:9, fontFamily:"sans-serif" }}>Guardar</button>
+            <button onClick={() => save(k,vals[k])} style={{ background:C.red, border:"none", color:"#fff", padding:"9px 16px", cursor:"pointer", fontSize:11.5, fontFamily:"sans-serif" }}>Guardar</button>
           </div>
         </div>
       ))}
@@ -1610,7 +1610,7 @@ function NumberStatTile({ pre, n, suf, l }) {
         {pre}{<StatCounter value={n} duration={1600}/>}{suf}
       </div>
       <div style={{
-        fontSize:8, letterSpacing:3, textTransform:"uppercase",
+        fontSize:11, letterSpacing:3, textTransform:"uppercase",
         color: hov ? "rgba(255,255,255,.95)" : "rgba(255,255,255,.56)",
         marginTop:8, fontFamily:"sans-serif",
         transition:"color .35s",
@@ -1620,14 +1620,14 @@ function NumberStatTile({ pre, n, suf, l }) {
 }
 
 /* ─── HERO STAT ITEM (con divisor animado e indicador rojo en hover) ─────── */
-function HeroStatItem({ pre, n, suf, l, last }) {
+function HeroStatItem({ pre, n, suf, l, last, mob }) {
   const [hov, setHov] = useState(false);
   return (
     <div
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        flex:1, padding:"18px 4vw", position:"relative",
+        flex:1, minWidth:0, padding: mob ? "14px 2.5vw" : "18px 4vw", position:"relative",
         borderRight: !last ? `1px solid ${C.border}` : "none",
         cursor:"default",
         background: hov ? "rgba(220,38,38,.04)" : "transparent",
@@ -1640,13 +1640,13 @@ function HeroStatItem({ pre, n, suf, l, last }) {
         background: C.red,
         transition:"width .55s cubic-bezier(.16,1,.3,1)",
       }}/>
-      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:26, fontWeight:700, color:C.white, lineHeight:1 }}>
+      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize: mob ? 22 : 26, fontWeight:700, color:C.white, lineHeight:1 }}>
         {pre && <span style={{color:C.red}}>{pre}</span>}
         {isNaN(parseInt(n)) ? n : <StatCounter value={n} duration={1400}/>}
         {suf && <span style={{color:C.red}}>{suf}</span>}
       </div>
       <div style={{
-        fontSize:8, letterSpacing:2, textTransform:"uppercase",
+        fontSize: mob ? 10 : 11, letterSpacing: mob ? .4 : 2, textTransform:"uppercase", lineHeight:1.25,
         color: hov ? "rgba(245,245,245,.78)" : C.muted,
         marginTop:4, fontFamily:"sans-serif",
         transition:"color .35s",
@@ -1746,7 +1746,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
           opacity: heroOpacity,
           willChange:"transform, opacity",
         }}>
-          <div style={{ fontSize:9, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:18, display:"flex", alignItems:"center", gap:12, fontFamily:"sans-serif", animation:"fadeUp .8s .15s both", flexWrap:"wrap", overflow:"visible" }}>
+          <div style={{ fontSize:11.5, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:18, display:"flex", alignItems:"center", gap:12, fontFamily:"sans-serif", animation:"fadeUp .8s .15s both", flexWrap:"wrap", overflow:"visible" }}>
             <span style={{ width:24, height:1, background:C.red, flexShrink:0 }}/>Yerba Buena, Tucumán · Est. 2022
           </div>
           {/* Título con split + reveal palabra por palabra */}
@@ -1778,14 +1778,14 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
 
         {/* Scroll indicator */}
         <div style={{ position:"absolute", right:"5vw", bottom:88, display:"flex", flexDirection:"column", alignItems:"center", gap:9, zIndex:2, opacity: heroOpacity, transition:"opacity .25s" }}>
-          <span style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:"#2e2e2e", writingMode:"vertical-rl", fontFamily:"sans-serif" }}>Scroll</span>
+          <span style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:"#2e2e2e", writingMode:"vertical-rl", fontFamily:"sans-serif" }}>Scroll</span>
           <div style={{ width:1, height:58, background:"linear-gradient(to bottom,#DC2626,transparent)", animation:"pulse 2s ease-in-out infinite" }}/>
         </div>
 
         {/* Stats bar */}
         <div style={{ position:"absolute", bottom:0, left:0, right:0, display:"flex", borderTop:`1px solid ${C.border}`, background:"rgba(5,5,5,.92)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", zIndex:2 }}>
           {[["+","100","","Vehículos vendidos"],["","100","%","Satisfacción"],["","17","","Marcas 0km"],["","Tucumán","","Yerba Buena"]].map(([pre,n,suf,l],i) => (
-            <HeroStatItem key={i} pre={pre} n={n} suf={suf} l={l} last={i===3}/>
+            <HeroStatItem key={i} pre={pre} n={n} suf={suf} l={l} last={i===3} mob={mob}/>
           ))}
         </div>
       </section>
@@ -1951,6 +1951,9 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
       {/* ── VIDEOS ── */}
       <VideosSection videos={videosData}/>
 
+      {/* ── INSTAGRAM ── (Ale: junto a clientes y videos, antes de ubicación) */}
+      <InstagramPerfil/>
+
       <SectionDivider/>
 
       {/* ── LOCATION ── */}
@@ -1987,9 +1990,6 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
 
       {/* ── FAQ ── */}
       <FAQSection navTo={navTo}/>
-
-      {/* ── INSTAGRAM ── */}
-      <InstagramPerfil/>
 
       <Footer navTo={navTo}/>
     </>
@@ -2209,10 +2209,10 @@ function PageHeader({ tag, bgWord, subtitle, children }) {
 function StockFilterBar({ label, opts, val, set }) {
   return (
     <div>
-      <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.muted2, marginBottom:7, fontFamily:"sans-serif" }}>{label}</div>
+      <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.muted2, marginBottom:7, fontFamily:"sans-serif" }}>{label}</div>
       <div style={{ display:"flex", flexWrap:"wrap", gap:2 }}>
         {opts.map(o => (
-          <button key={o} onClick={() => set(o)} style={{ fontSize:9, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", padding:"5px 11px", cursor:"pointer", border:"none", transition:"all .2s", background:val===o?C.red:"rgba(255,255,255,.05)", color:val===o?"#fff":C.muted }}>{o}</button>
+          <button key={o} onClick={() => set(o)} style={{ fontSize:11.5, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", padding:"5px 11px", cursor:"pointer", border:"none", transition:"all .2s", background:val===o?C.red:"rgba(255,255,255,.05)", color:val===o?"#fff":C.muted }}>{o}</button>
         ))}
       </div>
     </div>
@@ -2255,7 +2255,7 @@ function StockPage({ stockData, setSelectedCar, loading }) {
         <StockFilterBar label="Carrocería" opts={CARROCERIAS} val={fBody} set={setFBody}/>
         <StockFilterBar label="Año" opts={years} val={fYear} set={setFYear}/>
         <button onClick={() => { setFType("Todos");setFBrand("Todas");setFBody("Todos");setFYear("Todos"); }}
-          style={{ alignSelf:"flex-end", background:"none", border:`1px solid ${C.border2}`, color:C.muted, padding:"5px 13px", fontSize:8, letterSpacing:2, textTransform:"uppercase", cursor:"pointer", fontFamily:"sans-serif" }}>× Limpiar</button>
+          style={{ alignSelf:"flex-end", background:"none", border:`1px solid ${C.border2}`, color:C.muted, padding:"5px 13px", fontSize:11, letterSpacing:2, textTransform:"uppercase", cursor:"pointer", fontFamily:"sans-serif" }}>× Limpiar</button>
       </div>
       {/* Grid */}
       <div style={{ padding:"46px 5vw", background:"linear-gradient(to bottom,#0d0d0d,#111)" }}>
@@ -2299,7 +2299,7 @@ function BarraComparar({ autos, quitar, limpiar, abrir }) {
           return a ? (
             <div key={a.id} style={{ position:"relative", width: mob ? 44 : 54, height: mob ? 34 : 40, borderRadius:6, overflow:"hidden", background:C.zinc3, border:`1px solid ${C.border2}` }}>
               {a.fotos?.[0] && <img src={a.fotos[0]} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>}
-              <button onClick={() => quitar(a.id)} aria-label="Quitar" style={{ position:"absolute", top:1, right:1, width:16, height:16, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.8)", color:"#fff", fontSize:10, lineHeight:"16px", padding:0 }}>×</button>
+              <button onClick={() => quitar(a.id)} aria-label="Quitar" style={{ position:"absolute", top:1, right:1, width:16, height:16, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.8)", color:"#fff", fontSize:12, lineHeight:"16px", padding:0 }}>×</button>
             </div>
           ) : <div key={i} style={{ width: mob ? 44 : 54, height: mob ? 34 : 40, borderRadius:6, border:`1px dashed ${C.border2}` }}/>;
         })}
@@ -2307,7 +2307,7 @@ function BarraComparar({ autos, quitar, limpiar, abrir }) {
       {!mob && <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif", maxWidth:170, lineHeight:1.4 }}>{autos.length === 1 ? "Elegí otro auto para comparar" : `${autos.length} autos elegidos`}</div>}
       <button onClick={limpiar} aria-label="Limpiar" style={{ background:"none", border:"none", color:C.muted, fontSize: mob ? 18 : 10, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", padding: mob ? "0 4px" : 0 }}>{mob ? "×" : "Limpiar"}</button>
       <button onClick={abrir} disabled={autos.length < 2}
-        style={{ background: autos.length < 2 ? C.zinc3 : C.red, color: autos.length < 2 ? C.muted : "#fff", border:"none", borderRadius:9, padding: mob ? "11px 12px" : "11px 16px", fontSize:10, letterSpacing: mob ? 1.2 : 2, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:700, whiteSpace:"nowrap" }}>
+        style={{ background: autos.length < 2 ? C.zinc3 : C.red, color: autos.length < 2 ? C.muted : "#fff", border:"none", borderRadius:9, padding: mob ? "11px 12px" : "11px 16px", fontSize:12, letterSpacing: mob ? 1.2 : 2, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:700, whiteSpace:"nowrap" }}>
         Comparar {autos.length}/3
       </button>
     </div>
@@ -2354,7 +2354,7 @@ function ComparadorModal({ autos, quitar, onClose, verAuto }) {
       <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:980, maxHeight: mob ? "92vh" : "90vh", overflow:"auto", background:C.zinc, border:`1px solid ${C.border2}`, borderRadius: mob ? "16px 16px 0 0" : 4 }}>
         <div style={{ position:"sticky", top:0, zIndex:2, background:C.zinc, display:"flex", justifyContent:"space-between", alignItems:"center", padding: mob ? "14px" : "18px 24px", borderBottom:`1px solid ${C.border}` }}>
           <div>
-            <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif" }}>Comparador</div>
+            <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif" }}>Comparador</div>
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize: mob ? 22 : 28, fontWeight:900, textTransform:"uppercase", color:C.white, lineHeight:1 }}>Lado a lado</div>
           </div>
           <button onClick={onClose} aria-label="Cerrar" style={{ width:34, height:34, background:"transparent", border:`1px solid ${C.border2}`, color:"#fff", fontSize:18 }}>×</button>
@@ -2369,9 +2369,9 @@ function ComparadorModal({ autos, quitar, onClose, verAuto }) {
                   {a.fotos?.[0] && <img src={a.fotos[0]} alt={a.modelo} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>}
                   {autos.length > 2 && <button onClick={() => quitar(a.id)} aria-label="Quitar" style={{ position:"absolute", top:6, right:6, width:24, height:24, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.75)", color:"#fff", fontSize:13 }}>×</button>}
                 </div>
-                <div style={{ fontSize:8, letterSpacing:2.5, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif", marginTop:9 }}>{a.marca}</div>
+                <div style={{ fontSize:11, letterSpacing:2.5, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif", marginTop:9 }}>{a.marca}</div>
                 <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize: mob ? 18 : 24, fontWeight:800, textTransform:"uppercase", color:C.white, lineHeight:1 }}>{a.modelo}</div>
-                {a.version && <div style={{ fontSize:10.5, color:C.muted, fontFamily:"sans-serif", marginTop:3, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{a.version}</div>}
+                {a.version && <div style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif", marginTop:3, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{a.version}</div>}
               </div>
             ))}
           </div>
@@ -2380,7 +2380,7 @@ function ComparadorModal({ autos, quitar, onClose, verAuto }) {
           <div style={{ marginTop:16 }}>
             {filas.map(([label, val, gana]) => (
               <div key={label} style={{ borderTop:`1px solid ${C.border}`, padding: mob ? "9px 0" : "11px 0" }}>
-                <div style={{ fontSize:9, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif", marginBottom:5 }}>{label}</div>
+                <div style={{ fontSize:11.5, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif", marginBottom:5 }}>{label}</div>
                 <div style={{ display:"grid", gridTemplateColumns:cols, gap }}>
                   {autos.map((a, i) => {
                     const g = gana && gana(a, i);
@@ -2388,7 +2388,7 @@ function ComparadorModal({ autos, quitar, onClose, verAuto }) {
                     return (
                       <div key={a.id} style={{ minWidth:0 }}>
                         <div style={{ fontFamily: esPrecio ? "'Barlow Condensed',sans-serif" : "sans-serif", fontSize: esPrecio ? (mob ? 17 : 22) : (mob ? 12 : 13.5), fontWeight: esPrecio ? 700 : 400, color: g ? "#4ade80" : C.white }}>{val(a)}</div>
-                        {g && <div style={{ display:"inline-block", marginTop:4, fontSize:8, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:700, color:"#4ade80", border:"1px solid rgba(74,222,128,.35)", padding:"2px 6px", borderRadius:10 }}>{g}</div>}
+                        {g && <div style={{ display:"inline-block", marginTop:4, fontSize:11, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:700, color:"#4ade80", border:"1px solid rgba(74,222,128,.35)", padding:"2px 6px", borderRadius:10 }}>{g}</div>}
                       </div>
                     );
                   })}
@@ -2402,12 +2402,12 @@ function ComparadorModal({ autos, quitar, onClose, verAuto }) {
             {autos.map(a => (
               <div key={a.id} style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 <a href={`https://wa.me/${WA_NORDEN}?text=${encodeURIComponent(`Hola Norden Cars! Me interesa el ${a.marca} ${a.modelo} ${a.anio} que vi en la web.`)}`} target="_blank" rel="noreferrer"
-                  style={{ background:C.red, color:"#fff", textAlign:"center", padding: mob ? "10px 4px" : "12px", fontSize:9, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:700, textDecoration:"none" }}>Consultar</a>
-                <button onClick={() => verAuto(a)} style={{ background:"transparent", color:C.white, border:`1px solid ${C.border2}`, padding: mob ? "9px 4px" : "11px", fontSize:9, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif" }}>Ver fotos</button>
+                  style={{ background:C.red, color:"#fff", textAlign:"center", padding: mob ? "10px 4px" : "12px", fontSize:11.5, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:700, textDecoration:"none" }}>Consultar</a>
+                <button onClick={() => verAuto(a)} style={{ background:"transparent", color:C.white, border:`1px solid ${C.border2}`, padding: mob ? "9px 4px" : "11px", fontSize:11.5, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif" }}>Ver fotos</button>
               </div>
             ))}
           </div>
-          {!mismaMoneda && <p style={{ fontSize:10.5, color:C.muted, fontFamily:"sans-serif", marginTop:14 }}>Hay autos en pesos y en dólares: el precio no se compara.</p>}
+          {!mismaMoneda && <p style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif", marginTop:14 }}>Hay autos en pesos y en dólares: el precio no se compara.</p>}
         </div>
       </div>
     </div>
@@ -2506,7 +2506,7 @@ function NosotrosPage({ navTo }) {
                   <div style={{ width:40, height:40, borderRadius:"50%", background:"#128C7E", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><WaSvg size={19}/></div>
                   <div>
                     <div style={{ fontSize:11, fontWeight:600, letterSpacing:1, textTransform:"uppercase", color:C.white, fontFamily:"sans-serif" }}>WhatsApp Norden Cars</div>
-                    <div style={{ fontSize:10, color:C.muted, fontFamily:"sans-serif" }}>{WA_NORDEN_DISP}</div>
+                    <div style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif" }}>{WA_NORDEN_DISP}</div>
                   </div>
                 </a>
               </div>
@@ -2535,7 +2535,7 @@ function NosotrosPage({ navTo }) {
 function ContactFormField({ label, fkey, type = "text", form, set }) {
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:4, marginBottom:11 }}>
-      <label style={{ fontSize:8, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{label}</label>
+      <label style={{ fontSize:11, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{label}</label>
       <input
         type={type}
         value={form[fkey]}
@@ -2570,7 +2570,7 @@ function ContactoPage({ config, navTo }) {
         style={{ display:"flex", alignItems:"center", gap:16, padding:"18px 20px", background:hov?C.zinc2:C.zinc, border:`1px solid ${hov?C.red:C.border}`, transform:hov?"translateX(6px)":"translateX(0)", transition:"all .3s", cursor:"pointer", textDecoration:"none", color:"inherit", marginBottom:2 }}>
         <div style={{ width:48, height:48, borderRadius:"50%", background:"#128C7E", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transform:hov?"scale(1.08)":"scale(1)", transition:"transform .3s" }}><WaSvg size={21}/></div>
         <div style={{ flex:1 }}>
-          <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.muted, marginBottom:3, fontFamily:"sans-serif" }}>WhatsApp oficial</div>
+          <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.muted, marginBottom:3, fontFamily:"sans-serif" }}>WhatsApp oficial</div>
           <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:700, textTransform:"uppercase", color:C.white }}>{name}</div>
           <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif" }}>{phone}</div>
         </div>
@@ -2598,14 +2598,14 @@ function ContactoPage({ config, navTo }) {
                   <img src="/images/qr-whatsapp.png" alt="QR WhatsApp Norden Cars" style={{ width:96, height:96, display:"block" }}/>
                 </div>
                 <div>
-                  <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:6, fontFamily:"sans-serif" }}>Escaneá y escribinos</div>
+                  <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:6, fontFamily:"sans-serif" }}>Escaneá y escribinos</div>
                   <div style={{ fontSize:13, fontWeight:300, color:"rgba(245,245,245,.6)", lineHeight:1.6, fontFamily:"sans-serif" }}>Apuntá la cámara de tu celular al código y se abre el chat de WhatsApp.</div>
                 </div>
               </div>
             </Reveal>
             <Reveal delay={.4}>
               <div style={{ marginTop:26, padding:"20px", background:C.zinc, border:`1px solid ${C.border}` }}>
-                <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:10, fontFamily:"sans-serif" }}>Ubicación</div>
+                <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:10, fontFamily:"sans-serif" }}>Ubicación</div>
                 <div style={{ fontSize:13, fontWeight:300, color:"rgba(245,245,245,.58)", lineHeight:1.7, fontFamily:"sans-serif" }}>
                   📍 Galería Mercato, Casco Viejo<br/>Yerba Buena, Tucumán, Argentina<br/><br/>
                   🕐 Lun a Vie: 9–13 y 16:30–20:30hs<br/>Sáb: 9–12:30hs
@@ -2627,7 +2627,7 @@ function ContactoPage({ config, navTo }) {
                   <ContactFormField label="Email" fkey="email" type="email" form={form} set={set}/>
                   <ContactFormField label="¿Qué vehículo buscás?" fkey="vehiculo_interes" form={form} set={set}/>
                   <div style={{ display:"flex", flexDirection:"column", gap:4, marginBottom:11 }}>
-                    <label style={{ fontSize:8, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>Mensaje</label>
+                    <label style={{ fontSize:11, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>Mensaje</label>
                     <textarea value={form.mensaje} onChange={e => set("mensaje",e.target.value)} rows={4} placeholder="Contanos más..."
                       style={{ background:"rgba(255,255,255,.03)", border:`1px solid ${C.border2}`, color:C.white, padding:"10px 12px", fontSize:12, fontFamily:"sans-serif", resize:"vertical", outline:"none" }}
                       onFocus={e => e.target.style.borderColor=C.red} onBlur={e => e.target.style.borderColor=C.border2}/>
@@ -2712,14 +2712,14 @@ function OkmCard({ m, onClick }) {
           background:"linear-gradient(105deg, transparent, rgba(255,255,255,.08), transparent)", pointerEvents:"none" }}/>
       </div>
       <div style={{ padding:"16px 18px 18px", position:"relative", zIndex:3 }}>
-        <div style={{ fontSize:9, letterSpacing:3, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{m.marca}</div>
+        <div style={{ fontSize:11.5, letterSpacing:3, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{m.marca}</div>
         <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:28, fontWeight:800, textTransform:"uppercase", color:C.white, lineHeight:1, margin:"4px 0 10px" }}>{m.modelo}</div>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", gap:10 }}>
           <div>
-            <div style={{ fontSize:9, letterSpacing:2, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{m.desde ? "Desde" : "Precio"}</div>
+            <div style={{ fontSize:11.5, letterSpacing:2, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{m.desde ? "Desde" : "Precio"}</div>
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:700, color: hov ? C.red2 : C.white, transition:"color .3s" }}>{m.desde ? fmtPrecio(m.desde.precio, m.desde.moneda) : "Consultanos"}</div>
           </div>
-          <span style={{ fontSize:10, letterSpacing:1.5, textTransform:"uppercase", color: hov ? C.white : C.muted, fontFamily:"sans-serif", whiteSpace:"nowrap", transition:"color .3s" }}>
+          <span style={{ fontSize:12, letterSpacing:1.5, textTransform:"uppercase", color: hov ? C.white : C.muted, fontFamily:"sans-serif", whiteSpace:"nowrap", transition:"color .3s" }}>
             {m.versiones.length} {m.versiones.length === 1 ? "versión" : "versiones"} →
           </span>
         </div>
@@ -2774,7 +2774,7 @@ function OkmModal({ m, onClose, abrirTeilen }) {
               <Btn primary href={wa(null)}>Consultar por WhatsApp</Btn>
               <Btn onClick={() => { onClose(); abrirTeilen(m.desde?.moneda === "ARS" ? m.desde.precio : undefined); }}>Simulá tu crédito</Btn>
             </div>
-            <p style={{ fontSize:10.5, color:C.muted, fontFamily:"sans-serif", lineHeight:1.6 }}>{LEYENDA_OKM}</p>
+            <p style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif", lineHeight:1.6 }}>{LEYENDA_OKM}</p>
           </div>
         </div>
       </div>
@@ -2900,7 +2900,7 @@ function TeilenModal({ onClose, precio }) {
           ) : campo("Monto a financiar", montoLibre, setMontoLibre, "15.000.000")}
           {conAuto && monto > 0 && (
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", padding:"12px 0 18px", borderBottom:`1px solid ${C.border}`, marginBottom:18 }}>
-              <span style={{ fontSize:10, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>A financiar</span>
+              <span style={{ fontSize:12, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>A financiar</span>
               <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:30, fontWeight:800, color:C.white }}>$ {monto.toLocaleString("es-AR")}</span>
             </div>
           )}
@@ -2921,9 +2921,9 @@ function TeilenModal({ onClose, precio }) {
                 {plan.filas.map((f, i) => (
                   <a key={`${plan.tasa}-${f.meses}`} href={waPlan(f)} target="_blank" rel="noreferrer" className="tl-cuota"
                     style={{ display:"block", padding:"14px 14px 12px", border:`1px solid ${C.border2}`, background:"rgba(255,255,255,.025)", textDecoration:"none", animation:`okmUp .45s ${i * .05}s both cubic-bezier(.16,1,.3,1)` }}>
-                    <div style={{ fontSize:10, letterSpacing:2, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{f.meses} cuotas de</div>
+                    <div style={{ fontSize:12, letterSpacing:2, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{f.meses} cuotas de</div>
                     <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:800, color:C.white, margin:"4px 0 6px" }}>$ {Math.round(f.cuota).toLocaleString("es-AR")}</div>
-                    <div style={{ fontSize:10, letterSpacing:1.5, textTransform:"uppercase", color:"#4ade80", fontFamily:"sans-serif" }}>Quiero esta →</div>
+                    <div style={{ fontSize:12, letterSpacing:1.5, textTransform:"uppercase", color:"#4ade80", fontFamily:"sans-serif" }}>Quiero esta →</div>
                   </a>
                 ))}
               </div>
@@ -2933,7 +2933,7 @@ function TeilenModal({ onClose, precio }) {
             </div>
           )}
 
-          <p style={{ fontSize:10.5, color:C.muted2, fontFamily:"sans-serif", lineHeight:1.6, marginTop:18, paddingTop:14, borderTop:`1px solid ${C.border}` }}>
+          <p style={{ fontSize:12, color:C.muted2, fontFamily:"sans-serif", lineHeight:1.6, marginTop:18, paddingTop:14, borderTop:`1px solid ${C.border}` }}>
             Valores aproximados calculados por Teilen, sujetos a modificaciones y a aprobación crediticia. La cuota no incluye el seguro del automotor.{" "}
             <a href={TEILEN_URL} target="_blank" rel="noreferrer" style={{ color:C.muted }}>teilen.com.ar</a>
           </p>
@@ -3103,7 +3103,7 @@ async function achicarFoto(file) {
 function VField({ label, children, hint }) {
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:14 }}>
-      <span style={{ fontSize:9, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{label}</span>
+      <span style={{ fontSize:11.5, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{label}</span>
       {children}
       {hint && <span style={{ fontSize:11, color:C.muted2, fontFamily:"sans-serif" }}>{hint}</span>}
     </div>
@@ -3243,8 +3243,8 @@ function VenderPage({ navTo }) {
             ))}
           </div>
           <div style={{ display:"flex", justifyContent:"space-between", marginBottom:24, fontFamily:"sans-serif" }}>
-            <span style={{ fontSize:9, letterSpacing:3, textTransform:"uppercase", color:C.red }}>Paso {paso + 1} de 3</span>
-            <span style={{ fontSize:9, letterSpacing:3, textTransform:"uppercase", color:C.muted }}>{PASOS[paso]}</span>
+            <span style={{ fontSize:11.5, letterSpacing:3, textTransform:"uppercase", color:C.red }}>Paso {paso + 1} de 3</span>
+            <span style={{ fontSize:11.5, letterSpacing:3, textTransform:"uppercase", color:C.muted }}>{PASOS[paso]}</span>
           </div>
 
           {paso === 0 && (
@@ -3312,7 +3312,7 @@ function VenderPage({ navTo }) {
                       <img src={x.url} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
                       <button type="button" onClick={() => sacarFoto(i)} aria-label="Quitar foto"
                         style={{ position:"absolute", top:5, right:5, width:26, height:26, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.7)", color:"#fff", fontSize:14, lineHeight:"26px", cursor:"pointer", padding:0 }}>×</button>
-                      {i === 0 && <span style={{ position:"absolute", left:5, bottom:5, fontSize:8, letterSpacing:1.5, textTransform:"uppercase", background:C.red, color:"#fff", padding:"3px 6px", fontFamily:"sans-serif" }}>Portada</span>}
+                      {i === 0 && <span style={{ position:"absolute", left:5, bottom:5, fontSize:11, letterSpacing:1.5, textTransform:"uppercase", background:C.red, color:"#fff", padding:"3px 6px", fontFamily:"sans-serif" }}>Portada</span>}
                     </div>
                   ))}
                   {fotos.length < MAX_FOTOS_VENTA && (
@@ -3384,7 +3384,7 @@ function VenderPage({ navTo }) {
               {beneficios.map(([t, d], i) => (
                 <Reveal key={t} delay={.1 + i * .06}>
                   <div style={{ background:"#0c0c0c", padding:"18px 16px 18px 0", height:"100%" }}>
-                    <div style={{ fontSize:9, letterSpacing:2.5, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif", marginBottom:6 }}>{t}</div>
+                    <div style={{ fontSize:11.5, letterSpacing:2.5, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif", marginBottom:6 }}>{t}</div>
                     <div style={{ fontSize:12, color:"rgba(245,245,245,.5)", lineHeight:1.55, fontFamily:"sans-serif" }}>{d}</div>
                   </div>
                 </Reveal>
@@ -3409,7 +3409,7 @@ function FloatVender({ onClick }) {
     <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} aria-label="Vendé tu auto"
       style={{ position:"fixed", left:20, bottom:28, zIndex:600, display:"flex", alignItems:"center", gap:9, padding:"0 18px 0 14px", height:46,
         background: hov ? C.red : "rgba(12,14,18,.92)", border:`1px solid ${hov ? C.red : "rgba(220,38,38,.55)"}`, color:"#fff",
-        backdropFilter:"blur(12px)", cursor:"pointer", fontFamily:"sans-serif", fontSize:10, fontWeight:600, letterSpacing:2.2, textTransform:"uppercase",
+        backdropFilter:"blur(12px)", cursor:"pointer", fontFamily:"sans-serif", fontSize:12, fontWeight:600, letterSpacing:2.2, textTransform:"uppercase",
         boxShadow: hov ? "0 10px 32px rgba(220,38,38,.4)" : "0 6px 24px rgba(0,0,0,.45)", transition:"all .3s cubic-bezier(.16,1,.3,1)",
         transform: hov ? "translateY(-2px)" : "none" }}>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

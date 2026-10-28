@@ -461,7 +461,7 @@ export default function HistoriaCompra({ mobile }) {
       {/* Texto */}
       <div>
         <div key={`t${i}`} style={{ animation: "hcIn .5s both" }}>
-          <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: 3, color: R, marginBottom: 6 }}>
+          <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 14, fontWeight: 700, letterSpacing: 3, color: R, marginBottom: 6 }}>
             PASO {String(i + 1).padStart(2, "0")} DE {String(PASOS.length).padStart(2, "0")}
           </div>
           <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: mobile ? 30 : 38, fontWeight: 900, textTransform: "uppercase", color: BLANCO, lineHeight: 1, marginBottom: 12, letterSpacing: -.5 }}>{PASOS[i].t}</div>
@@ -470,7 +470,7 @@ export default function HistoriaCompra({ mobile }) {
         {!mobile && (
           <div style={{ marginTop: 22, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 14px" }}>
             {PASOS.map((p, n) => (
-              <button key={n} onClick={() => ir(n)} style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 0", background: "transparent", border: "none", borderBottom: "1px solid rgba(255,255,255,.06)", textAlign: "left", color: n === i ? BLANCO : GRIS, fontFamily: "sans-serif", fontSize: 12.5, transition: "color .3s" }}>
+              <button key={n} onClick={() => ir(n)} style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 0", background: "transparent", border: "none", borderBottom: "1px solid rgba(255,255,255,.06)", textAlign: "left", color: n === i ? BLANCO : GRIS, fontFamily: "sans-serif", fontSize: 13.5, transition: "color .3s" }}>
                 <span style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, background: n === i ? R : n < i ? "rgba(220,38,38,.22)" : "rgba(255,255,255,.06)", color: n <= i ? "#fff" : GRIS, transition: "background .3s" }}>{n + 1}</span>
                 {p.t}
               </button>
@@ -483,7 +483,7 @@ export default function HistoriaCompra({ mobile }) {
             <button onClick={siguiente} aria-label="Siguiente" style={flecha(false)}>→</button>
           </div>
         )}
-        <p style={{ fontSize: 10.5, color: "#5b606b", fontFamily: "sans-serif", marginTop: 14 }}>Historia ilustrativa. Financiación sujeta a aprobación crediticia.</p>
+        <p style={{ fontSize: 12, color: "#7a7f8a", fontFamily: "sans-serif", marginTop: 14 }}>Historia ilustrativa. Financiación sujeta a aprobación crediticia.</p>
       </div>
     </div>
   );
