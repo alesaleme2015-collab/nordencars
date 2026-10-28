@@ -449,9 +449,15 @@ const Red = ({ children }) => <span style={{ color:C.red }}>{children}</span>;
 const BigH = ({ children, sz = "clamp(52px,8.5vw,108px)", style = {} }) => (
   <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:sz, fontWeight:900, lineHeight:.88, letterSpacing:-3, textTransform:"uppercase", color:C.white, ...style }}>{children}</h1>
 );
-const SecH = ({ children, style = {} }) => (
-  <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"clamp(30px,4vw,58px)", fontWeight:800, textTransform:"uppercase", lineHeight:.92, letterSpacing:-1, color:C.white, ...style }}>{children}</h2>
-);
+// Títulos de sección: entran con una cortina de abajo hacia arriba, de borroso a nítido.
+function SecH({ children, style = {} }) {
+  const [ref, v] = useReveal(.2);
+  return (
+    <h2 ref={ref} style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"clamp(30px,4vw,58px)", fontWeight:800, textTransform:"uppercase", lineHeight:.92, letterSpacing:-1, color:C.white,
+      clipPath: v ? "inset(-20% -5% -25% -5%)" : "inset(0 0 100% 0)", transform: v ? "none" : "translateY(.4em)", filter: v ? "none" : "blur(6px)",
+      transition:"clip-path 1.1s cubic-bezier(.16,1,.3,1), transform 1.1s cubic-bezier(.16,1,.3,1), filter .9s ease", ...style }}>{children}</h2>
+  );
+}
 
 function Btn({ children, primary, full, small, onClick, disabled = false, href, target = "_blank" }) {
   const [hov, setHov] = useState(false);
@@ -687,11 +693,20 @@ function Marquee() {
 }
 
 /* ─── CAR CARD ──────────────────────────────────────────────────────────────── */
-function CarCard({ car, onClick }) {
+// Precio del auto con SU moneda: el ERP manda el valor en `precio_usd` (nombre
+// viejo) y la moneda en `precio_moneda` (ARS o USD).
+const precioDe = (car) => {
+  const v = Number(car.precio_ars || car.precio_usd || 0);
+  if (!v) return "Consultar";
+  return `${car.precio_moneda === "USD" ? "US$" : "$"} ${v.toLocaleString("es-AR")}`;
+};
+
+function CarCard({ car, onClick, comparar }) {
   const [hov, setHov] = useState(false);
+  const [fotoRef, fotoVista] = useReveal(.15);
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, mx: 50, my: 50 });
   const img = car.fotos && car.fotos.length ? car.fotos[0] : null;
-  const precio = (car.precio_ars || car.precio_usd) ? `$ ${Number(car.precio_ars || car.precio_usd).toLocaleString("es-AR")}` : "Consultar";
+  const precio = precioDe(car);
   const km = car.kilometraje === 0 ? "0 km" : `${Number(car.kilometraje).toLocaleString("es-AR")} km`;
 
   const handleMove = (e) => {
@@ -738,9 +753,11 @@ function CarCard({ car, onClick }) {
         pointerEvents:"none", zIndex:3,
       }}/>
       {/* Image */}
-      <div style={{ height:200, overflow:"hidden", position:"relative", background:C.zinc3 }}>
+      <div ref={fotoRef} style={{ height:200, overflow:"hidden", position:"relative", background:C.zinc3 }}>
         {img
-          ? <img src={img} alt={car.modelo} style={{ width:"100%", height:"100%", objectFit:"cover", transform:hov?"scale(1.07)":"scale(1)", transition:"transform .65s cubic-bezier(.16,1,.3,1)" }}/>
+          ? <img src={img} alt={car.modelo} loading="lazy" style={{ width:"100%", height:"100%", objectFit:"cover",
+              clipPath: fotoVista ? "inset(0)" : "inset(0 100% 0 0)", transform: !fotoVista ? "scale(1.18)" : hov ? "scale(1.07)" : "scale(1)",
+              transition:"transform .9s cubic-bezier(.16,1,.3,1), clip-path 1.1s cubic-bezier(.77,0,.18,1)" }}/>
           : <div style={{ width:"100%", height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6 }}>
               <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:46, fontWeight:900, color:"rgba(255,255,255,.03)", letterSpacing:-3 }}>{car.marca}</div>
               <div style={{ fontSize:9, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.11)", fontFamily:"sans-serif" }}>Foto próximamente</div>
@@ -749,6 +766,15 @@ function CarCard({ car, onClick }) {
         <span style={{ position:"absolute", top:11, left:11, fontSize:8, letterSpacing:2, textTransform:"uppercase", padding:"4px 9px", background:car.tipo==="0km"?C.red:"rgba(0,0,0,.82)", color:car.tipo==="0km"?"#fff":"rgba(255,255,255,.62)", border:car.tipo==="0km"?"none":`1px solid ${C.border2}`, fontFamily:"sans-serif" }}>{car.tipo}</span>
         {car.carroceria && <span style={{ position:"absolute", top:11, right:11, fontSize:8, letterSpacing:1.5, textTransform:"uppercase", padding:"4px 9px", background:"rgba(0,0,0,.78)", color:"rgba(255,255,255,.48)", fontFamily:"sans-serif" }}>{car.carroceria}</span>}
         <div style={{ position:"absolute", bottom:0, left:0, width:hov?"100%":"0%", height:2, background:C.red, transition:"width .42s cubic-bezier(.16,1,.3,1)" }}/>
+        {comparar && (
+          <button onClick={e => { e.stopPropagation(); comparar.toggle(car.id); }} data-cursor-label={comparar.on ? "Quitar" : "Comparar"}
+            disabled={!comparar.on && comparar.lleno} title={!comparar.on && comparar.lleno ? "Podés comparar hasta 3 autos" : ""}
+            style={{ position:"absolute", bottom:10, right:10, zIndex:4, display:"flex", alignItems:"center", gap:6, padding:"6px 11px", borderRadius:20, fontSize:9, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600,
+              background: comparar.on ? C.red : "rgba(0,0,0,.72)", color: comparar.on ? "#fff" : "rgba(255,255,255,.8)", border:`1px solid ${comparar.on ? C.red : "rgba(255,255,255,.22)"}`,
+              opacity: !comparar.on && comparar.lleno ? .35 : 1, backdropFilter:"blur(6px)", transition:"all .25s" }}>
+            {comparar.on ? "✓ Comparando" : "⇄ Comparar"}
+          </button>
+        )}
       </div>
       {/* Body */}
       <div style={{ padding:"18px 20px" }}>
@@ -775,7 +801,7 @@ function CarModal({ car, onClose }) {
   useEffect(() => { document.body.style.overflow="hidden"; return () => { document.body.style.overflow=""; }; }, []);
   if (!car) return null;
   const fotos = car.fotos || [];
-  const precio = (car.precio_ars || car.precio_usd) ? `$ ${Number(car.precio_ars || car.precio_usd).toLocaleString("es-AR")}` : "Consultar";
+  const precio = precioDe(car);
   const km = car.kilometraje===0 ? "0 km" : `${Number(car.kilometraje).toLocaleString("es-AR")} km`;
   const carEnc = encodeURIComponent(`${car.marca} ${car.modelo} ${car.anio}`);
 
@@ -1886,10 +1912,11 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
       <SectionDivider/>
 
       {/* ── PHOTO STRIP ── */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", height:210, overflow:"hidden", gap:1 }}>
+      <style>{`.foto-tira img{filter:brightness(.48) saturate(.72);transition:filter .7s ease,transform 1.2s cubic-bezier(.16,1,.3,1)}.foto-tira>div:hover img{filter:brightness(1) saturate(1.05);transform:scale(1.07)}`}</style>
+      <div className="foto-tira" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", height:210, overflow:"hidden", gap:1 }}>
         {[IMG_BMW_FULL,IMG_BMW_FRONT,IMG_VW_FRONT,IMG_VW_INT].map((img,i) => (
           <div key={i} style={{ overflow:"hidden" }}>
-            <img src={img} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", filter:"brightness(.48) saturate(.72)" }}/>
+            <img src={img} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
           </div>
         ))}
       </div>
@@ -2194,6 +2221,11 @@ function StockFilterBar({ label, opts, val, set }) {
 
 /* ─── STOCK PAGE ─────────────────────────────────────────────────────────────── */
 function StockPage({ stockData, setSelectedCar, loading }) {
+  const [comp, setComp] = useState([]);       // ids elegidos para comparar (hasta 3)
+  const [verComp, setVerComp] = useState(false);
+  const toggleComp = (id) => setComp(c => c.includes(id) ? c.filter(x => x !== id) : c.length >= 3 ? c : [...c, id]);
+  const elegidos = comp.map(id => stockData.find(c => c.id === id)).filter(Boolean);
+  const cerrarComp = useCallback(() => setVerComp(false), []);
   const [fType, setFType] = useState("Todos");
   const [fBrand, setFBrand] = useState("Todas");
   const [fBody, setFBody] = useState("Todos");
@@ -2234,7 +2266,7 @@ function StockPage({ stockData, setSelectedCar, loading }) {
               <div style={{ fontSize:11, color:C.muted2 }}>Probá otros filtros o consultanos directamente</div>
             </div>
           : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:1, background:C.bg }}>
-              {filtered.map(car => <CarCard key={car.id} car={car} onClick={setSelectedCar}/>)}
+              {filtered.map(car => <CarCard key={car.id} car={car} onClick={setSelectedCar} comparar={{ on: comp.includes(car.id), lleno: comp.length >= 3, toggle: toggleComp }}/>)}
             </div>
         }
         <div style={{ marginTop:36, padding:"24px", background:C.zinc, border:`1px solid ${C.border}`, display:"flex", gap:20, alignItems:"center", flexWrap:"wrap" }}>
@@ -2243,6 +2275,139 @@ function StockPage({ stockData, setSelectedCar, loading }) {
             <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif" }}>Consultanos y buscamos el vehículo ideal para vos.</div>
           </div>
           <Btn primary href={`https://wa.me/${WA_NORDEN}?text=Hola%2C%20busco%20un%20veh%C3%ADculo%20espec%C3%ADfico...`}>Consultanos →</Btn>
+        </div>
+      </div>
+      {elegidos.length > 0 && !verComp && createPortal(<BarraComparar autos={elegidos} quitar={toggleComp} limpiar={() => setComp([])} abrir={() => setVerComp(true)}/>, document.body)}
+      {verComp && elegidos.length > 1 && createPortal(<ComparadorModal autos={elegidos} quitar={toggleComp} onClose={cerrarComp} verAuto={(c) => { setVerComp(false); setSelectedCar(c); }}/>, document.body)}
+    </div>
+  );
+}
+
+/* ─── COMPARADOR DE USADOS ───────────────────────────────────────────────────── */
+// Ale (2026-10-28): elegir hasta 3 autos del stock y verlos lado a lado.
+// Resalta el de menos km, el más nuevo y el más barato (si están en la misma moneda).
+function BarraComparar({ autos, quitar, limpiar, abrir }) {
+  const mob = useIsMobile();
+  return (
+    // En celular va arriba (debajo del menú) para no tapar los botones flotantes de abajo.
+    <div style={{ position:"fixed", left:"50%", ...(mob ? { top:74 } : { bottom:24 }), transform:"translateX(-50%)", zIndex:850, width: mob ? "calc(100% - 20px)" : "auto", maxWidth:640, boxSizing:"border-box",
+      display:"flex", alignItems:"center", gap: mob ? 8 : 12, padding: mob ? "8px" : "10px 12px 10px 14px", background:"rgba(13,16,21,.94)", border:`1px solid ${C.border2}`, borderRadius:14,
+      boxShadow:"0 20px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(220,38,38,.15)", backdropFilter:"blur(12px)" }}>
+      <div style={{ display:"flex", gap: mob ? 4 : 6, flex: mob ? 1 : "0 0 auto" }}>
+        {[0, 1, 2].map(i => {
+          const a = autos[i];
+          return a ? (
+            <div key={a.id} style={{ position:"relative", width: mob ? 44 : 54, height: mob ? 34 : 40, borderRadius:6, overflow:"hidden", background:C.zinc3, border:`1px solid ${C.border2}` }}>
+              {a.fotos?.[0] && <img src={a.fotos[0]} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>}
+              <button onClick={() => quitar(a.id)} aria-label="Quitar" style={{ position:"absolute", top:1, right:1, width:16, height:16, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.8)", color:"#fff", fontSize:10, lineHeight:"16px", padding:0 }}>×</button>
+            </div>
+          ) : <div key={i} style={{ width: mob ? 44 : 54, height: mob ? 34 : 40, borderRadius:6, border:`1px dashed ${C.border2}` }}/>;
+        })}
+      </div>
+      {!mob && <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif", maxWidth:170, lineHeight:1.4 }}>{autos.length === 1 ? "Elegí otro auto para comparar" : `${autos.length} autos elegidos`}</div>}
+      <button onClick={limpiar} aria-label="Limpiar" style={{ background:"none", border:"none", color:C.muted, fontSize: mob ? 18 : 10, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", padding: mob ? "0 4px" : 0 }}>{mob ? "×" : "Limpiar"}</button>
+      <button onClick={abrir} disabled={autos.length < 2}
+        style={{ background: autos.length < 2 ? C.zinc3 : C.red, color: autos.length < 2 ? C.muted : "#fff", border:"none", borderRadius:9, padding: mob ? "11px 12px" : "11px 16px", fontSize:10, letterSpacing: mob ? 1.2 : 2, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:700, whiteSpace:"nowrap" }}>
+        Comparar {autos.length}/3
+      </button>
+    </div>
+  );
+}
+
+function ComparadorModal({ autos, quitar, onClose, verAuto }) {
+  const mob = useIsMobile();
+  useEffect(() => {
+    const k = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", k);
+    const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", k); document.body.style.overflow = prev; };
+  }, [onClose]);
+
+  // Ganadores: solo si hay diferencia; el precio solo si todos están en la misma moneda.
+  const mejor = (vals, menor) => {
+    const ok = vals.filter(v => v != null && !Number.isNaN(v));
+    if (ok.length < 2 || Math.min(...ok) === Math.max(...ok)) return null;
+    return menor ? Math.min(...ok) : Math.max(...ok);
+  };
+  const km = autos.map(a => Number(a.kilometraje));
+  const anio = autos.map(a => Number(a.anio));
+  const mismaMoneda = new Set(autos.map(a => a.precio_moneda || "ARS")).size === 1;
+  const precio = autos.map(a => Number(a.precio_usd) || null);
+  const gKm = mejor(km, true), gAnio = mejor(anio, false), gPrecio = mismaMoneda ? mejor(precio, true) : null;
+  const kmTxt = (v) => v === 0 ? "0 km" : `${Number(v).toLocaleString("es-AR")} km`;
+
+  const filas = [
+    ["Precio", a => precioDe(a), (a, i) => gPrecio != null && precio[i] === gPrecio && "Mejor precio"],
+    ["Año", a => a.anio, (a, i) => gAnio != null && anio[i] === gAnio && "Más nuevo"],
+    ["Kilómetros", a => kmTxt(a.kilometraje), (a, i) => gKm != null && km[i] === gKm && "Menos km"],
+    ["Motor", a => a.motor || "—"],
+    ["Combustible", a => a.combustible || "—"],
+    ["Transmisión", a => a.transmision || "—"],
+    ["Carrocería", a => a.carroceria || "—"],
+    ["Color", a => a.color || "—"],
+  ];
+  const cols = `repeat(${autos.length}, minmax(0,1fr))`;
+  const gap = mob ? 8 : 16;
+
+  return (
+    <div onClick={onClose} style={{ position:"fixed", inset:0, zIndex:900, background:"rgba(0,0,0,.88)", backdropFilter:"blur(8px)", display:"flex", alignItems: mob ? "flex-end" : "center", justifyContent:"center", padding: mob ? 0 : 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:980, maxHeight: mob ? "92vh" : "90vh", overflow:"auto", background:C.zinc, border:`1px solid ${C.border2}`, borderRadius: mob ? "16px 16px 0 0" : 4 }}>
+        <div style={{ position:"sticky", top:0, zIndex:2, background:C.zinc, display:"flex", justifyContent:"space-between", alignItems:"center", padding: mob ? "14px" : "18px 24px", borderBottom:`1px solid ${C.border}` }}>
+          <div>
+            <div style={{ fontSize:8, letterSpacing:3, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif" }}>Comparador</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize: mob ? 22 : 28, fontWeight:900, textTransform:"uppercase", color:C.white, lineHeight:1 }}>Lado a lado</div>
+          </div>
+          <button onClick={onClose} aria-label="Cerrar" style={{ width:34, height:34, background:"transparent", border:`1px solid ${C.border2}`, color:"#fff", fontSize:18 }}>×</button>
+        </div>
+
+        <div style={{ padding: mob ? "12px 10px 18px" : "20px 24px 26px" }}>
+          {/* Cabecera: foto + nombre */}
+          <div style={{ display:"grid", gridTemplateColumns:cols, gap }}>
+            {autos.map(a => (
+              <div key={a.id} style={{ minWidth:0 }}>
+                <div style={{ position:"relative", aspectRatio:"4/3", overflow:"hidden", background:C.zinc3, borderRadius:6 }}>
+                  {a.fotos?.[0] && <img src={a.fotos[0]} alt={a.modelo} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>}
+                  {autos.length > 2 && <button onClick={() => quitar(a.id)} aria-label="Quitar" style={{ position:"absolute", top:6, right:6, width:24, height:24, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.75)", color:"#fff", fontSize:13 }}>×</button>}
+                </div>
+                <div style={{ fontSize:8, letterSpacing:2.5, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif", marginTop:9 }}>{a.marca}</div>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize: mob ? 18 : 24, fontWeight:800, textTransform:"uppercase", color:C.white, lineHeight:1 }}>{a.modelo}</div>
+                {a.version && <div style={{ fontSize:10.5, color:C.muted, fontFamily:"sans-serif", marginTop:3, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{a.version}</div>}
+              </div>
+            ))}
+          </div>
+
+          {/* Filas: el título va arriba de los valores (igual en compu y celular) */}
+          <div style={{ marginTop:16 }}>
+            {filas.map(([label, val, gana]) => (
+              <div key={label} style={{ borderTop:`1px solid ${C.border}`, padding: mob ? "9px 0" : "11px 0" }}>
+                <div style={{ fontSize:9, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif", marginBottom:5 }}>{label}</div>
+                <div style={{ display:"grid", gridTemplateColumns:cols, gap }}>
+                  {autos.map((a, i) => {
+                    const g = gana && gana(a, i);
+                    const esPrecio = label === "Precio";
+                    return (
+                      <div key={a.id} style={{ minWidth:0 }}>
+                        <div style={{ fontFamily: esPrecio ? "'Barlow Condensed',sans-serif" : "sans-serif", fontSize: esPrecio ? (mob ? 17 : 22) : (mob ? 12 : 13.5), fontWeight: esPrecio ? 700 : 400, color: g ? "#4ade80" : C.white }}>{val(a)}</div>
+                        {g && <div style={{ display:"inline-block", marginTop:4, fontSize:8, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:700, color:"#4ade80", border:"1px solid rgba(74,222,128,.35)", padding:"2px 6px", borderRadius:10 }}>{g}</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Acciones por auto */}
+          <div style={{ display:"grid", gridTemplateColumns:cols, gap, marginTop:12 }}>
+            {autos.map(a => (
+              <div key={a.id} style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                <a href={`https://wa.me/${WA_NORDEN}?text=${encodeURIComponent(`Hola Norden Cars! Me interesa el ${a.marca} ${a.modelo} ${a.anio} que vi en la web.`)}`} target="_blank" rel="noreferrer"
+                  style={{ background:C.red, color:"#fff", textAlign:"center", padding: mob ? "10px 4px" : "12px", fontSize:9, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:700, textDecoration:"none" }}>Consultar</a>
+                <button onClick={() => verAuto(a)} style={{ background:"transparent", color:C.white, border:`1px solid ${C.border2}`, padding: mob ? "9px 4px" : "11px", fontSize:9, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif" }}>Ver fotos</button>
+              </div>
+            ))}
+          </div>
+          {!mismaMoneda && <p style={{ fontSize:10.5, color:C.muted, fontFamily:"sans-serif", marginTop:14 }}>Hay autos en pesos y en dólares: el precio no se compara.</p>}
         </div>
       </div>
     </div>
