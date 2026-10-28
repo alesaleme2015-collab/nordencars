@@ -88,6 +88,7 @@ const BRAND_DOMAINS = {
 };
 const FAQ = [
   {k:"financiación financiamiento cuotas",a:"Sí, trabajamos con múltiples entidades financieras para que arranques a rodar sin preocupaciones."},
+  {k:"vender vendo tasar tasación tasacion compran",a:"¡Te compramos tu auto! Entrá a Vendé tu auto en el menú, cargá los datos y unas fotos, y te respondemos en menos de 24 h."},
   {k:"permuta cambio parte pago",a:"¡Sí! Tomamos tu vehículo como parte de pago al mejor precio del mercado."},
   {k:"garantía garantia",a:"Los 0km tienen garantía de fábrica. Los usados tienen garantía según cada caso."},
   {k:"entrega provincia envío envio",a:"Coordinamos traslado a todo el país con transportistas de confianza."},
@@ -610,7 +611,7 @@ function FloatWa() {
 function Nav({ page, navTo, scrolled }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const go = (p) => { navTo(p); setMenuOpen(false); };
-  const links = [["home","Inicio"],["stock","Stock"],["nosotros","Nosotros"],["contacto","Contacto"]];
+  const links = [["home","Inicio"],["stock","Stock"],["vender","Vendé tu auto"],["nosotros","Nosotros"],["contacto","Contacto"]];
 
   return (
     <>
@@ -1842,6 +1843,27 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
 
       <SectionDivider/>
 
+      {/* ── VENDÉ TU AUTO ── */}
+      <section style={{ position:"relative", overflow:"hidden", padding:"84px 5vw", background:"linear-gradient(120deg,#0d0708 0%,#140909 50%,#0a0c10 100%)", borderTop:`1px solid ${C.border}`, isolation:"isolate" }}>
+        <div style={{ position:"absolute", right:"-4vw", top:"50%", transform:"translateY(-50%)", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:"clamp(120px,22vw,320px)", lineHeight:.8, color:"transparent", WebkitTextStroke:"1px rgba(220,38,38,.16)", letterSpacing:-6, zIndex:-1, pointerEvents:"none", userSelect:"none" }}>VENDÉ</div>
+        <div style={{ position:"absolute", left:"-10%", top:"-40%", width:"60%", height:"180%", background:"radial-gradient(ellipse, rgba(220,38,38,.14), transparent 65%)", zIndex:-1, pointerEvents:"none" }}/>
+        <Reveal><Tag>Te compramos tu auto</Tag></Reveal>
+        <Reveal delay={.1}><SecH style={{ marginBottom:16, maxWidth:720 }}>¿Querés vender <Red>tu auto?</Red></SecH></Reveal>
+        <Reveal delay={.18}>
+          <p style={{ fontSize:15, fontWeight:300, color:"rgba(245,245,245,.62)", lineHeight:1.7, maxWidth:520, marginBottom:30, fontFamily:"sans-serif" }}>
+            Cargá los datos y unas fotos desde el celular en 2 minutos. Te respondemos en menos de 24 h con una propuesta, o lo tomamos como parte de pago.
+          </p>
+        </Reveal>
+        <Reveal delay={.26}>
+          <div style={{ display:"flex", gap:13, flexWrap:"wrap" }}>
+            <Btn primary onClick={() => navTo("vender")}>Vendé tu auto</Btn>
+            <Btn href={`https://wa.me/${WA_NORDEN}?text=${encodeURIComponent("Hola Norden Cars, quiero vender mi auto")}`}>Consultar por WhatsApp</Btn>
+          </div>
+        </Reveal>
+      </section>
+
+      <SectionDivider/>
+
       {/* ── PROCESO DE COMPRA ── */}
       <section style={{ padding:"100px 5vw", background:C.bg }}>
         <Reveal><Tag>Cómo funciona</Tag></Reveal>
@@ -2459,9 +2481,349 @@ function ContactoPage({ config, navTo }) {
   );
 }
 
+/* ─── VENDÉ TU AUTO ──────────────────────────────────────────────────────────── */
+// Formulario → ERP (/api/publico/vender-auto). Llega a "Autos ofrecidos" del
+// sistema con sus fotos y crea el cliente con origen "Web propia".
+const MARCAS_COMUNES = ["Audi","BMW","BYD","Chery","Chevrolet","Citroën","Fiat","Ford","Honda","Hyundai","Jeep","Kia","Mercedes-Benz","Mitsubishi","Nissan","Peugeot","RAM","Renault","Suzuki","Toyota","Volkswagen","Volvo"];
+const ESTADOS_AUTO = [["excelente","Excelente"],["muy_bueno","Muy bueno"],["bueno","Bueno"],["a_reparar","Necesita arreglos"]];
+const MAX_FOTOS_VENTA = 6;
+
+// Achica la foto en el celular antes de mandarla (de ~4 MB a ~300 KB).
+async function achicarFoto(file) {
+  try {
+    const bmp = await createImageBitmap(file);
+    const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const cv = document.createElement("canvas");
+    cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
+    cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
+    const blob = await new Promise(r => cv.toBlob(r, "image/jpeg", 0.82));
+    return blob || file;
+  } catch { return file; }
+}
+
+function VField({ label, children, hint }) {
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:14 }}>
+      <span style={{ fontSize:9, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{label}</span>
+      {children}
+      {hint && <span style={{ fontSize:11, color:C.muted2, fontFamily:"sans-serif" }}>{hint}</span>}
+    </div>
+  );
+}
+const vInput = { background:"rgba(255,255,255,.035)", border:`1px solid ${C.border2}`, color:C.white, padding:"13px 14px", fontSize:15, fontFamily:"sans-serif", outline:"none", width:"100%", borderRadius:0, transition:"border-color .25s" };
+const vFocus = { onFocus: e => { e.target.style.borderColor = C.red; }, onBlur: e => { e.target.style.borderColor = C.border2; } };
+
+function VChips({ opts, val, set }) {
+  return (
+    <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+      {opts.map(([v, l]) => {
+        const on = val === v;
+        return (
+          <button key={v} type="button" onClick={() => set(on ? "" : v)}
+            style={{ padding:"11px 16px", fontSize:13, fontFamily:"sans-serif", cursor:"pointer", transition:"all .22s",
+              background: on ? "rgba(220,38,38,.14)" : "rgba(255,255,255,.03)", color: on ? C.white : "rgba(245,245,245,.6)",
+              border:`1px solid ${on ? C.red : C.border2}` }}>
+            {l}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+const FORM_VENTA_VACIO = { marca:"", modelo:"", version:"", anio:"", km:"", color:"", estado_auto:"", tiene_deuda:"", deuda_detalle:"", precio:"", moneda:"ARS", comentario:"", nombre:"", telefono:"", empresa:"" };
+
+function VenderPage({ navTo }) {
+  const mob = useIsMobile();
+  const [f, setF] = useState(FORM_VENTA_VACIO);
+  const [paso, setPaso] = useState(0);
+  const [fotos, setFotos] = useState([]); // [{ blob, url }]
+  const [procesando, setProcesando] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState("");
+  const [listo, setListo] = useState(false);
+  const abierto = useRef(Date.now());
+  const fileRef = useRef(null);
+  const topRef = useRef(null);
+  const set = (k, v) => { setF(p => ({ ...p, [k]: v })); setError(""); };
+
+  const anioMax = new Date().getFullYear() + 1;
+  const anios = Array.from({ length: anioMax - 1989 }, (_, i) => anioMax - i);
+  const fmtMiles = (s) => s ? Number(s).toLocaleString("es-AR") : "";
+
+  useEffect(() => () => fotos.forEach(x => URL.revokeObjectURL(x.url)), []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const PASOS = ["Tu auto", "Estado y precio", "Fotos y contacto"];
+  const validar = (p) => {
+    if (p === 0) {
+      if (f.marca.trim().length < 2) return "Contanos la marca.";
+      if (!f.modelo.trim()) return "Contanos el modelo.";
+      if (!f.anio) return "Elegí el año.";
+      if (f.km === "") return "Poné los kilómetros (aproximados).";
+    }
+    if (p === 2) {
+      if (f.nombre.trim().length < 2) return "Poné tu nombre.";
+      if (f.telefono.replace(/\D/g, "").length < 8) return "Poné tu WhatsApp con característica (ej: 381 555-1234).";
+    }
+    return "";
+  };
+  const irA = (p) => {
+    if (p > paso) { const e = validar(paso); if (e) { setError(e); return; } }
+    setError(""); setPaso(p);
+    if (mob && topRef.current) topRef.current.scrollIntoView({ behavior:"smooth", block:"start" });
+  };
+
+  const agregarFotos = async (lista) => {
+    const libres = MAX_FOTOS_VENTA - fotos.length;
+    const nuevas = Array.from(lista || []).filter(x => x.type.startsWith("image/")).slice(0, libres);
+    if (!nuevas.length) return;
+    setProcesando(true);
+    const out = [];
+    for (const file of nuevas) {
+      const blob = await achicarFoto(file);
+      if (blob.size > 3.5 * 1024 * 1024) continue; // no se pudo achicar y es muy pesada
+      out.push({ blob, url: URL.createObjectURL(blob) });
+    }
+    setFotos(p => [...p, ...out]);
+    setProcesando(false);
+  };
+  const sacarFoto = (i) => setFotos(p => { URL.revokeObjectURL(p[i].url); return p.filter((_, j) => j !== i); });
+
+  const enviar = async () => {
+    const e = validar(0) || validar(2);
+    if (e) { setError(e); return; }
+    setEnviando(true); setError("");
+    const fd = new FormData();
+    const campos = { ...f, precio_pretendido: f.precio, t: String(abierto.current) };
+    delete campos.precio;
+    if (campos.tiene_deuda !== "si") delete campos.deuda_detalle;
+    Object.entries(campos).forEach(([k, v]) => { if (v !== "" && v != null) fd.append(k, v); });
+    fotos.forEach((x, i) => fd.append("fotos", x.blob, `foto-${i + 1}.jpg`));
+    try {
+      const r = await fetch(`${ERP_URL}/api/publico/vender-auto`, { method:"POST", body: fd });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) throw new Error(j.error || "No pudimos enviar tu auto.");
+      setListo(true);
+      if (topRef.current) topRef.current.scrollIntoView({ behavior:"smooth", block:"start" });
+    } catch (err) {
+      setError(err.message && err.message !== "Failed to fetch" ? err.message : "No pudimos enviar tu auto. Probá de nuevo o escribinos por WhatsApp.");
+    }
+    setEnviando(false);
+  };
+
+  const beneficios = [
+    ["Respuesta en 24 h", "Te escribimos por WhatsApp con una propuesta concreta, sin vueltas."],
+    ["Tasación real", "Con datos del mercado de Tucumán y nuestra experiencia en ventas."],
+    ["Parte de pago", "Si querés, lo tomamos como entrega para un 0km o un usado de nuestro stock."],
+    ["Papeles resueltos", "Nos ocupamos de la transferencia con nuestra gestoría."],
+  ];
+
+  const card = (
+    <div ref={topRef} style={{ background:C.zinc, border:`1px solid ${C.border2}`, position:"relative", scrollMarginTop:80 }}>
+      <CornerBrackets size={16} inset={-1}/>
+      {listo ? (
+        <div style={{ padding: mob ? "44px 22px" : "64px 44px", textAlign:"center" }}>
+          <div style={{ width:72, height:72, borderRadius:"50%", margin:"0 auto 22px", display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(220,38,38,.12)", border:`1px solid ${C.red}` }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.red} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          <SecH style={{ fontSize:"clamp(30px,4vw,44px)", marginBottom:12 }}>¡Recibimos <Red>tu auto</Red>!</SecH>
+          <p style={{ fontSize:15, color:"rgba(245,245,245,.7)", lineHeight:1.7, fontFamily:"sans-serif", maxWidth:380, margin:"0 auto 28px" }}>
+            Te contactamos en <b style={{ color:C.white }}>menos de 24 h</b> por WhatsApp con una propuesta.
+          </p>
+          <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
+            <Btn primary onClick={() => navTo("stock")}>Mirá nuestro stock</Btn>
+            <Btn onClick={() => { setListo(false); setF(FORM_VENTA_VACIO); setFotos([]); setPaso(0); abierto.current = Date.now(); }}>Ofrecer otro auto</Btn>
+          </div>
+        </div>
+      ) : (
+        <div style={{ padding: mob ? "26px 18px 22px" : "38px 38px 32px" }}>
+          {/* Progreso */}
+          <div style={{ display:"flex", gap:6, marginBottom:10 }}>
+            {PASOS.map((_, i) => (
+              <div key={i} style={{ flex:1, height:3, background: i <= paso ? C.red : "rgba(255,255,255,.08)", transition:"background .4s" }}/>
+            ))}
+          </div>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:24, fontFamily:"sans-serif" }}>
+            <span style={{ fontSize:9, letterSpacing:3, textTransform:"uppercase", color:C.red }}>Paso {paso + 1} de 3</span>
+            <span style={{ fontSize:9, letterSpacing:3, textTransform:"uppercase", color:C.muted }}>{PASOS[paso]}</span>
+          </div>
+
+          {paso === 0 && (
+            <div key="p0" style={{ animation:"vtaIn .45s cubic-bezier(.16,1,.3,1)" }}>
+              <div style={{ display:"grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: mob ? 0 : 12 }}>
+                <VField label="Marca *">
+                  <input list="vta-marcas" value={f.marca} onChange={e => set("marca", e.target.value)} placeholder="Toyota" style={vInput} {...vFocus}/>
+                  <datalist id="vta-marcas">{MARCAS_COMUNES.map(m => <option key={m} value={m}/>)}</datalist>
+                </VField>
+                <VField label="Modelo *"><input value={f.modelo} onChange={e => set("modelo", e.target.value)} placeholder="Hilux" style={vInput} {...vFocus}/></VField>
+              </div>
+              <VField label="Versión"><input value={f.version} onChange={e => set("version", e.target.value)} placeholder="SRV 4x4 automática" style={vInput} {...vFocus}/></VField>
+              <div style={{ display:"grid", gridTemplateColumns: mob ? "1fr 1fr" : "1fr 1fr 1fr", gap:12 }}>
+                <VField label="Año *">
+                  <select value={f.anio} onChange={e => set("anio", e.target.value)} style={{ ...vInput, appearance:"none", color: f.anio ? C.white : C.muted }} {...vFocus}>
+                    <option value="">Elegí</option>
+                    {anios.map(a => <option key={a} value={a} style={{ color:"#111" }}>{a}</option>)}
+                  </select>
+                </VField>
+                <VField label="Kilómetros *">
+                  <input inputMode="numeric" value={fmtMiles(f.km)} onChange={e => set("km", e.target.value.replace(/\D/g, "").slice(0, 7))} placeholder="85.000" style={vInput} {...vFocus}/>
+                </VField>
+                <div style={{ gridColumn: mob ? "1 / -1" : "auto" }}>
+                  <VField label="Color"><input value={f.color} onChange={e => set("color", e.target.value)} placeholder="Gris plata" style={vInput} {...vFocus}/></VField>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {paso === 1 && (
+            <div key="p1" style={{ animation:"vtaIn .45s cubic-bezier(.16,1,.3,1)" }}>
+              <VField label="¿Cómo está el auto?"><VChips opts={ESTADOS_AUTO} val={f.estado_auto} set={v => set("estado_auto", v)}/></VField>
+              <VField label="¿Tiene deuda de patente, multas o prenda?">
+                <VChips opts={[["no","No"],["si","Sí"]]} val={f.tiene_deuda} set={v => set("tiene_deuda", v)}/>
+              </VField>
+              {f.tiene_deuda === "si" && (
+                <VField label="Contanos cuál"><input value={f.deuda_detalle} onChange={e => set("deuda_detalle", e.target.value)} placeholder="Prenda con 10 cuotas pendientes" style={vInput} {...vFocus}/></VField>
+              )}
+              <VField label="¿Cuánto pretendés?" hint="Opcional. Nos sirve como referencia para la propuesta.">
+                <div style={{ display:"flex" }}>
+                  <div style={{ display:"flex", border:`1px solid ${C.border2}`, borderRight:"none" }}>
+                    {["ARS","USD"].map(m => (
+                      <button key={m} type="button" onClick={() => set("moneda", m)}
+                        style={{ padding:"0 14px", fontSize:12, fontFamily:"sans-serif", cursor:"pointer", border:"none", background: f.moneda === m ? C.red : "transparent", color: f.moneda === m ? "#fff" : C.muted, transition:"all .2s" }}>
+                        {m === "ARS" ? "$" : "US$"}
+                      </button>
+                    ))}
+                  </div>
+                  <input inputMode="numeric" value={fmtMiles(f.precio)} onChange={e => set("precio", e.target.value.replace(/\D/g, "").slice(0, 12))} placeholder={f.moneda === "ARS" ? "25.000.000" : "18.000"} style={vInput} {...vFocus}/>
+                </div>
+              </VField>
+              <VField label="Algo más que quieras contarnos">
+                <textarea rows={3} value={f.comentario} onChange={e => set("comentario", e.target.value)} placeholder="Único dueño, service oficial, cubiertas nuevas..." style={{ ...vInput, resize:"vertical", fontSize:14 }} {...vFocus}/>
+              </VField>
+            </div>
+          )}
+
+          {paso === 2 && (
+            <div key="p2" style={{ animation:"vtaIn .45s cubic-bezier(.16,1,.3,1)" }}>
+              <VField label={`Fotos (hasta ${MAX_FOTOS_VENTA})`} hint="Frente, lateral, atrás, interior y el tablero con los km. Con buena luz, mejor.">
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8 }}>
+                  {fotos.map((x, i) => (
+                    <div key={x.url} style={{ position:"relative", aspectRatio:"4/3", background:"#000", overflow:"hidden" }}>
+                      <img src={x.url} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
+                      <button type="button" onClick={() => sacarFoto(i)} aria-label="Quitar foto"
+                        style={{ position:"absolute", top:5, right:5, width:26, height:26, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.7)", color:"#fff", fontSize:14, lineHeight:"26px", cursor:"pointer", padding:0 }}>×</button>
+                      {i === 0 && <span style={{ position:"absolute", left:5, bottom:5, fontSize:8, letterSpacing:1.5, textTransform:"uppercase", background:C.red, color:"#fff", padding:"3px 6px", fontFamily:"sans-serif" }}>Portada</span>}
+                    </div>
+                  ))}
+                  {fotos.length < MAX_FOTOS_VENTA && (
+                    <button type="button" onClick={() => fileRef.current && fileRef.current.click()} disabled={procesando}
+                      style={{ aspectRatio:"4/3", border:`1px dashed ${C.borderStrong}`, background:"rgba(255,255,255,.02)", color:C.muted, cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6, fontFamily:"sans-serif", fontSize:11 }}>
+                      {procesando ? "Cargando…" : <>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        Sumar fotos
+                      </>}
+                    </button>
+                  )}
+                </div>
+                <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={e => { agregarFotos(e.target.files); e.target.value = ""; }}/>
+              </VField>
+              <div style={{ display:"grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: mob ? 0 : 12 }}>
+                <VField label="Tu nombre *"><input value={f.nombre} onChange={e => set("nombre", e.target.value)} placeholder="Juan Pérez" autoComplete="name" style={vInput} {...vFocus}/></VField>
+                <VField label="Tu WhatsApp *"><input type="tel" value={f.telefono} onChange={e => set("telefono", e.target.value)} placeholder="381 555-1234" autoComplete="tel" style={vInput} {...vFocus}/></VField>
+              </div>
+              {/* Campo trampa para bots: invisible para personas */}
+              <input name="empresa" value={f.empresa} onChange={e => set("empresa", e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true"
+                style={{ position:"absolute", left:-9999, width:1, height:1, opacity:0 }}/>
+            </div>
+          )}
+
+          {error && <div style={{ marginBottom:14, padding:"11px 14px", background:"rgba(220,38,38,.1)", border:`1px solid rgba(220,38,38,.4)`, color:"#fca5a5", fontSize:13, fontFamily:"sans-serif" }}>{error}</div>}
+
+          <div style={{ display:"flex", gap:10, justifyContent:"space-between", alignItems:"center", marginTop:6 }}>
+            {paso > 0
+              ? <button type="button" onClick={() => irA(paso - 1)} style={{ background:"none", border:"none", color:C.muted, fontSize:11, letterSpacing:2, textTransform:"uppercase", fontFamily:"sans-serif", cursor:"pointer", padding:"12px 0" }}>← Atrás</button>
+              : <span/>}
+            {paso < 2
+              ? <Btn primary onClick={() => irA(paso + 1)}>Siguiente →</Btn>
+              : <Btn primary onClick={enviar} disabled={enviando || procesando}>{enviando ? "Enviando…" : "Enviar mi auto"}</Btn>}
+          </div>
+          <p style={{ marginTop:16, fontSize:11, color:C.muted2, fontFamily:"sans-serif", lineHeight:1.5 }}>
+            Usamos tus datos solo para contactarte por este auto.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div style={{ paddingTop:68 }}>
+      <style>{`@keyframes vtaIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}`}</style>
+      <PageHeader tag="Te compramos tu auto" bgWord="VENDÉ" subtitle="Completá los datos en 2 minutos y te hacemos una propuesta.">
+        Vendé tu auto <Red>sin vueltas</Red>
+      </PageHeader>
+      <div style={{ padding: mob ? "36px 16px 70px" : "70px 5vw 100px", background:"#0c0c0c" }}>
+        <div style={{ display:"grid", gridTemplateColumns: mob ? "1fr" : "minmax(0,.85fr) minmax(0,1.15fr)", gap: mob ? 40 : 72, alignItems:"start" }}>
+          {mob && card}
+          <div>
+            <Reveal><Tag>Cómo funciona</Tag></Reveal>
+            <Reveal delay={.1}><SecH style={{ marginBottom:30 }}>Tres pasos y <Red>listo</Red></SecH></Reveal>
+            {[["01","Contanos de tu auto","Marca, modelo, año, km y unas fotos desde el celular."],
+              ["02","Te escribimos","En menos de 24 h te contactamos por WhatsApp con una propuesta."],
+              ["03","Cerramos","Lo vemos en persona, acordamos y nos encargamos de los papeles."]].map(([n, t, d], i) => (
+              <Reveal key={n} delay={.15 + i * .08}>
+                <div style={{ display:"flex", gap:18, padding:"18px 0", borderTop:`1px solid ${C.border}` }}>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:30, fontWeight:800, color:C.red, lineHeight:1, minWidth:40 }}>{n}</span>
+                  <div>
+                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom:4 }}>{t}</div>
+                    <div style={{ fontSize:13, color:"rgba(245,245,245,.5)", lineHeight:1.6, fontFamily:"sans-serif" }}>{d}</div>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:1, marginTop:30, background:C.border }}>
+              {beneficios.map(([t, d], i) => (
+                <Reveal key={t} delay={.1 + i * .06}>
+                  <div style={{ background:"#0c0c0c", padding:"18px 16px 18px 0", height:"100%" }}>
+                    <div style={{ fontSize:9, letterSpacing:2.5, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif", marginBottom:6 }}>{t}</div>
+                    <div style={{ fontSize:12, color:"rgba(245,245,245,.5)", lineHeight:1.55, fontFamily:"sans-serif" }}>{d}</div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+            <p style={{ marginTop:26, fontSize:12, color:C.muted, fontFamily:"sans-serif" }}>
+              ¿Preferís hablar directo? <a href={`https://wa.me/${WA_NORDEN}?text=${encodeURIComponent("Hola Norden Cars, quiero vender mi auto")}`} target="_blank" rel="noreferrer" style={{ color:C.red, textDecoration:"none" }}>Escribinos por WhatsApp →</a>
+            </p>
+          </div>
+          {!mob && <div style={{ position:"sticky", top:96 }}>{card}</div>}
+        </div>
+      </div>
+      <Footer navTo={navTo}/>
+    </div>
+  );
+}
+
+/* Botón fijo "Vendé tu auto" (abajo a la izquierda; a la derecha están WhatsApp y el chat). */
+function FloatVender({ onClick }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} aria-label="Vendé tu auto"
+      style={{ position:"fixed", left:20, bottom:28, zIndex:600, display:"flex", alignItems:"center", gap:9, padding:"0 18px 0 14px", height:46,
+        background: hov ? C.red : "rgba(12,14,18,.92)", border:`1px solid ${hov ? C.red : "rgba(220,38,38,.55)"}`, color:"#fff",
+        backdropFilter:"blur(12px)", cursor:"pointer", fontFamily:"sans-serif", fontSize:10, fontWeight:600, letterSpacing:2.2, textTransform:"uppercase",
+        boxShadow: hov ? "0 10px 32px rgba(220,38,38,.4)" : "0 6px 24px rgba(0,0,0,.45)", transition:"all .3s cubic-bezier(.16,1,.3,1)",
+        transform: hov ? "translateY(-2px)" : "none" }}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 17h14M6 17l1.5-5h9L18 17M7.5 12 9 8h6l1.5 4"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/>
+      </svg>
+      Vendé tu auto
+    </button>
+  );
+}
+
 /* ─── ROOT APP ───────────────────────────────────────────────────────────────── */
 export default function App() {
-  const [page, setPage] = useState("home");
+  // Link directo a "Vendé tu auto" (bio de Instagram, anuncios): ?vender o #vender
+  const [page, setPage] = useState(() => { try { const u = window.location; return (new URLSearchParams(u.search).has("vender") || u.hash === "#vender") ? "vender" : "home"; } catch { return "home"; } });
   const [pageAnim, setPageAnim] = useState("in"); // "in" | "out"
   const [scrolled, setScrolled] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
@@ -2622,10 +2984,12 @@ export default function App() {
         {page==="stock"    && <StockPage stockData={stockData} setSelectedCar={setSelectedCar} loading={loadingStock}/>}
         {page==="nosotros" && <NosotrosPage navTo={navTo}/>}
         {page==="contacto" && <ContactoPage config={config} navTo={navTo}/>}
+        {page==="vender"   && <VenderPage navTo={navTo}/>}
       </div>
 
       {selectedCar && <CarModal car={selectedCar} onClose={() => setSelectedCar(null)}/>}
 
+      {page !== "vender" && <FloatVender onClick={() => navTo("vender")}/>}
       <FloatWa/>
       <Chatbot/>
     </div>
