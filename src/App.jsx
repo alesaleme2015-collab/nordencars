@@ -3406,10 +3406,12 @@ export default function App() {
       <style>{`
         @keyframes dot{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
         *, *::before, *::after { cursor: none !important; }
+        input:not([type=checkbox]):not([type=radio]), textarea { cursor: text !important; }
       `}</style>
 
       {appLoading && <LoadingScreen onDone={() => setAppLoading(false)}/>}
-      <CustomCursor/>
+      {/* Portal: #root tiene z-index propio y las ventanas (también en portal) tapaban el cursor */}
+      {createPortal(<CustomCursor/>, document.body)}
 
       <Nav page={page} navTo={navTo} scrolled={scrolled}/>
 
