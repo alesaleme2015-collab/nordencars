@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
  */
 
 const R = "#DC2626", BLANCO = "#F5F5F5", GRIS = "#8a8e98";
+const LOGO = "/images/img_logo_tight.png"; // 1400×336
 const PIEL_M = "#E8B48A", PIEL_A = "#C98E62";
 const PISO = 318;
 const DURACION = 6.5; // segundos por escena
@@ -63,7 +64,22 @@ const txt = { fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700 };
 
 /* ─── Piezas ─────────────────────────────────────────────────────────────── */
 
-function Fondo({ ventana = true, cartel = true }) {
+// Logo de Norden (blanco y rojo, fondo transparente).
+const Logo = ({ x, y, w }) => <image href={LOGO} x={x} y={y} width={w} height={w * 336 / 1400}/>;
+
+// Cartel de la oficina: el logo en un panel con luz de fondo.
+function Cartel({ x, y, w }) {
+  const h = w * 336 / 1400;
+  return (
+    <g>
+      <rect x={x - 14} y={y - 12} width={w + 28} height={h + 24} rx="6" fill="#0a0c10" stroke="#2a303b" strokeWidth="2"/>
+      <rect x={x - 6} y={y + h + 8} width={w + 12} height="3" rx="1.5" fill={R} opacity=".55"/>
+      <Logo x={x} y={y} w={w}/>
+    </g>
+  );
+}
+
+function Fondo({ ventana = true, cartel = { x: 34, y: 34, w: 190 } }) {
   return (
     <g>
       <defs>
@@ -79,12 +95,7 @@ function Fondo({ ventana = true, cartel = true }) {
           <circle cx="560" cy="78" r="16" fill="#fde68a" opacity=".55"/>
         </g>
       )}
-      {cartel && (
-        <g>
-          <text x="36" y="70" fill={R} style={{ ...txt, fontWeight: 900 }} fontSize="30" letterSpacing="4">NORDEN</text>
-          <text x="38" y="90" fill={GRIS} style={txt} fontSize="13" letterSpacing="7">CARS</text>
-        </g>
-      )}
+      {cartel && <Cartel {...cartel}/>}
       <rect y={PISO} width="640" height={380 - PISO} fill="#0d1015"/>
       <line x1="0" y1={PISO} x2="640" y2={PISO} stroke="#2a303b" strokeWidth="2"/>
       <g>
@@ -198,7 +209,7 @@ function Globo({ x, y, w, h, colaX, lineas, delay = 0, size = 20, fill = "#fff",
   );
 }
 
-function Escritorio({ x, w, laptop }) {
+function Escritorio({ x, w, laptop, logo }) {
   return (
     <g>
       {laptop && (
@@ -210,6 +221,7 @@ function Escritorio({ x, w, laptop }) {
       <rect x={x} y="250" width={w} height="10" rx="2" fill="#343b48"/>
       <rect x={x + 8} y="260" width={w - 16} height={PISO - 260} fill="#1f242d"/>
       <line x1={x + 8} y1="262" x2={x + w - 8} y2="262" stroke="#000" strokeOpacity=".3" strokeWidth="3"/>
+      {logo && <Logo x={x + w / 2 - Math.min(124, w - 40) / 2} y="276" w={Math.min(124, w - 40)}/>}
     </g>
   );
 }
@@ -257,7 +269,7 @@ const ESCENAS = [
   () => (
     <g>
       <Fondo cartel={false}/>
-      <Escritorio x={255} w={150} laptop/>
+      <Escritorio x={255} w={150} laptop logo/>
       <Persona x={195} {...MARTIN}/>
       <Persona x={470} d={-1} {...ASESOR} pose="senala"/>
       <Globo x={50} y={40} w={230} h={72} colaX={185} lineas={["¿Tienen la SUV", "que vi en Instagram?"]} delay={.3}/>
@@ -273,13 +285,13 @@ const ESCENAS = [
       <Estrella x={395} y={232} s={.8} delay={2}/>
       <Persona x={95} {...ASESOR} pose="senala"/>
       <Persona x={565} d={-1} {...MARTIN} feliz/>
-      <Globo x={448} y={42} w={170} h={50} colaX={556} lineas={["¡Es esa! ♥"]} delay={1.8}/>
+      <Globo x={448} y={42} w={170} h={50} colaX={556} lineas={["¡Esa quiero!"]} delay={1.8}/>
     </g>
   ),
   () => (
     <g>
       <Fondo ventana={false} cartel={false}/>
-      <Escritorio x={250} w={160} laptop/>
+      <Escritorio x={250} w={160} laptop logo/>
       <Persona x={185} {...MARTIN}/>
       <Persona x={475} d={-1} {...ASESOR}/>
       <Pildora x={150} y={40} w={150} texto="ANTICIPO" delay={.4}/>
@@ -294,6 +306,7 @@ const ESCENAS = [
       <rect x="150" y="34" width="340" height="196" rx="8" fill="#0a0c10" stroke="#2a303b" strokeWidth="6"/>
       <rect x="306" y="230" width="28" height="22" fill="#2a303b"/>
       <text x="170" y="62" fill={GRIS} style={txt} fontSize="14" letterSpacing="3">PLANES</text>
+      <Logo x={244} y={46} w={96}/>
       {["12 cuotas", "24 cuotas", "36 cuotas"].map((p, i) => {
         const cx = 172 + i * 106, alto = [74, 52, 36][i];
         return (
@@ -317,8 +330,8 @@ const ESCENAS = [
   ),
   () => (
     <g>
-      <Fondo ventana={false}/>
-      <Escritorio x={175} w={290}/>
+      <Fondo ventana={false} cartel={{ x: 30, y: 34, w: 170 }}/>
+      <Escritorio x={175} w={290} logo/>
       <g className="hc-fade" style={dl(.1)} transform="rotate(-3 320 140)">
         <rect x="232" y="44" width="180" height="176" rx="6" fill={BLANCO}/>
         <text x="322" y="72" textAnchor="middle" fill="#111" style={txt} fontSize="15" letterSpacing="1">CRÉDITO PRENDARIO</text>
@@ -345,12 +358,12 @@ const ESCENAS = [
   ),
   () => (
     <g>
-      <Fondo cartel={false}/>
+      <Fondo cartel={{ x: 44, y: 98, w: 160 }}/>
       <Auto x={460} color={R} esc={.95} moño/>
       <Persona x={150} {...MARTIN} pose="sostiene" feliz/>
       <Persona x={262} d={-1} {...ASESOR} pose="sostiene" feliz/>
       <g transform="translate(203 226)"><g className="hc-bob"><Llaves/></g></g>
-      <Pildora x={70} y={44} w={270} h={38} texto="LLAVES + PAPELES PARA CIRCULAR" fondo="#fff" color="#111" delay={.8} size={16}/>
+      <Pildora x={60} y={34} w={270} h={38} texto="LLAVES + PAPELES PARA CIRCULAR" fondo="#fff" color="#111" delay={.8} size={16}/>
       {Array.from({ length: 22 }).map((_, i) => (
         <rect key={i} className="hc-conf" style={{ animationDelay: `${(i * .37) % 2.8}s` }} x={(i * 53) % 640} y="-10" width="7" height="12" rx="1.5"
           fill={[R, "#facc15", "#22c55e", "#3b82f6", BLANCO][i % 5]}/>
@@ -363,7 +376,7 @@ const ESCENAS = [
       <Pildora x={52} y={36} w={170} h={36} texto="GESTORÍA NORDEN" fondo="#475569" delay={.2} size={16}/>
       <Persona x={78} {...GESTOR}/>
       <Persona x={196} d={-1} {...GESTOR} pelo="#111" piel="#C08A5E"/>
-      <Escritorio x={40} w={200}/>
+      <Escritorio x={40} w={200} logo/>
       <g className="hc-folder">
         <rect x="104" y="232" width="74" height="18" rx="2" fill="#d6a85c"/>
         <path d="M104 232 L104 226 L128 226 L134 232 Z" fill="#c4964c"/>
