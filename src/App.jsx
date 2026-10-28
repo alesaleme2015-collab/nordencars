@@ -88,7 +88,7 @@ const BRAND_DOMAINS = {
 };
 const FAQ = [
   {k:"financiación financiamiento cuotas",a:"Sí, trabajamos con múltiples entidades financieras para que arranques a rodar sin preocupaciones."},
-  {k:"vender vendo tasar tasación tasacion compran",a:"¡Te compramos tu auto! Entrá a Vendé tu auto en el menú, cargá los datos y unas fotos, y te respondemos en menos de 24 h."},
+  {k:"vender vendo tasar tasación tasacion compran",a:"¡Te ayudamos a venderlo! Te lo compramos, lo vendemos en consignación o lo tomamos como parte de pago. Entrá a Vendé tu auto en el menú, cargá los datos y unas fotos, y te respondemos en menos de 24 h."},
   {k:"permuta cambio parte pago",a:"¡Sí! Tomamos tu vehículo como parte de pago al mejor precio del mercado."},
   {k:"garantía garantia",a:"Los 0km tienen garantía de fábrica. Los usados tienen garantía según cada caso."},
   {k:"entrega provincia envío envio",a:"Coordinamos traslado a todo el país con transportistas de confianza."},
@@ -1847,11 +1847,11 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
       <section style={{ position:"relative", overflow:"hidden", padding:"84px 5vw", background:"linear-gradient(120deg,#0d0708 0%,#140909 50%,#0a0c10 100%)", borderTop:`1px solid ${C.border}`, isolation:"isolate" }}>
         <div style={{ position:"absolute", right:"-4vw", top:"50%", transform:"translateY(-50%)", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:"clamp(120px,22vw,320px)", lineHeight:.8, color:"transparent", WebkitTextStroke:"1px rgba(220,38,38,.16)", letterSpacing:-6, zIndex:-1, pointerEvents:"none", userSelect:"none" }}>VENDÉ</div>
         <div style={{ position:"absolute", left:"-10%", top:"-40%", width:"60%", height:"180%", background:"radial-gradient(ellipse, rgba(220,38,38,.14), transparent 65%)", zIndex:-1, pointerEvents:"none" }}/>
-        <Reveal><Tag>Te compramos tu auto</Tag></Reveal>
+        <Reveal><Tag>Compra o consignación</Tag></Reveal>
         <Reveal delay={.1}><SecH style={{ marginBottom:16, maxWidth:720 }}>¿Querés vender <Red>tu auto?</Red></SecH></Reveal>
         <Reveal delay={.18}>
           <p style={{ fontSize:15, fontWeight:300, color:"rgba(245,245,245,.62)", lineHeight:1.7, maxWidth:520, marginBottom:30, fontFamily:"sans-serif" }}>
-            Cargá los datos y unas fotos desde el celular en 2 minutos. Te respondemos en menos de 24 h con una propuesta, o lo tomamos como parte de pago.
+            Te lo compramos, lo vendemos por vos en consignación o lo tomamos como parte de pago. Cargá los datos y unas fotos desde el celular en 2 minutos y te respondemos en menos de 24 h.
           </p>
         </Reveal>
         <Reveal delay={.26}>
@@ -2487,6 +2487,7 @@ function ContactoPage({ config, navTo }) {
 const MARCAS_COMUNES = ["Audi","BMW","BYD","Chery","Chevrolet","Citroën","Fiat","Ford","Honda","Hyundai","Jeep","Kia","Mercedes-Benz","Mitsubishi","Nissan","Peugeot","RAM","Renault","Suzuki","Toyota","Volkswagen","Volvo"];
 const ESTADOS_AUTO = [["excelente","Excelente"],["muy_bueno","Muy bueno"],["bueno","Bueno"],["a_reparar","Necesita arreglos"]];
 const MAX_FOTOS_VENTA = 6;
+const MODALIDADES_VENTA = [["compra","Que me lo compren"],["consignacion","Dejarlo en consignación"],["parte_pago","Parte de pago"],["indistinto","Lo que convenga"]];
 
 // Achica la foto en el celular antes de mandarla (de ~4 MB a ~300 KB).
 async function achicarFoto(file) {
@@ -2531,7 +2532,7 @@ function VChips({ opts, val, set }) {
   );
 }
 
-const FORM_VENTA_VACIO = { marca:"", modelo:"", version:"", anio:"", km:"", color:"", estado_auto:"", tiene_deuda:"", deuda_detalle:"", precio:"", moneda:"ARS", comentario:"", nombre:"", telefono:"", empresa:"" };
+const FORM_VENTA_VACIO = { marca:"", modelo:"", version:"", anio:"", km:"", color:"", estado_auto:"", modalidad:"", tiene_deuda:"", deuda_detalle:"", precio:"", moneda:"ARS", comentario:"", nombre:"", telefono:"", empresa:"" };
 
 function VenderPage({ navTo }) {
   const mob = useIsMobile();
@@ -2612,9 +2613,9 @@ function VenderPage({ navTo }) {
   };
 
   const beneficios = [
-    ["Respuesta en 24 h", "Te escribimos por WhatsApp con una propuesta concreta, sin vueltas."],
-    ["Tasación real", "Con datos del mercado de Tucumán y nuestra experiencia en ventas."],
-    ["Parte de pago", "Si querés, lo tomamos como entrega para un 0km o un usado de nuestro stock."],
+    ["Te lo compramos", "Si nos interesa, te hacemos una oferta concreta y cerramos rápido."],
+    ["Consignación", "Lo publicamos y lo vendemos por vos: sin perder tiempo con curiosos."],
+    ["Parte de pago", "Lo tomamos como entrega para un 0km o un usado de nuestro stock."],
     ["Papeles resueltos", "Nos ocupamos de la transferencia con nuestra gestoría."],
   ];
 
@@ -2677,6 +2678,7 @@ function VenderPage({ navTo }) {
 
           {paso === 1 && (
             <div key="p1" style={{ animation:"vtaIn .45s cubic-bezier(.16,1,.3,1)" }}>
+              <VField label="¿Cómo querés venderlo?"><VChips opts={MODALIDADES_VENTA} val={f.modalidad} set={v => set("modalidad", v)}/></VField>
               <VField label="¿Cómo está el auto?"><VChips opts={ESTADOS_AUTO} val={f.estado_auto} set={v => set("estado_auto", v)}/></VField>
               <VField label="¿Tiene deuda de patente, multas o prenda?">
                 <VChips opts={[["no","No"],["si","Sí"]]} val={f.tiene_deuda} set={v => set("tiene_deuda", v)}/>
@@ -2758,7 +2760,7 @@ function VenderPage({ navTo }) {
   return (
     <div style={{ paddingTop:68 }}>
       <style>{`@keyframes vtaIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}`}</style>
-      <PageHeader tag="Te compramos tu auto" bgWord="VENDÉ" subtitle="Completá los datos en 2 minutos y te hacemos una propuesta.">
+      <PageHeader tag="Compra · Consignación · Parte de pago" bgWord="VENDÉ" subtitle="Te lo compramos o lo vendemos por vos. Completá los datos en 2 minutos.">
         Vendé tu auto <Red>sin vueltas</Red>
       </PageHeader>
       <div style={{ padding: mob ? "36px 16px 70px" : "70px 5vw 100px", background:"#0c0c0c" }}>
@@ -2768,7 +2770,7 @@ function VenderPage({ navTo }) {
             <Reveal><Tag>Cómo funciona</Tag></Reveal>
             <Reveal delay={.1}><SecH style={{ marginBottom:30 }}>Tres pasos y <Red>listo</Red></SecH></Reveal>
             {[["01","Contanos de tu auto","Marca, modelo, año, km y unas fotos desde el celular."],
-              ["02","Te escribimos","En menos de 24 h te contactamos por WhatsApp con una propuesta."],
+              ["02","Te escribimos","En menos de 24 h te contactamos por WhatsApp: compra, consignación o parte de pago."],
               ["03","Cerramos","Lo vemos en persona, acordamos y nos encargamos de los papeles."]].map(([n, t, d], i) => (
               <Reveal key={n} delay={.15 + i * .08}>
                 <div style={{ display:"flex", gap:18, padding:"18px 0", borderTop:`1px solid ${C.border}` }}>
