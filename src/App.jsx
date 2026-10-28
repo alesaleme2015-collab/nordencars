@@ -692,6 +692,19 @@ function Marquee() {
   );
 }
 
+/* ─── ETIQUETAS DEL STOCK ─────────────────────────────────────────────────── */
+// Las calcula el ERP (Ale, 2026-10-28): recién ingresado = entró hace ≤7 días;
+// bajó de precio = baja en los últimos 30 días y sigue más barato que antes.
+function EtiquetasAuto({ car, grande }) {
+  const et = [];
+  if (car.bajo_precio) et.push(["↓ Bajó de precio", "#16a34a"]);
+  if (car.recien_ingresado) et.push(["Recién ingresado", C.red]);
+  if (!et.length) return null;
+  return et.map(([t, bg]) => (
+    <span key={t} style={{ fontSize: grande ? 12 : 11, fontWeight:700, letterSpacing:1.2, textTransform:"uppercase", padding: grande ? "5px 11px" : "4px 9px", background:bg, color:"#fff", fontFamily:"sans-serif", boxShadow:"0 4px 14px rgba(0,0,0,.35)", whiteSpace:"nowrap" }}>{t}</span>
+  ));
+}
+
 /* ─── CAR CARD ──────────────────────────────────────────────────────────────── */
 // Precio del auto con SU moneda: el ERP manda el valor en `precio_usd` (nombre
 // viejo) y la moneda en `precio_moneda` (ARS o USD).
@@ -763,7 +776,10 @@ function CarCard({ car, onClick, comparar }) {
               <div style={{ fontSize:11.5, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.11)", fontFamily:"sans-serif" }}>Foto próximamente</div>
             </div>
         }
-        <span style={{ position:"absolute", top:11, left:11, fontSize:11, letterSpacing:2, textTransform:"uppercase", padding:"4px 9px", background:car.tipo==="0km"?C.red:"rgba(0,0,0,.82)", color:car.tipo==="0km"?"#fff":"rgba(255,255,255,.62)", border:car.tipo==="0km"?"none":`1px solid ${C.border2}`, fontFamily:"sans-serif" }}>{car.tipo}</span>
+        <div style={{ position:"absolute", top:11, left:11, display:"flex", flexDirection:"column", alignItems:"flex-start", gap:5, zIndex:2 }}>
+          <span style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", padding:"4px 9px", background:car.tipo==="0km"?C.red:"rgba(0,0,0,.82)", color:car.tipo==="0km"?"#fff":"rgba(255,255,255,.62)", border:car.tipo==="0km"?"none":`1px solid ${C.border2}`, fontFamily:"sans-serif" }}>{car.tipo}</span>
+          <EtiquetasAuto car={car}/>
+        </div>
         {car.carroceria && <span style={{ position:"absolute", top:11, right:11, fontSize:11, letterSpacing:1.5, textTransform:"uppercase", padding:"4px 9px", background:"rgba(0,0,0,.78)", color:"rgba(255,255,255,.48)", fontFamily:"sans-serif" }}>{car.carroceria}</span>}
         <div style={{ position:"absolute", bottom:0, left:0, width:hov?"100%":"0%", height:2, background:C.red, transition:"width .42s cubic-bezier(.16,1,.3,1)" }}/>
         {comparar && (
@@ -805,9 +821,9 @@ function CarModal({ car, onClose }) {
   const km = car.kilometraje===0 ? "0 km" : `${Number(car.kilometraje).toLocaleString("es-AR")} km`;
   const carEnc = encodeURIComponent(`${car.marca} ${car.modelo} ${car.anio}`);
 
-  // Compartir esta publicación: link directo al auto (?auto=<id>) para mandar por
-  // WhatsApp/redes. En celular abre el menú nativo; en PC copia el link.
-  const shareUrl = `${typeof window !== "undefined" ? window.location.origin : "https://nordencars.com.ar"}/?auto=${car.id}`;
+  // Compartir esta publicación: /auto/<id> muestra la vista previa con foto y precio
+  // en WhatsApp/redes (api/auto.js) y lleva a la ficha. En celular abre el menú nativo; en PC copia el link.
+  const shareUrl = `https://www.nordencars.com.ar/auto/${car.id}`;
   const shareMsg = `Mirá este ${car.marca} ${car.modelo} ${car.anio} en Norden Cars — ${precio}`;
   const doShare = async () => {
     if (typeof navigator !== "undefined" && navigator.share) {
@@ -840,6 +856,7 @@ function CarModal({ car, onClose }) {
         <div style={{ padding:26 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:18, flexWrap:"wrap", gap:14 }}>
             <div>
+              {(car.bajo_precio || car.recien_ingresado) && <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:10 }}><EtiquetasAuto car={car} grande/></div>}
               <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif", marginBottom:6 }}>{car.marca} · {car.carroceria||""}</div>
               <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:42, fontWeight:900, textTransform:"uppercase", color:C.white, lineHeight:.9, letterSpacing:-1 }}>{car.modelo}</div>
               {car.version && <div style={{ fontSize:13, color:C.muted, marginTop:6, fontFamily:"sans-serif" }}>{car.version} · {car.anio}</div>}
