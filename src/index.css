@@ -4,6 +4,11 @@
   padding: 0;
 }
 
+/* La web es oscura de por sí: se declara para que el modo oscuro del celular
+   (Chrome, Samsung Internet, navegador de Instagram) no la "oscurezca" encima. */
+:root { color-scheme: dark; }
+@media (prefers-color-scheme: dark) { :root { color-scheme: dark; } }
+
 html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;

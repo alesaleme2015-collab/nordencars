@@ -2623,8 +2623,12 @@ function useOkm() {
   return okm;
 }
 
-function LogoMarcaOkm({ src, marca, size = 28 }) {
+function LogoMarcaOkm({ src, pastilla, marca, size = 28 }) {
   const [falla, setFalla] = useState(false);
+  const [fallaPastilla, setFallaPastilla] = useState(false);
+  // Pastilla blanca ya pegada en la imagen (la arma el sistema): con el celular en modo
+  // oscuro el navegador oscurecía el fondo blanco por CSS y los logos oscuros no se veían.
+  if (pastilla && !fallaPastilla) return <img src={pastilla} alt={marca} onError={() => setFallaPastilla(true)} style={{ height:size + 8, width:"auto", display:"block" }}/>;
   if (!src || falla) return marca ? <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:size * .5, letterSpacing:1, color:"rgba(255,255,255,.55)", textTransform:"uppercase" }}>{marca}</span> : null;
   // Logo en sus colores sobre una pastilla clara (en blanco puro, Fiat y Ford quedaban como manchas).
   return (
@@ -2652,7 +2656,7 @@ function OkmCard({ m, onClick }) {
       <div style={{ position:"relative", height:190, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden",
         background:"radial-gradient(ellipse at 50% 85%, rgba(220,38,38,.16), transparent 60%), linear-gradient(180deg,#10131a,#0b0d12)" }}>
         <div style={{ position:"absolute", left:"12%", right:"12%", bottom:26, height:14, borderRadius:"50%", background:"rgba(0,0,0,.65)", filter:"blur(10px)" }}/>
-        <div style={{ position:"absolute", top:14, left:16, zIndex:1 }}><LogoMarcaOkm src={m.logo} marca={m.marca} size={22}/></div>
+        <div style={{ position:"absolute", top:14, left:16, zIndex:1 }}><LogoMarcaOkm src={m.logo} pastilla={m.logo_pastilla} marca={m.marca} size={22}/></div>
         {foto
           ? <img src={foto} alt={`${m.marca} ${m.modelo}`} loading="lazy" style={{ position:"relative", maxWidth:"82%", maxHeight:150, objectFit:"contain", marginTop:18,
               transform: hov ? "scale(1.08) translateX(6px)" : "scale(1)", transition:"transform .7s cubic-bezier(.16,1,.3,1)", filter:"drop-shadow(0 14px 18px rgba(0,0,0,.55))" }}/>
@@ -2695,7 +2699,7 @@ function OkmModal({ m, onClose, abrirTeilen }) {
         <div style={{ display:"grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr" }}>
           <div style={{ position: mob ? "relative" : "sticky", top:0, alignSelf:"start", minHeight: mob ? 200 : 380, display:"flex", alignItems:"center", justifyContent:"center", padding:24,
             background:"radial-gradient(ellipse at 50% 80%, rgba(220,38,38,.22), transparent 60%), linear-gradient(180deg,#121620,#0a0c10)" }}>
-            <div style={{ position:"absolute", top:18, left:20 }}><LogoMarcaOkm src={m.logo} marca={m.marca} size={26}/></div>
+            <div style={{ position:"absolute", top:18, left:20 }}><LogoMarcaOkm src={m.logo} pastilla={m.logo_pastilla} marca={m.marca} size={26}/></div>
             {foto
               ? <img src={foto} alt="" style={{ maxWidth:"100%", maxHeight: mob ? 170 : 240, objectFit:"contain", filter:"drop-shadow(0 18px 22px rgba(0,0,0,.6))", animation:"okmCar .8s cubic-bezier(.16,1,.3,1)" }}/>
               : <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:64, textTransform:"uppercase", color:"transparent", WebkitTextStroke:"1px rgba(255,255,255,.18)", textAlign:"center", lineHeight:.9 }}>{m.modelo}</div>}
@@ -2899,7 +2903,7 @@ function OkmPage({ navTo, okm, abrirTeilen }) {
   const [q, setQ] = useState("");
   const [sel, setSel] = useState(null);
   const marcas = ["Todas", ...Array.from(new Set(okm.modelos.map(m => m.marca)))];
-  const logoDe = Object.fromEntries(okm.modelos.map(m => [m.marca, m.logo]));
+  const logoDe = Object.fromEntries(okm.modelos.map(m => [m.marca, m]));
   const filtro = slugOkm(q);
   const lista = okm.modelos.filter(m => (marca === "Todas" || m.marca === marca) && (!filtro || slugOkm(`${m.marca} ${m.modelo} ${m.versiones.map(v => v.version).join(" ")}`).includes(filtro)));
   const ultima = okm.modelos.reduce((mx, m) => (m.vigente_al && m.vigente_al > mx ? m.vigente_al : mx), "");
@@ -2928,7 +2932,7 @@ function OkmPage({ navTo, okm, abrirTeilen }) {
                 <button key={mc} onClick={() => setMarca(mc)} style={{ display:"flex", alignItems:"center", gap:8, padding:"9px 14px", cursor:"pointer", whiteSpace:"nowrap", flexShrink:0,
                   background: on ? "rgba(220,38,38,.14)" : "rgba(255,255,255,.03)", border:`1px solid ${on ? C.red : C.border2}`, color: on ? C.white : "rgba(245,245,245,.6)",
                   fontSize:11, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"sans-serif", transition:"all .25s" }}>
-                  {mc !== "Todas" && <LogoMarcaOkm src={logoDe[mc]} marca="" size={14}/>}{mc}
+                  {mc !== "Todas" && <LogoMarcaOkm src={logoDe[mc]?.logo} pastilla={logoDe[mc]?.logo_pastilla} marca="" size={14}/>}{mc}
                 </button>
               );
             })}
