@@ -401,7 +401,8 @@ const ESCENAS = [
 
 export default function HistoriaCompra({ mobile }) {
   const [i, setI] = useState(0);
-  const [visible, setVisible] = useState(false);
+  // Sin IntersectionObserver (navegadores muy viejos) se considera siempre a la vista.
+  const [visible, setVisible] = useState(() => typeof IntersectionObserver === "undefined");
   const [pausa, setPausa] = useState(false);
   const [fin, setFin] = useState(false);
   const ref = useRef(null);
@@ -409,7 +410,7 @@ export default function HistoriaCompra({ mobile }) {
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") { setVisible(true); return; }
+    if (!el || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: .45 });
     io.observe(el);
     return () => io.disconnect();

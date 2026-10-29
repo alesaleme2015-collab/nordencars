@@ -827,13 +827,13 @@ function CarModal({ car, onClose }) {
   const shareMsg = `Mirá este ${car.marca} ${car.modelo} ${car.anio} en Norden Cars — ${precio}`;
   const doShare = async () => {
     if (typeof navigator !== "undefined" && navigator.share) {
-      try { await navigator.share({ title: `${car.marca} ${car.modelo}`, text: shareMsg, url: shareUrl }); } catch {}
+      try { await navigator.share({ title: `${car.marca} ${car.modelo}`, text: shareMsg, url: shareUrl }); } catch { /* la persona canceló el menú */ }
       return;
     }
     try {
       await navigator.clipboard.writeText(`${shareMsg}\n${shareUrl}`);
       setCopied(true); setTimeout(() => setCopied(false), 2200);
-    } catch { try { window.prompt("Copiá el link para compartir:", shareUrl); } catch {} }
+    } catch { try { window.prompt("Copiá el link para compartir:", shareUrl); } catch { /* sin portapapeles ni prompt */ } }
   };
   return (
     <div onClick={onClose} style={{ position:"fixed", inset:0, zIndex:900, background:"rgba(0,0,0,.9)", display:"flex", alignItems:"center", justifyContent:"center", padding:20, backdropFilter:"blur(8px)" }}>
@@ -1028,80 +1028,6 @@ function FlipBrandCard({ brand }) {
 }
 
 /* ─── PROCESO ORBITAL (sistema solar del proceso de compra) ─────────────────── */
-function ProcesoOrbital() {
-  const steps = [
-    { n:"01", nt:"Consulta",      t:"Contacto y consulta",  d:"Te asesoramos según nuestro catálogo 0km y usados, con la propuesta ideal para vos." },
-    { n:"02", nt:"Reunión",       t:"Te mostramos el auto", d:"Vemos el vehículo y nos reunimos: financiación, pagos, permutas y papeles." },
-    { n:"03", nt:"El pago",       t:"El pago",              d:"Acordamos el pago según la opción que elijas. Claro y a tu medida." },
-    { n:"04", nt:"¡A disfrutar!", t:"¡Disfrutá tu auto!",   d:"Listo, el vehículo es tuyo. A estrenarlo y disfrutarlo." },
-    { n:"05", nt:"Post-venta",    t:"Post-venta",           d:"Seguimos a tu disposición para resolver cualquier inquietud después de la compra." },
-  ];
-  const ICON = (i) => {
-    const p = { width:30, height:30, viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", strokeWidth:1.5, strokeLinecap:"round", strokeLinejoin:"round" };
-    return [
-      <svg key="0" {...p}><path d="M21 11.5a8.38 8.38 0 0 1-9 8.3 8.5 8.5 0 0 1-3.8-.9L3 20l1.1-3.2A8.38 8.38 0 0 1 3.5 11 8.5 8.5 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>,
-      <svg key="1" {...p}><path d="M5 17h14M6 17l1.2-4.8A2 2 0 0 1 9.1 11h5.8a2 2 0 0 1 1.9 1.2L18 17"/><circle cx="8" cy="17" r="1.3"/><circle cx="16" cy="17" r="1.3"/></svg>,
-      <svg key="2" {...p}><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg>,
-      <svg key="3" {...p}><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15 19 4M16 5l3 3M18.5 6.5l1.5 1.5"/></svg>,
-      <svg key="4" {...p}><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><path d="M5 13h2v5H6a2 2 0 0 1-2-2zM19 13h-2v5h1a2 2 0 0 0 2-2z"/><path d="M19 16v1.5a3 3 0 0 1-3 3h-3"/></svg>,
-    ][i];
-  };
-  const [active, setActive] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const ck = () => setIsMobile(window.innerWidth < 760);
-    ck(); window.addEventListener("resize", ck);
-    return () => window.removeEventListener("resize", ck);
-  }, []);
-
-  if (isMobile) {
-    return (
-      <div style={{ display:"flex", flexDirection:"column", gap:1, background:C.borderStrong }}>
-        {steps.map((s,i) => (
-          <div key={i} style={{ background:C.zinc, padding:"24px 22px", display:"flex", gap:16, alignItems:"flex-start" }}>
-            <div style={{ width:48, height:48, borderRadius:"50%", border:`1px solid ${C.red}`, color:C.red, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{ICON(i)}</div>
-            <div>
-              <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:6, fontFamily:"sans-serif" }}>Paso {s.n}</div>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom:7 }}>{s.t}</div>
-              <div style={{ fontSize:12.5, fontWeight:300, lineHeight:1.7, color:C.muted, fontFamily:"sans-serif" }}>{s.d}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  const SIZE = 580, R = 230, CC = SIZE / 2;
-  const angles = [-90, -18, 54, 126, 198];
-  return (
-    <div style={{ position:"relative", width:SIZE, height:SIZE, margin:"0 auto", maxWidth:"100%" }}>
-      <div className="orbit-spin" style={{ position:"absolute", left:CC-R, top:CC-R, width:R*2, height:R*2, borderRadius:"50%", border:"1px solid rgba(255,255,255,.07)" }}>
-        <div style={{ position:"absolute", top:-3.5, left:"50%", width:7, height:7, borderRadius:"50%", background:C.red, boxShadow:"0 0 14px 2px rgba(220,38,38,.8)", transform:"translateX(-50%)" }}/>
-        <div style={{ position:"absolute", bottom:-2.5, left:"32%", width:5, height:5, borderRadius:"50%", background:"rgba(255,255,255,.5)" }}/>
-      </div>
-      <div style={{ position:"absolute", left:CC-160, top:CC-160, width:320, height:320, borderRadius:"50%", background:"radial-gradient(circle, rgba(220,38,38,.15), transparent 62%)", pointerEvents:"none" }}/>
-      <div style={{ position:"absolute", left:CC-130, top:CC-130, width:260, height:260, borderRadius:"50%", background:"radial-gradient(circle at 50% 35%, #1a1d24, #0c0e13 70%)", border:"1px solid rgba(255,255,255,.08)", boxShadow:"inset 0 0 40px rgba(0,0,0,.6), 0 0 60px rgba(220,38,38,.12)", display:"flex", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"0 32px" }}>
-        <div key={active} style={{ animation:"fadeUp .45s both" }}>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, letterSpacing:3, color:C.red, marginBottom:6 }}>PASO {steps[active].n}</div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:27, fontWeight:900, textTransform:"uppercase", color:C.white, lineHeight:1, marginBottom:12, letterSpacing:-.5 }}>{steps[active].t}</div>
-          <div style={{ fontSize:12.5, fontWeight:300, lineHeight:1.65, color:"rgba(245,245,245,.6)", fontFamily:"sans-serif" }}>{steps[active].d}</div>
-        </div>
-      </div>
-      {steps.map((s,i) => {
-        const a = angles[i] * Math.PI / 180;
-        const x = CC + R * Math.cos(a), y = CC + R * Math.sin(a);
-        const on = i === active;
-        return (
-          <div key={i} onMouseEnter={() => setActive(i)} style={{ position:"absolute", left:x-50, top:y-50, width:100, display:"flex", flexDirection:"column", alignItems:"center", gap:10, cursor:"pointer" }}>
-            <div style={{ width:66, height:66, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", background: on?C.red:"rgba(20,22,28,.92)", color: on?"#fff":"rgba(245,245,245,.55)", border:`1px solid ${on?C.red:"rgba(255,255,255,.12)"}`, boxShadow: on?"0 0 26px rgba(220,38,38,.6)":"none", transform: on?"scale(1.12)":"scale(1)", transition:"all .4s cubic-bezier(.16,1,.3,1)" }}>{ICON(i)}</div>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:12.5, fontWeight:700, textTransform:"uppercase", letterSpacing:1, color: on?C.white:"rgba(245,245,245,.5)", transition:"color .35s", textAlign:"center", lineHeight:1 }}>{s.nt}</div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 /* ─── CLIENTES CAROUSEL ─────────────────────────────────────────────────────── */
 function ClientesCarousel({ fotos = [] }) {
   if (!fotos.length) return null;
@@ -2006,7 +1932,7 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
       </section>
 
       {/* ── FAQ ── */}
-      <FAQSection navTo={navTo}/>
+      <FAQSection/>
 
       <Footer navTo={navTo}/>
     </>
@@ -2075,7 +2001,7 @@ function FAQItem({ faq, isOpen, onToggle }) {
 }
 
 /* ─── FAQ SECTION ───────────────────────────────────────────────────────────── */
-function FAQSection({ navTo }) {
+function FAQSection() {
   const [open, setOpen] = useState(null);
   const faqs = [
     { q:"¿Financian la compra?",            a:"Sí, trabajamos con múltiples entidades financieras para que arranques a rodar sin preocupaciones. Consultanos y te armamos la mejor opción." },
@@ -2566,7 +2492,7 @@ function ContactFormField({ label, fkey, type = "text", form, set }) {
 }
 
 /* ─── CONTACTO PAGE ──────────────────────────────────────────────────────────── */
-function ContactoPage({ config, navTo }) {
+function ContactoPage({ navTo }) {
   const [form, setForm] = useState({ nombre:"",telefono:"",email:"",vehiculo_interes:"",mensaje:"" });
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -3568,14 +3494,14 @@ export default function App() {
 
   // Splash una sola vez por sesión de pestaña: 1ª carga se ve; refresh / volver al
   // menú no lo repite; al cerrar la pestaña y volver, se ve de nuevo. (sessionStorage)
-  useEffect(() => { try { sessionStorage.setItem("nc_splash_seen", "1"); } catch {} }, []);
+  useEffect(() => { try { sessionStorage.setItem("nc_splash_seen", "1"); } catch { /* modo privado */ } }, []);
 
   // Deep-link: si la URL trae ?auto=<id> (link compartido), abrir ese vehículo al cargar.
   const deepLinkDone = useRef(false);
   useEffect(() => {
     if (deepLinkDone.current) return;
     let id = null;
-    try { id = new URLSearchParams(window.location.search).get("auto"); } catch {}
+    try { id = new URLSearchParams(window.location.search).get("auto"); } catch { /* URL inválida: sin link directo */ }
     if (!id) { deepLinkDone.current = true; return; }
     if (stockData && stockData.length) {
       const car = stockData.find(c => String(c.id) === String(id));
@@ -3712,7 +3638,7 @@ export default function App() {
         {page==="okm"      && <OkmPage navTo={navTo} okm={okm} abrirTeilen={abrirTeilen}/>}
         {page==="stock"    && <StockPage stockData={stockData} setSelectedCar={setSelectedCar} loading={loadingStock}/>}
         {page==="nosotros" && <NosotrosPage navTo={navTo}/>}
-        {page==="contacto" && <ContactoPage config={config} navTo={navTo}/>}
+        {page==="contacto" && <ContactoPage navTo={navTo}/>}
         {page==="vender"   && <VenderPage navTo={navTo}/>}
       </div>
 
