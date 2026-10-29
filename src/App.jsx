@@ -4,8 +4,8 @@ import HistoriaCompra from "./HistoriaCompra";
 import './App.css';
 
 // ═══════════════════════════════════════════════════════════
-// NORDENCARS — Página web oficial + Panel de administración
-// Supabase: https://crwcshjhzwbqpxsdhrrm.supabase.co
+// NORDENCARS — Página web oficial
+// Todos los datos vienen del sistema (ERP): stock, 0km, Instagram y formularios.
 // ═══════════════════════════════════════════════════════════
 
 // Imágenes embebidas (reemplazables por URLs reales)
@@ -38,41 +38,19 @@ const HERO_CARS = [
 ];
 // Fotos de entregas a clientes (sección "Clientes felices"), en public/images/clientes.
 // Si la tabla fotos_clientes de Supabase tiene datos, esos mandan; si no, van estas.
+const SIN_CONFIG = {};
+const SIN_VIDEOS = [];
 const CLIENTES_LOCAL = Array.from({ length: 25 }, (_, i) => ({
   url: `/images/clientes/entrega-${String(i + 1).padStart(2, "0")}.jpg`,
 }));
-const SUPA_URL       = "https://crwcshjhzwbqpxsdhrrm.supabase.co";
-const SUPA_KEY       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyd2NzaGpoendicXB4c2RocnJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODg1NzUsImV4cCI6MjA5MTA2NDU3NX0.dmpr2AR38XszZzbuZuJkQUyBLo8t7czRiRmthGMt8sg";
-
-// ERP de NordenCars — fuente única de verdad del stock.
-// Las tablas vehiculos / vehiculo_fotos del Supabase de la web quedaron
-// en desuso. El admin de stock de esta web tambien (ver AdminPanel).
+// ERP de NordenCars — fuente única de verdad. El Supabase propio de la web y su
+// panel admin se dieron de baja (auditoría 2026-10-29: la base ya no existía).
 const ERP_URL = "https://sistema.nordencars.store";
 
-
-/* ─── SUPABASE CLIENT LIVIANO ──────────────────────────────────────────────── */
-function sbFetch(path, opts = {}) {
-  return fetch(`${SUPA_URL}/rest/v1/${path}`, {
-    ...opts,
-    headers: {
-      apikey: SUPA_KEY,
-      Authorization: `Bearer ${SUPA_KEY}`,
-      "Content-Type": "application/json",
-      ...(opts.headers || {}),
-    },
-  });
-}
-const db = {
-  sel:  (t, q = "")       => sbFetch(`${t}?${q}`).then(r => r.json()),
-  ins:  (t, d)            => sbFetch(t, { method:"POST", headers:{ Prefer:"return=minimal" }, body:JSON.stringify(d) }).then(r => ({ ok: r.ok, status: r.status })),
-  upd:  (t, d, col, val)  => sbFetch(`${t}?${col}=eq.${encodeURIComponent(val)}`, { method:"PATCH", body:JSON.stringify(d) }).then(r => ({ ok: r.ok })),
-  del:  (t, col, val)     => sbFetch(`${t}?${col}=eq.${encodeURIComponent(val)}`, { method:"DELETE" }).then(r => ({ ok: r.ok })),
-};
 
 /* ─── CONSTANTES ───────────────────────────────────────────────────────────── */
 const MARCAS_0KM = ["Toyota","Fiat","Chevrolet","BAIC","BYD","Jeep","RAM","Volkswagen","Peugeot","Ford","Haval","Citroën","KIA","BMW","MINI","Audi","Hyundai"];
 const CARROCERIAS = ["Todos","Sedán","SUV","Pick-up","Hatchback","Coupé","Otro"];
-const ADMIN_PASS  = "norden2025";
 
 const STOCK_LOCAL = [
   {id:"l1",marca:"Volkswagen",modelo:"Vento GLI",version:"2.0 TSI DSG",anio:2018,tipo:"Usado",carroceria:"Sedán",precio_usd:32000000,kilometraje:68000,color:"Blanco Perlado",descripcion:"Motor turbo 2.0 TSI, DSG 6 velocidades, interior deportivo con costuras rojas. Impecable.",destacado:true,fotos:[IMG_VW_FRONT,IMG_VW_INT]},
@@ -654,7 +632,6 @@ function Nav({ page, navTo, scrolled }) {
         ))}
         <div style={{ height:1, background:C.border, margin:"14px 0" }}/>
         <button onClick={() => go("contacto")} style={{ background:C.red, border:"none", color:"#fff", padding:"14px 18px", cursor:"pointer", fontSize:12, letterSpacing:2.5, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:600 }}>Consultar ahora</button>
-        <button onClick={() => go("admin")} style={{ background:"none", border:`1px solid ${C.border}`, color:"rgba(255,255,255,.22)", padding:"10px 18px", cursor:"pointer", fontSize:11.5, letterSpacing:2, textTransform:"uppercase", fontFamily:"sans-serif", marginTop:6 }}>⚙ Admin</button>
       </div>
     </>
   );
@@ -1205,327 +1182,6 @@ function Footer({ navTo }) {
         </div>
       </div>
     </footer>
-  );
-}
-
-/* ─── ADMIN PANEL ───────────────────────────────────────────────────────────── */
-function AdminPanel({ onExit }) {
-  const [auth, setAuth] = useState(false);
-  const [pass, setPass] = useState("");
-  const [tab, setTab] = useState("stock");
-  const [vehiculos, setVehiculos] = useState([]);
-  const [consultas, setConsultas] = useState([]);
-  const [resenas, setResenas] = useState([]);
-  const [config, setConfig] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState(null);
-  const [editCar, setEditCar] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-
-  const showToast = (msg, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 3200); };
-
-  const fetchAll = async () => {
-    setLoading(true);
-    try {
-      const [v, c, r, cfg] = await Promise.all([
-        db.sel("vehiculos", "order=created_at.desc"),
-        db.sel("consultas", "order=created_at.desc"),
-        db.sel("resenas", "order=orden.asc"),
-        db.sel("configuracion"),
-      ]);
-      if (Array.isArray(v)) setVehiculos(v);
-      if (Array.isArray(c)) setConsultas(c);
-      if (Array.isArray(r)) setResenas(r);
-      if (Array.isArray(cfg)) { const m = {}; cfg.forEach(x => { m[x.clave] = x.valor; }); setConfig(m); }
-    } catch { showToast("Error conectando con Supabase. Verificá tu clave anon.", false); }
-    setLoading(false);
-  };
-
-  useEffect(() => { if (auth) fetchAll(); }, [auth]);
-
-  /* LOGIN */
-  if (!auth) return (
-    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", background:C.carbon }}>
-      <div style={{ background:C.zinc, padding:36, border:`1px solid ${C.border2}`, width:340 }}>
-        <img src={IMG_LOGO} alt="NordenCars" style={{ height:34, marginBottom:22 }}/>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom:5 }}>Panel Admin</div>
-        <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif", marginBottom:22 }}>Ingresá la contraseña para continuar</div>
-        <input type="password" placeholder="Contraseña..." value={pass} onChange={e => setPass(e.target.value)}
-          onKeyDown={e => e.key==="Enter" && (pass===ADMIN_PASS ? setAuth(true) : showToast("Contraseña incorrecta",false))}
-          style={{ width:"100%", background:"rgba(255,255,255,.04)", border:`1px solid ${C.border2}`, color:C.white, padding:"11px 13px", fontSize:13, fontFamily:"sans-serif", outline:"none", marginBottom:11, boxSizing:"border-box" }}/>
-        <Btn primary full onClick={() => pass===ADMIN_PASS ? setAuth(true) : showToast("Contraseña incorrecta",false)}>Ingresar</Btn>
-        <button onClick={onExit} style={{ marginTop:10, background:"none", border:"none", color:C.muted, fontSize:12, cursor:"pointer", fontFamily:"sans-serif", width:"100%" }}>← Volver a la página</button>
-        {toast && <div style={{ marginTop:10, padding:"10px 13px", background:toast.ok?"#16a34a":C.red, color:"#fff", fontSize:12, fontFamily:"sans-serif" }}>{toast.msg}</div>}
-      </div>
-    </div>
-  );
-
-  return (
-    <div style={{ minHeight:"100vh", background:C.carbon }}>
-      {toast && <div style={{ position:"fixed", top:18, right:18, zIndex:9999, padding:"11px 18px", background:toast.ok?"#16a34a":C.red, color:"#fff", fontSize:12, fontFamily:"sans-serif", boxShadow:"0 4px 20px rgba(0,0,0,.5)", maxWidth:300 }}>{toast.msg}</div>}
-
-      {/* Admin Header */}
-      <div style={{ background:C.zinc, borderBottom:`1px solid ${C.border}`, padding:"0 5vw", display:"flex", alignItems:"center", justifyContent:"space-between", height:58 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:13 }}>
-          <img src={IMG_LOGO} alt="NordenCars" style={{ height:28 }}/>
-          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:14, fontWeight:700, textTransform:"uppercase", color:C.white, letterSpacing:1 }}>Panel de Administración</span>
-        </div>
-        <div style={{ display:"flex", gap:7 }}>
-          <button onClick={fetchAll} style={{ background:"rgba(255,255,255,.06)", border:`1px solid ${C.border2}`, color:C.white, padding:"6px 13px", cursor:"pointer", fontSize:11.5, fontFamily:"sans-serif" }}>{loading?"Cargando...":"↻ Actualizar"}</button>
-          <button onClick={onExit} style={{ background:C.red, border:"none", color:"#fff", padding:"6px 13px", cursor:"pointer", fontSize:11.5, fontFamily:"sans-serif" }}>← Salir</button>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ background:C.zinc2, borderBottom:`1px solid ${C.border}`, padding:"0 5vw", display:"flex", gap:1 }}>
-        {[["stock","📦 Stock"],["consultas","📩 Consultas"],["resenas","⭐ Reseñas"],["config","⚙️ Configuración"]].map(([k,l]) => (
-          <button key={k} onClick={() => setTab(k)} style={{ background:"none", border:"none", borderBottom:tab===k?`2px solid ${C.red}`:"2px solid transparent", color:tab===k?C.white:C.muted, padding:"12px 14px", cursor:"pointer", fontSize:11, fontFamily:"sans-serif", transition:"color .3s" }}>{l}</button>
-        ))}
-      </div>
-
-      <div style={{ padding:"34px 5vw" }}>
-
-        {/* ── STOCK TAB ── */}
-        {tab==="stock" && <>
-          {/* Aviso: el stock se gestiona ahora desde el ERP, no desde aca */}
-          <div style={{
-            background: "linear-gradient(135deg, rgba(220,38,38,.08), rgba(255,138,0,.08))",
-            border: `2px solid ${C.red}`,
-            padding: "22px 26px",
-            marginBottom: 28,
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 16
-          }}>
-            <div style={{ fontSize: 28 }}>⚠️</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:18, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom: 6, letterSpacing: 1 }}>
-                El stock se gestiona desde el ERP
-              </div>
-              <p style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif", lineHeight:1.6, margin: 0 }}>
-                Esta sección está desactivada. La carga, edición y eliminación de vehículos del catálogo público ahora se hace desde el sistema NordenCars ERP. Los autos en estado <strong style={{color:C.white}}>Disponible</strong> o <strong style={{color:C.white}}>Reservado</strong> aparecen automáticamente en esta web.
-              </p>
-              <a href="https://sistema.nordencars.store/stock" target="_blank" rel="noopener noreferrer"
-                style={{
-                  display: "inline-block",
-                  marginTop: 14,
-                  background: C.red,
-                  color: "#fff",
-                  padding: "9px 18px",
-                  fontSize: 11,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  fontFamily: "sans-serif",
-                  textDecoration: "none",
-                  fontWeight: 600
-                }}>
-                Ir al ERP →
-              </a>
-            </div>
-          </div>
-
-          {/* Listado y formulario antiguos: ocultos por seguridad. El stock real
-              esta en el ERP. Si quedaran filas en la tabla `vehiculos` de este
-              Supabase, no afectan a la web pero conviene limpiarlas manualmente. */}
-          <div style={{ display: "none" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:700, textTransform:"uppercase", color:C.white }}>Vehículos <Red>({vehiculos.length})</Red></div>
-              <Btn primary small>+ Agregar vehículo</Btn>
-            </div>
-          {showForm && <CarForm car={editCar} onSave={async (data) => {
-            setLoading(true);
-            const op = editCar
-              ? await db.upd("vehiculos", { ...data, updated_at: new Date().toISOString() }, "id", editCar.id)
-              : await db.ins("vehiculos", { ...data, activo: true });
-            if (!op.ok) showToast("Error guardando. Verificá que la tabla exista en Supabase.", false);
-            else { showToast(editCar ? "✓ Vehículo actualizado" : "✓ Vehículo agregado"); setShowForm(false); fetchAll(); }
-            setLoading(false);
-          }} onCancel={() => setShowForm(false)}/>}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:2, background:C.border }}>
-            {vehiculos.map(v => (
-              <AdminCarCard key={v.id} v={v}
-                onEdit={() => { setEditCar(v); setShowForm(true); }}
-                onDelete={async () => {
-                  if (!window.confirm(`¿Eliminar ${v.marca} ${v.modelo}?`)) return;
-                  const r = await db.del("vehiculos","id",v.id);
-                  if (!r.ok) showToast("Error eliminando",false); else { showToast("✓ Eliminado"); fetchAll(); }
-                }}
-                onToggle={async () => { await db.upd("vehiculos",{activo:!v.activo},"id",v.id); fetchAll(); }}
-              />
-            ))}
-            {vehiculos.length === 0 && !loading && (
-              <div style={{ padding:"40px", color:C.muted, fontFamily:"sans-serif", fontSize:13, gridColumn:"1/-1" }}>
-                No hay vehículos cargados. Hacé click en &quot;+ Agregar vehículo&quot; para empezar.
-              </div>
-            )}
-          </div>
-          </div>{/* /display:none */}
-        </>}
-
-        {/* ── CONSULTAS TAB ── */}
-        {tab==="consultas" && <>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom:20 }}>Consultas recibidas <Red>({consultas.length})</Red></div>
-          {consultas.length === 0 && <div style={{ color:C.muted, fontFamily:"sans-serif", fontSize:13 }}>No hay consultas todavía. Aparecerán aquí cuando alguien complete el formulario de la web.</div>}
-          <div style={{ display:"flex", flexDirection:"column", gap:2, background:consultas.length?C.border:"transparent" }}>
-            {consultas.map(c => (
-              <div key={c.id} style={{ background:C.zinc, padding:"16px 20px", display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:14 }}>
-                <div style={{ flex:1 }}>
-                  <div style={{ display:"flex", gap:9, alignItems:"center", marginBottom:5, flexWrap:"wrap" }}>
-                    <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700, color:C.white }}>{c.nombre}</span>
-                    <span style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", padding:"3px 8px", background:c.estado==="nueva"?C.red:"rgba(255,255,255,.07)", color:"#fff", fontFamily:"sans-serif" }}>{c.estado}</span>
-                  </div>
-                  {c.telefono && <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif" }}>📱 {c.telefono}</div>}
-                  {c.email && <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif" }}>✉️ {c.email}</div>}
-                  {c.vehiculo_interes && <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif" }}>🚗 {c.vehiculo_interes}</div>}
-                  {c.mensaje && <div style={{ fontSize:12, color:"rgba(245,245,245,.45)", marginTop:7, fontFamily:"sans-serif", lineHeight:1.5 }}>{c.mensaje}</div>}
-                  <div style={{ fontSize:11.5, color:C.muted2, marginTop:7, fontFamily:"sans-serif" }}>{new Date(c.created_at).toLocaleString("es-AR")}</div>
-                </div>
-                <div style={{ display:"flex", gap:5, flexDirection:"column", flexShrink:0 }}>
-                  <a href={`https://wa.me/${(c.telefono||"").replace(/\D/g,"")||WA_NORDEN}?text=Hola%20${encodeURIComponent(c.nombre)}%2C%20te%20escribo%20de%20NordenCars!`} target="_blank" rel="noreferrer"
-                    style={{ background:"#128C7E", color:"#fff", padding:"6px 10px", fontSize:11.5, fontFamily:"sans-serif", textDecoration:"none", textAlign:"center" }}>WA</a>
-                  <select value={c.estado} onChange={async e => { await db.upd("consultas",{estado:e.target.value},"id",c.id); fetchAll(); }}
-                    style={{ background:C.zinc2, border:`1px solid ${C.border2}`, color:C.white, padding:"5px", fontSize:11.5, fontFamily:"sans-serif", cursor:"pointer" }}>
-                    {["nueva","vista","respondida","cerrada"].map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>}
-
-        {/* ── RESEÑAS TAB ── */}
-        {tab==="resenas" && <>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom:20 }}>Reseñas <Red>({resenas.length})</Red></div>
-          <div style={{ display:"flex", flexDirection:"column", gap:2, background:C.border }}>
-            {resenas.map(r => (
-              <div key={r.id} style={{ background:C.zinc, padding:"14px 18px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:14 }}>
-                <div>
-                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:700, color:C.white }}>{r.nombre}</div>
-                  <div style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif" }}>{r.detalle} · {"★".repeat(r.estrellas)}{"☆".repeat(5-r.estrellas)}</div>
-                  <div style={{ fontSize:12, color:"rgba(245,245,245,.42)", marginTop:4, fontFamily:"sans-serif" }}>{r.texto}</div>
-                </div>
-                <button onClick={async () => { await db.upd("resenas",{activo:!r.activo},"id",r.id); fetchAll(); }}
-                  style={{ background:r.activo?"rgba(22,163,74,.1)":"rgba(255,255,255,.04)", border:`1px solid ${r.activo?"#16a34a":C.border2}`, color:r.activo?"#4ade80":C.muted, padding:"5px 11px", cursor:"pointer", fontSize:11.5, fontFamily:"sans-serif", whiteSpace:"nowrap" }}>
-                  {r.activo?"✓ Activa":"○ Inactiva"}
-                </button>
-              </div>
-            ))}
-          </div>
-        </>}
-
-        {/* ── CONFIG TAB ── */}
-        {tab==="config" && <>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom:20 }}>Configuración de la página</div>
-          <ConfigEditor config={config} showToast={showToast} onRefresh={fetchAll}/>
-        </>}
-
-      </div>
-    </div>
-  );
-}
-
-function AdminCarCard({ v, onEdit, onDelete, onToggle }) {
-  return (
-    <div style={{ background:C.zinc, padding:"16px 18px", opacity:v.activo?1:.45 }}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
-        <div>
-          <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, fontFamily:"sans-serif" }}>{v.marca}</div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:700, textTransform:"uppercase", color:C.white }}>{v.modelo}</div>
-          <div style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif" }}>{v.version||""} · {v.anio} · {v.tipo}</div>
-        </div>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700, color:C.white }}>{v.precio_usd?`USD ${Number(v.precio_usd).toLocaleString("es-AR")}`:"—"}</div>
-      </div>
-      <div style={{ display:"flex", gap:5 }}>
-        <button onClick={onEdit} style={{ background:"rgba(255,255,255,.06)", border:`1px solid ${C.border2}`, color:C.white, padding:"5px 12px", cursor:"pointer", fontSize:11.5, fontFamily:"sans-serif", flex:1 }}>✏️ Editar</button>
-        <button onClick={onToggle} style={{ background:v.activo?"rgba(255,255,255,.04)":"rgba(22,163,74,.1)", border:`1px solid ${v.activo?C.border2:"#16a34a"}`, color:v.activo?C.muted:"#4ade80", padding:"5px 10px", cursor:"pointer", fontSize:11.5, fontFamily:"sans-serif" }}>{v.activo?"Ocultar":"Mostrar"}</button>
-        <button onClick={onDelete} style={{ background:"rgba(220,38,38,.1)", border:"1px solid rgba(220,38,38,.28)", color:"#f87171", padding:"5px 10px", cursor:"pointer", fontSize:12 }}>🗑</button>
-      </div>
-    </div>
-  );
-}
-
-/* ─── FORM FIELD — module level to prevent focus loss on keystroke ──────── */
-function FormField({ label, k, type = "text", opts = null, d, set }) {
-  return (
-    <div style={{ display:"flex", flexDirection:"column", gap:4, marginBottom:10 }}>
-      <label style={{ fontSize:11, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{label}</label>
-      {opts
-        ? <select value={d[k]||""} onChange={e => set(k, e.target.value)}
-            style={{ background:C.zinc3, border:`1px solid ${C.border2}`, color:C.white, padding:"9px 11px", fontSize:11, fontFamily:"sans-serif", outline:"none" }}>
-            {opts.map(o => <option key={o} value={o}>{o}</option>)}
-          </select>
-        : <input
-            type={type}
-            value={d[k]||""}
-            onChange={e => set(k, type==="number" ? Number(e.target.value) : e.target.value)}
-            style={{ background:C.zinc3, border:`1px solid ${C.border2}`, color:C.white, padding:"9px 11px", fontSize:11, fontFamily:"sans-serif", outline:"none", width:"100%", boxSizing:"border-box" }}
-          />
-      }
-    </div>
-  );
-}
-
-function CarForm({ car, onSave, onCancel }) {
-  const blank = { marca:"",modelo:"",version:"",anio:new Date().getFullYear(),tipo:"Usado",carroceria:"Sedán",precio_usd:"",kilometraje:0,color:"",descripcion:"",destacado:false };
-  const [d, setD] = useState(car ? { ...blank,...car } : blank);
-  const set = (k,v) => setD(p => ({ ...p,[k]:v }));
-  // FormField is defined at module level to avoid losing focus on every keystroke
-  return (
-    <div style={{ background:C.zinc2, border:`1px solid ${C.border2}`, padding:22, marginBottom:22 }}>
-      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:18, fontWeight:700, textTransform:"uppercase", color:C.white, marginBottom:18 }}>{car?"Editar vehículo":"Nuevo vehículo"}</div>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-        <FormField label="Marca" k="marca" d={d} set={set}/>
-        <FormField label="Modelo" k="modelo" d={d} set={set}/>
-        <FormField label="Versión" k="version" d={d} set={set}/>
-        <FormField label="Año" k="anio" type="number" d={d} set={set}/>
-        <FormField label="Tipo" k="tipo" opts={["0km","Usado"]} d={d} set={set}/>
-        <FormField label="Carrocería" k="carroceria" opts={["Sedán","SUV","Pick-up","Hatchback","Coupé","Otro"]} d={d} set={set}/>
-        <FormField label="Precio ARS $" k="precio_usd" type="number" d={d} set={set}/>
-        <FormField label="Kilómetros" k="kilometraje" type="number" d={d} set={set}/>
-      </div>
-      <FormField label="Color" k="color" d={d} set={set}/>
-      <div style={{ display:"flex", flexDirection:"column", gap:4, marginBottom:10 }}>
-        <label style={{ fontSize:11, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>Descripción</label>
-        <textarea value={d.descripcion||""} onChange={e => set("descripcion",e.target.value)} rows={3}
-          style={{ background:C.zinc3, border:`1px solid ${C.border2}`, color:C.white, padding:"9px 11px", fontSize:11, fontFamily:"sans-serif", resize:"vertical", outline:"none" }}/>
-      </div>
-      <label style={{ display:"flex", alignItems:"center", gap:7, cursor:"pointer", marginBottom:14 }}>
-        <input type="checkbox" checked={d.destacado||false} onChange={e => set("destacado",e.target.checked)}/>
-        <span style={{ fontSize:11, color:C.white, fontFamily:"sans-serif" }}>Destacar en la página de inicio</span>
-      </label>
-      <div style={{ display:"flex", gap:9 }}>
-        <Btn primary small onClick={() => onSave(d)}>💾 Guardar</Btn>
-        <Btn small onClick={onCancel}>Cancelar</Btn>
-      </div>
-    </div>
-  );
-}
-
-function ConfigEditor({ config, showToast, onRefresh }) {
-  const [vals, setVals] = useState(config);
-  useEffect(() => setVals(config), [config]);
-  const save = async (clave, valor) => {
-    const r = await db.upd("configuracion",{valor,updated_at:new Date().toISOString()},"clave",clave);
-    if (!r.ok) showToast("Error guardando",false); else { showToast("✓ Guardado"); onRefresh(); }
-  };
-  const items = [
-    ["hero_titulo","Título del Hero"],["hero_subtitulo","Subtítulo del Hero"],
-    ["nosotros_texto","Texto de Nosotros"],["instagram","Instagram handle"],
-    ["direccion","Dirección física"],["horario","Horario de atención"],
-  ];
-  return (
-    <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-      {items.map(([k,label]) => (
-        <div key={k} style={{ background:C.zinc, padding:"15px 18px", border:`1px solid ${C.border}` }}>
-          <div style={{ fontSize:11, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif", marginBottom:6 }}>{label}</div>
-          <div style={{ display:"flex", gap:9 }}>
-            <input value={vals[k]||""} onChange={e => setVals(p => ({...p,[k]:e.target.value}))}
-              style={{ flex:1, background:C.zinc2, border:`1px solid ${C.border2}`, color:C.white, padding:"9px 13px", fontSize:12, fontFamily:"sans-serif", outline:"none" }}/>
-            <button onClick={() => save(k,vals[k])} style={{ background:C.red, border:"none", color:"#fff", padding:"9px 16px", cursor:"pointer", fontSize:11.5, fontFamily:"sans-serif" }}>Guardar</button>
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -2503,13 +2159,25 @@ function ContactoPage({ navTo }) {
   const [form, setForm] = useState({ nombre:"",telefono:"",email:"",vehiculo_interes:"",mensaje:"" });
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+  const [abierto] = useState(() => Date.now());
+  const [trampa, setTrampa] = useState("");
   const set = (k,v) => setForm(p => ({...p,[k]:v}));
 
+  // La consulta entra directo al sistema (cliente nuevo en el embudo, con su mensaje).
   const submit = async () => {
-    if (!form.nombre.trim()) return;
+    setError("");
+    if (form.nombre.trim().length < 2) return setError("Poné tu nombre.");
+    if (form.telefono.replace(/\D/g, "").length < 8) return setError("Poné tu WhatsApp para poder responderte.");
     setSending(true);
-    const r = await db.ins("consultas", form);
-    if (r.ok) { setSent(true); setForm({ nombre:"",telefono:"",email:"",vehiculo_interes:"",mensaje:"" }); }
+    try {
+      const r = await fetch(`${ERP_URL}/api/publico/consulta`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ ...form, t: abierto, empresa: trampa }) });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && j.ok) { setSent(true); setForm({ nombre:"",telefono:"",email:"",vehiculo_interes:"",mensaje:"" }); }
+      else setError(j.error || "No pudimos enviar tu consulta. Escribinos por WhatsApp.");
+    } catch {
+      setError("No pudimos enviar tu consulta. Escribinos por WhatsApp.");
+    }
     setSending(false);
   };
 
@@ -2572,7 +2240,7 @@ function ContactoPage({ navTo }) {
               ? <div style={{ padding:"22px", background:"rgba(22,163,74,.1)", border:"1px solid #16a34a", color:"#4ade80", fontFamily:"sans-serif", fontSize:13 }}>✅ ¡Consulta enviada! Te contactamos a la brevedad.</div>
               : <>
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-                    <ContactFormField label="Nombre *" fkey="nombre" form={form} set={set}/> <ContactFormField label="Teléfono" fkey="telefono" type="tel" form={form} set={set}/>
+                    <ContactFormField label="Nombre *" fkey="nombre" form={form} set={set}/> <ContactFormField label="WhatsApp *" fkey="telefono" type="tel" form={form} set={set}/>
                   </div>
                   <ContactFormField label="Email" fkey="email" type="email" form={form} set={set}/>
                   <ContactFormField label="¿Qué vehículo buscás?" fkey="vehiculo_interes" form={form} set={set}/>
@@ -2582,6 +2250,9 @@ function ContactoPage({ navTo }) {
                       style={{ background:"rgba(255,255,255,.03)", border:`1px solid ${C.border2}`, color:C.white, padding:"10px 12px", fontSize:12, fontFamily:"sans-serif", resize:"vertical", outline:"none" }}
                       onFocus={e => e.target.style.borderColor=C.red} onBlur={e => e.target.style.borderColor=C.border2}/>
                   </div>
+                  {/* Campo trampa para bots: invisible para las personas */}
+                  <input value={trampa} onChange={e => setTrampa(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position:"absolute", left:-9999, width:1, height:1, opacity:0 }}/>
+                  {error && <p style={{ fontSize:12, color:"#f87171", fontFamily:"sans-serif", marginBottom:10 }}>{error}</p>}
                   <Btn primary full onClick={submit} disabled={sending}>{sending?"Enviando...":"Enviar consulta"}</Btn>
                 </>
             }
@@ -3488,11 +3159,11 @@ export default function App() {
   const [scrolled, setScrolled] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
   const [stockData, setStockData] = useState(STOCK_LOCAL);
-  const [config, setConfig] = useState({});
+  const config = SIN_CONFIG; // textos editables de la web vieja: hoy van los de por defecto
   const [loadingStock, setLoadingStock] = useState(true);
   const [appLoading, setAppLoading] = useState(() => { try { return !sessionStorage.getItem("nc_splash_seen"); } catch { return true; } });
-  const [fotosClientes, setFotosClientes] = useState(CLIENTES_LOCAL);
-  const [videosData, setVideosData] = useState([]);
+  const fotosClientes = CLIENTES_LOCAL;
+  const videosData = SIN_VIDEOS;
   const okm = useOkm();
   const [teilen, setTeilen] = useState(false);
   const abrirTeilen = (precio) => setTeilen({ precio: typeof precio === "number" ? precio : null });
@@ -3576,15 +3247,6 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // Load config
-    db.sel("configuracion").then(data => {
-      if (Array.isArray(data) && data.length) {
-        const m = {}; data.forEach(x => { m[x.clave] = x.valor; }); setConfig(m);
-      }
-    });
-    // Cargar fotos clientes y videos en paralelo
-    db.sel("fotos_clientes","activo=eq.true&order=orden.asc,created_at.desc").then(d => { if (Array.isArray(d) && d.length) setFotosClientes(d); });
-    db.sel("videos","activo=eq.true&order=orden.asc,created_at.desc").then(d => { if (Array.isArray(d)) setVideosData(d); });
     // Load stock + fotos desde el ERP (fuente unica de verdad).
     // Si por algun motivo el ERP no responde, mantenemos STOCK_LOCAL como
     // fallback para que la web nunca se quede sin contenido.
@@ -3612,7 +3274,6 @@ export default function App() {
 
   const navTo = (p) => {
     if (p === page) { window.scrollTo({ top:0, behavior:"smooth" }); return; }
-    if (p === "admin") { setPage(p); return; } // admin sin animación
     setPageAnim("out");
     setTimeout(() => {
       setPage(p);
@@ -3620,8 +3281,6 @@ export default function App() {
       requestAnimationFrame(() => setPageAnim("in"));
     }, 240);
   };
-
-  if (page === "admin") return <AdminPanel onExit={() => { setPage("home"); setPageAnim("in"); }}/>;
 
   const pageStyle = {
     opacity: pageAnim === "in" ? 1 : 0,
