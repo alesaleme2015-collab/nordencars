@@ -20,6 +20,8 @@ const IMG_BMW_INT = "/images/img_bmw_int.jpg";
 // Se centraliza acá para no volver a hardcodear el número en cada CTA.
 const WA_NORDEN      = "5493816375262";
 const WA_NORDEN_DISP = "+54 9 381 637-5262";
+// Link para dejar una opinión de Norden en Google (Ale, 2026-10-29). El mismo usa el ERP.
+const GOOGLE_RESENA = "https://g.page/r/CTczIyYkYCQJEBM/review";
 // Barras del fondo del hero (líneas de luz animadas, estilo "shader").
 // Valores deterministas: cada barra titila con su propio ritmo, altura y desfase.
 const HERO_BARS = Array.from({ length: 18 }, (_, i) => ({
@@ -1038,6 +1040,11 @@ function ClientesCarousel({ fotos = [] }) {
         <Tag>Clientes felices</Tag>
         <SecH>Una gran <Red>comunidad</Red></SecH>
         <p style={{ fontSize:14, fontWeight:300, color:"rgba(245,245,245,.52)", lineHeight:1.75, maxWidth:560, marginTop:14, fontFamily:"sans-serif" }}>Somos una gran comunidad. Muchos clientes ya confían en nuestros servicios y productos. <span style={{ color:C.white, fontWeight:400 }}>¿Qué esperás para sumarte?</span></p>
+        <a href={GOOGLE_RESENA} target="_blank" rel="noreferrer" data-cursor-label="Opinar"
+          style={{ display:"inline-flex", alignItems:"center", gap:10, marginTop:20, padding:"11px 18px", border:`1px solid ${C.border2}`, color:C.white, textDecoration:"none", fontFamily:"sans-serif", fontSize:13 }}>
+          <span style={{ color:"#facc15", letterSpacing:2 }}>★★★★★</span>
+          ¿Ya compraste en Norden? <b style={{ color:C.red2, fontWeight:600 }}>Dejanos tu opinión en Google</b>
+        </a>
       </div></Reveal>
       <div style={{ display:"flex", width:"max-content", animation:"marquee 50s linear infinite", gap:3 }}>
         {doubled.map((f,i) => (
