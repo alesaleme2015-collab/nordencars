@@ -477,7 +477,7 @@ function Btn({ children, primary, full, small, onClick, disabled = false, href, 
 
   const st = {
     width: full ? "100%" : "auto", display:"inline-block", textAlign:"center",
-    fontSize: small ? 9 : 10, fontWeight:500, letterSpacing:2.5, textTransform:"uppercase",
+    fontSize: small ? 11 : 12.5, fontWeight:600, letterSpacing:2, textTransform:"uppercase",
     fontFamily:"sans-serif", padding: small ? "8px 16px" : "13px 30px",
     cursor: disabled ? "not-allowed" : "pointer", border:"none",
     transition:"background .3s, color .3s, box-shadow .3s, transform .25s cubic-bezier(.16,1,.3,1), outline-color .3s",
@@ -3100,7 +3100,6 @@ function InstagramPerfil() {
 // Formulario → ERP (/api/publico/vender-auto). Llega a "Autos ofrecidos" del
 // sistema con sus fotos y crea el cliente con origen "Web propia".
 const MARCAS_COMUNES = ["Audi","BMW","BYD","Chery","Chevrolet","Citroën","Fiat","Ford","Honda","Hyundai","Jeep","Kia","Mercedes-Benz","Mitsubishi","Nissan","Peugeot","RAM","Renault","Suzuki","Toyota","Volkswagen","Volvo"];
-const ESTADOS_AUTO = [["excelente","Excelente"],["muy_bueno","Muy bueno"],["bueno","Bueno"],["a_reparar","Necesita arreglos"]];
 const MAX_FOTOS_VENTA = 6;
 const MODALIDADES_VENTA = [["compra","Que me lo compren"],["consignacion","Dejarlo en consignación"],["parte_pago","Parte de pago"],["indistinto","Lo que convenga"]];
 
@@ -3147,11 +3146,102 @@ function VChips({ opts, val, set }) {
   );
 }
 
+/* ─── TASADOR RÁPIDO (Vendé tu auto) ───────────────────────────────────────── */
+// Ale (2026-10-28): cuestionario de estado que arma una ficha de qué suma y qué
+// resta valor. A propósito SIN número: un rango flojo genera expectativas falsas.
+// El valor lo pasa un asesor en 24 h (cuando haya fuente buena —InfoAuto— se suma).
+// Las claves tienen que coincidir con el ERP (api/publico/vender-auto, mig 078).
+const TASADOR = [
+  { k:"service",   t:"¿El service está al día?", ops:[["libreta","Al día con libreta"],["al_dia","Al día, sin libreta"],["atrasado","Atrasado / no sé"]] },
+  { k:"mecanica",  t:"Mecánica", d:"Motor, caja, embrague, tren delantero, aire.", ops:[["ok","Sin fallas"],["detalles","Detalles menores"],["arreglos","Necesita arreglos"]] },
+  { k:"chapa",     t:"Chapa y pintura", ops:[["impecable","Impecable"],["detalles","Rayones o detalles chicos"],["golpes","Golpes o partes repintadas"]] },
+  { k:"interior",  t:"Interior", d:"Tapizados, tablero, techo, olores.", ops:[["impecable","Impecable"],["normal","Uso normal"],["gastado","Gastado o roto"]] },
+  { k:"cubiertas", t:"Cubiertas", ops:[["nuevas","Nuevas o casi"],["mitad","Por la mitad"],["cambiar","A cambiar"]] },
+  { k:"duenos",    t:"¿Cuántos dueños tuvo?", ops:[["unico","Único dueño"],["varios","2 o más"]] },
+];
+// [puntos, texto para la ficha]. Positivo = suma valor, negativo = resta.
+const TASADOR_EFECTO = {
+  service:   { libreta:[2,"Service con libreta: es lo primero que mira un comprador."], al_dia:[1,"Service al día: bien, aunque sin libreta cuesta demostrarlo."], atrasado:[-2,"Service atrasado: se descuenta lo que cuesta ponerlo al día."] },
+  mecanica:  { ok:[2,"Mecánica sin fallas: no hay arreglos que descontar."], detalles:[-1,"Detalles mecánicos: se descuenta lo que cuesta resolverlos."], arreglos:[-4,"Arreglos mecánicos: se descuenta el taller y se revisa con más detalle."] },
+  chapa:     { impecable:[2,"Chapa y pintura impecable: se vende más rápido y mejor."], detalles:[0,"Rayones o detalles chicos: puede llevar un pulido o retoque."], golpes:[-3,"Golpes o repintado: baja el valor y se revisa con más detalle."] },
+  interior:  { impecable:[1,"Interior cuidado: suma en la primera impresión."], normal:[0,null], gastado:[-2,"Interior gastado: se descuenta tapicería o limpieza a fondo."] },
+  cubiertas: { nuevas:[1,"Cubiertas nuevas: el próximo dueño no tiene que comprar un juego."], mitad:[0,null], cambiar:[-1,"Cubiertas a cambiar: se descuenta un juego nuevo."] },
+  duenos:    { unico:[1,"Único dueño: historia clara y más confianza."], varios:[0,null] },
+};
+const NIVELES_TAS = {
+  excelente:    ["Excelente", "#22c55e"],
+  muy_bueno:    ["Muy bueno", "#4ade80"],
+  bueno:        ["Bueno", "#facc15"],
+  con_detalles: ["Con detalles", "#fb923c"],
+};
+
+function calcularTasacion(resp, anio, km) {
+  const contestadas = TASADOR.filter(q => resp[q.k]).length;
+  let puntos = 0;
+  const suma = [], resta = [];
+  for (const q of TASADOR) {
+    const v = resp[q.k]; if (!v) continue;
+    const [p, txt] = TASADOR_EFECTO[q.k][v];
+    puntos += p;
+    if (txt) (p > 0 ? suma : resta).push(txt);
+  }
+  // Kilometraje contra el año: lo normal en Argentina ronda 15.000 km por año.
+  const edad = Math.max(.5, new Date().getFullYear() - Number(anio || 0) + .5);
+  const kmAnio = anio && km !== "" ? Math.round(Number(km) / edad) : null;
+  if (kmAnio != null && Number(km) > 0) {
+    const t = `${kmAnio.toLocaleString("es-AR")} km por año`;
+    if (kmAnio <= 10000) { puntos += 1; suma.push(`Kilometraje bajo para el año (${t}).`); }
+    else if (kmAnio >= 25000) { puntos -= 1; resta.push(`Kilometraje alto para el año (${t}).`); }
+  }
+  const nivel = contestadas < 4 ? null : puntos >= 8 ? "excelente" : puntos >= 5 ? "muy_bueno" : puntos >= 2 ? "bueno" : "con_detalles";
+  return { contestadas, puntos, nivel, suma, resta };
+}
+
+function FichaTasacion({ tas }) {
+  if (!tas.nivel) {
+    return (
+      <div style={{ padding:"14px 16px", border:`1px dashed ${C.border2}`, color:C.muted, fontSize:13, fontFamily:"sans-serif", lineHeight:1.6 }}>
+        Contestá al menos 4 preguntas y te armamos la ficha de tu auto ({tas.contestadas}/4).
+      </div>
+    );
+  }
+  const [nombre, color] = NIVELES_TAS[tas.nivel];
+  const pct = Math.max(6, Math.min(100, ((tas.puntos + 6) / 17) * 100));
+  return (
+    <div style={{ background:"rgba(255,255,255,.03)", border:`1px solid ${C.border2}`, padding:"18px 18px 16px", animation:"vtaIn .45s cubic-bezier(.16,1,.3,1)" }}>
+      <div style={{ fontSize:11.5, letterSpacing:2.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif", marginBottom:6 }}>Ficha de tu auto</div>
+      <div style={{ display:"flex", alignItems:"baseline", gap:10, marginBottom:10 }}>
+        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:34, fontWeight:900, textTransform:"uppercase", color, lineHeight:1 }}>{nombre}</span>
+        <span style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif" }}>estado general</span>
+      </div>
+      <div style={{ height:6, background:"rgba(255,255,255,.08)", borderRadius:3, overflow:"hidden", marginBottom:16 }}>
+        <div style={{ width:`${pct}%`, height:"100%", background:`linear-gradient(90deg, #fb923c, ${color})`, transition:"width .6s cubic-bezier(.16,1,.3,1)" }}/>
+      </div>
+      {tas.suma.length > 0 && (
+        <div style={{ marginBottom:12 }}>
+          <div style={{ fontSize:12, fontWeight:700, color:"#4ade80", fontFamily:"sans-serif", marginBottom:6 }}>Suma valor</div>
+          {tas.suma.map(t => <div key={t} style={{ display:"flex", gap:8, fontSize:13, color:"rgba(245,245,245,.8)", fontFamily:"sans-serif", lineHeight:1.5, marginBottom:4 }}><span style={{ color:"#4ade80" }}>✓</span>{t}</div>)}
+        </div>
+      )}
+      {tas.resta.length > 0 && (
+        <div style={{ marginBottom:12 }}>
+          <div style={{ fontSize:12, fontWeight:700, color:"#fb923c", fontFamily:"sans-serif", marginBottom:6 }}>Resta valor</div>
+          {tas.resta.map(t => <div key={t} style={{ display:"flex", gap:8, fontSize:13, color:"rgba(245,245,245,.8)", fontFamily:"sans-serif", lineHeight:1.5, marginBottom:4 }}><span style={{ color:"#fb923c" }}>–</span>{t}</div>)}
+        </div>
+      )}
+      <div style={{ marginTop:4, padding:"12px 14px", background:"rgba(220,38,38,.08)", borderLeft:`2px solid ${C.red}`, fontSize:13, color:"rgba(245,245,245,.78)", fontFamily:"sans-serif", lineHeight:1.6 }}>
+        <b style={{ color:C.white }}>¿Y el precio?</b> Esto es un primer diagnóstico, no una oferta. Con tus respuestas y las fotos, un asesor te pasa el valor por WhatsApp en menos de 24 h. El valor final siempre se confirma viendo el auto.
+      </div>
+    </div>
+  );
+}
+
 const FORM_VENTA_VACIO = { marca:"", modelo:"", version:"", anio:"", km:"", color:"", estado_auto:"", modalidad:"", tiene_deuda:"", deuda_detalle:"", precio:"", moneda:"ARS", comentario:"", nombre:"", telefono:"", empresa:"" };
 
 function VenderPage({ navTo }) {
   const mob = useIsMobile();
   const [f, setF] = useState(FORM_VENTA_VACIO);
+  const [resp, setResp] = useState({}); // respuestas del tasador
   const [paso, setPaso] = useState(0);
   const [fotos, setFotos] = useState([]); // [{ blob, url }]
   const [procesando, setProcesando] = useState(false);
@@ -3169,7 +3259,9 @@ function VenderPage({ navTo }) {
 
   useEffect(() => () => fotos.forEach(x => URL.revokeObjectURL(x.url)), []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const PASOS = ["Tu auto", "Estado y precio", "Fotos y contacto"];
+  const PASOS = ["Tu auto", "Estado", "Cómo venderlo", "Fotos y contacto"];
+  const ULTIMO = PASOS.length - 1;
+  const tas = calcularTasacion(resp, f.anio, f.km);
   const validar = (p) => {
     if (p === 0) {
       if (f.marca.trim().length < 2) return "Contanos la marca.";
@@ -3177,7 +3269,7 @@ function VenderPage({ navTo }) {
       if (!f.anio) return "Elegí el año.";
       if (f.km === "") return "Poné los kilómetros (aproximados).";
     }
-    if (p === 2) {
+    if (p === ULTIMO) {
       if (f.nombre.trim().length < 2) return "Poné tu nombre.";
       if (f.telefono.replace(/\D/g, "").length < 8) return "Poné tu WhatsApp con característica (ej: 381 555-1234).";
     }
@@ -3206,7 +3298,7 @@ function VenderPage({ navTo }) {
   const sacarFoto = (i) => setFotos(p => { URL.revokeObjectURL(p[i].url); return p.filter((_, j) => j !== i); });
 
   const enviar = async () => {
-    const e = validar(0) || validar(2);
+    const e = validar(0) || validar(ULTIMO);
     if (e) { setError(e); return; }
     setEnviando(true); setError("");
     const fd = new FormData();
@@ -3214,6 +3306,7 @@ function VenderPage({ navTo }) {
     delete campos.precio;
     if (campos.tiene_deuda !== "si") delete campos.deuda_detalle;
     Object.entries(campos).forEach(([k, v]) => { if (v !== "" && v != null) fd.append(k, v); });
+    if (tas.contestadas > 0) fd.append("tasacion", JSON.stringify({ respuestas: resp, nivel: tas.nivel || undefined, suma: tas.suma, resta: tas.resta }));
     fotos.forEach((x, i) => fd.append("fotos", x.blob, `foto-${i + 1}.jpg`));
     try {
       const r = await fetch(`${ERP_URL}/api/publico/vender-auto`, { method:"POST", body: fd });
@@ -3248,7 +3341,7 @@ function VenderPage({ navTo }) {
           </p>
           <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
             <Btn primary onClick={() => navTo("stock")}>Mirá nuestro stock</Btn>
-            <Btn onClick={() => { setListo(false); setF(FORM_VENTA_VACIO); setFotos([]); setPaso(0); abierto.current = Date.now(); }}>Ofrecer otro auto</Btn>
+            <Btn onClick={() => { setListo(false); setF(FORM_VENTA_VACIO); setResp({}); setFotos([]); setPaso(0); abierto.current = Date.now(); }}>Ofrecer otro auto</Btn>
           </div>
         </div>
       ) : (
@@ -3260,7 +3353,7 @@ function VenderPage({ navTo }) {
             ))}
           </div>
           <div style={{ display:"flex", justifyContent:"space-between", marginBottom:24, fontFamily:"sans-serif" }}>
-            <span style={{ fontSize:11.5, letterSpacing:3, textTransform:"uppercase", color:C.red }}>Paso {paso + 1} de 3</span>
+            <span style={{ fontSize:11.5, letterSpacing:3, textTransform:"uppercase", color:C.red }}>Paso {paso + 1} de {PASOS.length}</span>
             <span style={{ fontSize:11.5, letterSpacing:3, textTransform:"uppercase", color:C.muted }}>{PASOS[paso]}</span>
           </div>
 
@@ -3293,8 +3386,21 @@ function VenderPage({ navTo }) {
 
           {paso === 1 && (
             <div key="p1" style={{ animation:"vtaIn .45s cubic-bezier(.16,1,.3,1)" }}>
+              <p style={{ fontSize:14, color:"rgba(245,245,245,.7)", fontFamily:"sans-serif", lineHeight:1.6, margin:"0 0 18px" }}>
+                Contanos cómo está y te armamos la <b style={{ color:C.white }}>ficha de tu auto</b>: qué le suma valor y qué le resta. Sé sincero: lo vamos a ver en persona.
+              </p>
+              {TASADOR.map(q => (
+                <VField key={q.k} label={q.t} hint={q.d}>
+                  <VChips opts={q.ops} val={resp[q.k] || ""} set={v => { setResp(r => ({ ...r, [q.k]: v || undefined })); setError(""); }}/>
+                </VField>
+              ))}
+              <FichaTasacion tas={tas}/>
+            </div>
+          )}
+
+          {paso === 2 && (
+            <div key="p2" style={{ animation:"vtaIn .45s cubic-bezier(.16,1,.3,1)" }}>
               <VField label="¿Cómo querés venderlo?"><VChips opts={MODALIDADES_VENTA} val={f.modalidad} set={v => set("modalidad", v)}/></VField>
-              <VField label="¿Cómo está el auto?"><VChips opts={ESTADOS_AUTO} val={f.estado_auto} set={v => set("estado_auto", v)}/></VField>
               <VField label="¿Tiene deuda de patente, multas o prenda?">
                 <VChips opts={[["no","No"],["si","Sí"]]} val={f.tiene_deuda} set={v => set("tiene_deuda", v)}/>
               </VField>
@@ -3315,13 +3421,13 @@ function VenderPage({ navTo }) {
                 </div>
               </VField>
               <VField label="Algo más que quieras contarnos">
-                <textarea rows={3} value={f.comentario} onChange={e => set("comentario", e.target.value)} placeholder="Único dueño, service oficial, cubiertas nuevas..." style={{ ...vInput, resize:"vertical", fontSize:14 }} {...vFocus}/>
+                <textarea rows={3} value={f.comentario} onChange={e => set("comentario", e.target.value)} placeholder="Equipamiento, papeles al día, por qué lo vendés..." style={{ ...vInput, resize:"vertical", fontSize:14 }} {...vFocus}/>
               </VField>
             </div>
           )}
 
-          {paso === 2 && (
-            <div key="p2" style={{ animation:"vtaIn .45s cubic-bezier(.16,1,.3,1)" }}>
+          {paso === 3 && (
+            <div key="p3" style={{ animation:"vtaIn .45s cubic-bezier(.16,1,.3,1)" }}>
               <VField label={`Fotos (hasta ${MAX_FOTOS_VENTA})`} hint="Frente, lateral, atrás, interior y el tablero con los km. Con buena luz, mejor.">
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8 }}>
                   {fotos.map((x, i) => (
@@ -3360,7 +3466,7 @@ function VenderPage({ navTo }) {
             {paso > 0
               ? <button type="button" onClick={() => irA(paso - 1)} style={{ background:"none", border:"none", color:C.muted, fontSize:11, letterSpacing:2, textTransform:"uppercase", fontFamily:"sans-serif", cursor:"pointer", padding:"12px 0" }}>← Atrás</button>
               : <span/>}
-            {paso < 2
+            {paso < ULTIMO
               ? <Btn primary onClick={() => irA(paso + 1)}>Siguiente →</Btn>
               : <Btn primary onClick={enviar} disabled={enviando || procesando}>{enviando ? "Enviando…" : "Enviar mi auto"}</Btn>}
           </div>
@@ -3384,7 +3490,7 @@ function VenderPage({ navTo }) {
           <div>
             <Reveal><Tag>Cómo funciona</Tag></Reveal>
             <Reveal delay={.1}><SecH style={{ marginBottom:30 }}>Tres pasos y <Red>listo</Red></SecH></Reveal>
-            {[["01","Contanos de tu auto","Marca, modelo, año, km y unas fotos desde el celular."],
+            {[["01","Contanos de tu auto","Marca, modelo, año, km, cómo está y unas fotos desde el celular. Te armamos la ficha al toque."],
               ["02","Te escribimos","En menos de 24 h te contactamos por WhatsApp: compra, consignación o parte de pago."],
               ["03","Cerramos","Lo vemos en persona, acordamos y nos encargamos de los papeles."]].map(([n, t, d], i) => (
               <Reveal key={n} delay={.15 + i * .08}>
