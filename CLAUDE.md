@@ -16,6 +16,7 @@ Producción: https://www.nordencars.com.ar (el dominio sin www redirige a www).
 - Casi todo el sitio vive en un solo archivo: `src/App.jsx` (estilos inline, paleta en un objeto de colores al principio). Imágenes en `public/images/`.
 - `src/HistoriaCompra.jsx`: "La historia de Martín" de la home (8 escenas SVG dibujadas en código, tipo historias de Instagram).
 - `api/auto.js` + `vercel.json`: única función de servidor. `www.nordencars.com.ar/auto/<id>` devuelve las etiquetas og (foto, modelo, precio) para la vista previa al compartir por WhatsApp/redes y redirige a `/?auto=<id>`. La foto liviana la arma el ERP (`/api/publico/foto-og/<id>`).
+- Botón "atrás" del navegador (2026-10-30, `src/historial.js`): cada sección es una entrada del historial (`#stock`, `#okm`…, se navega con `navTo`) y toda capa nueva (modal, menú, chat, pasos de un formulario) llama a `useCapaAtras(abierta, cerrar)` para que "atrás" la cierre en vez de salir de la web.
 - Overlays fijos (modales, comparador, cursor): siempre con `createPortal` a `document.body` (el wrapper de la página tiene `transform` y `#root` tiene z-index).
 - Legibilidad (pedido de Ale): ningún texto por debajo de ~11 px; etiquetas en `C.muted`/`C.muted2`, nada más oscuro.
 - Sin librería de Supabase: todo por `fetch` a las APIs públicas del ERP.
