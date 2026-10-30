@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import HistoriaCompra from "./HistoriaCompra";
+import { alNavegar, empujarPagina, reemplazarPagina, useCapaAtras } from "./historial";
 import './App.css';
 
 // ═══════════════════════════════════════════════════════════
@@ -492,6 +493,7 @@ const WaSvg = ({ size = 22 }) => (
 /* ─── CHATBOT ────────────────────────────────────────────────────────────────── */
 function Chatbot() {
   const [open, setOpen] = useState(false);
+  useCapaAtras(open, () => setOpen(false)); // "atrás" del celular cierra el chat
   const [msgs, setMsgs] = useState([{ from:"bot", text:"¡Hola! Soy el asistente de NordenCars 🏎️ ¿En qué te puedo ayudar?" }]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
@@ -598,6 +600,7 @@ function FloatWa() {
 /* ─── NAV ───────────────────────────────────────────────────────────────────── */
 function Nav({ page, navTo, scrolled }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  useCapaAtras(menuOpen, () => setMenuOpen(false)); // "atrás" cierra el menú
   const go = (p) => { navTo(p); setMenuOpen(false); };
   const links = [["home","Inicio"],["stock","Stock"],["okm","0km"],["vender","Vendé tu auto"],["nosotros","Nosotros"],["contacto","Contacto"]];
 
@@ -791,6 +794,7 @@ function CarCard({ car, onClick, comparar }) {
 
 /* ─── CAR MODAL ─────────────────────────────────────────────────────────────── */
 function CarModal({ car, onClose }) {
+  useCapaAtras(true, onClose); // "atrás" cierra la ficha y deja en el stock
   const [idx, setIdx] = useState(0);
   const [copied, setCopied] = useState(false);
   useEffect(() => { document.body.style.overflow="hidden"; return () => { document.body.style.overflow=""; }; }, []);
@@ -1922,6 +1926,7 @@ function BarraComparar({ autos, quitar, limpiar, abrir }) {
 
 function ComparadorModal({ autos, quitar, onClose, verAuto }) {
   const mob = useIsMobile();
+  useCapaAtras(true, onClose);
   useEffect(() => {
     const k = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", k);
@@ -2355,6 +2360,7 @@ function OkmCard({ m, onClick }) {
 
 function OkmModal({ m, onClose, abrirTeilen }) {
   const mob = useIsMobile();
+  useCapaAtras(true, onClose);
   const foto = fotoOkm(m);
   useEffect(() => {
     const k = (e) => { if (e.key === "Escape") onClose(); };
@@ -2459,6 +2465,7 @@ function AlianzaTeilen({ abrirTeilen }) {
 // Simulador propio con los números de Teilen (el ERP le consulta a su cotizador).
 function TeilenModal({ onClose, precio }) {
   const mob = useIsMobile();
+  useCapaAtras(true, onClose);
   const [precioAuto, setPrecioAuto] = useState(precio ? String(Math.round(precio)) : "");
   const [anticipo, setAnticipo] = useState("");
   const [montoLibre, setMontoLibre] = useState("");
@@ -2857,6 +2864,10 @@ function VenderPage({ navTo }) {
   const [error, setError] = useState("");
   const [listo, setListo] = useState(false);
   const abierto = useRef(Date.now());
+  // Cada paso es una entrada del historial: "atrás" vuelve al paso anterior, no se va de la página.
+  useCapaAtras(!listo && paso >= 1, () => setPaso(0));
+  useCapaAtras(!listo && paso >= 2, () => setPaso(1));
+  useCapaAtras(!listo && paso >= 3, () => setPaso(2));
   const fileRef = useRef(null);
   const topRef = useRef(null);
   const set = (k, v) => { setF(p => ({ ...p, [k]: v })); setError(""); };
@@ -3152,9 +3163,23 @@ function FloatVender({ onClick }) {
 }
 
 /* ─── ROOT APP ───────────────────────────────────────────────────────────────── */
+// Cada sección tiene su dirección (#stock, #okm…): "atrás" del navegador vuelve a la
+// anterior y recargar deja en la misma sección (ver historial.js).
+const PAGINAS = ["home", "stock", "okm", "vender", "nosotros", "contacto"];
+function paginaDeUrl() {
+  try {
+    const u = window.location;
+    const h = u.hash.replace(/^#/, "");
+    if (PAGINAS.includes(h)) return h;
+    // Link directo a "Vendé tu auto" (bio de Instagram, anuncios): ?vender
+    return new URLSearchParams(u.search).has("vender") ? "vender" : "home";
+  } catch { return "home"; }
+}
+const urlDePagina = (p) => window.location.pathname + (p === "home" ? "" : "#" + p);
+
 export default function App() {
-  // Link directo a "Vendé tu auto" (bio de Instagram, anuncios): ?vender o #vender
-  const [page, setPage] = useState(() => { try { const u = window.location; return (new URLSearchParams(u.search).has("vender") || u.hash === "#vender") ? "vender" : "home"; } catch { return "home"; } });
+  const [page, setPage] = useState(paginaDeUrl);
+  const pageRef = useRef(page); // la sección a la que se está yendo (cambia antes que `page`, que espera la animación)
   const [pageAnim, setPageAnim] = useState("in"); // "in" | "out"
   const [scrolled, setScrolled] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
@@ -3187,7 +3212,7 @@ export default function App() {
     if (!id) { deepLinkDone.current = true; return; }
     if (stockData && stockData.length) {
       const car = stockData.find(c => String(c.id) === String(id));
-      if (car) { setSelectedCar(car); setPage("stock"); deepLinkDone.current = true; }
+      if (car) { setSelectedCar(car); setPage("stock"); pageRef.current = "stock"; reemplazarPagina({ page: "stock" }); deepLinkDone.current = true; }
     }
   }, [stockData]);
 
@@ -3272,15 +3297,35 @@ export default function App() {
       });
   }, []);
 
-  const navTo = (p) => {
-    if (p === page) { window.scrollTo({ top:0, behavior:"smooth" }); return; }
+  const cambiarPagina = (p, scroll = 0) => {
+    pageRef.current = p;
     setPageAnim("out");
     setTimeout(() => {
       setPage(p);
       window.scrollTo({ top:0, behavior:"auto" });
-      requestAnimationFrame(() => setPageAnim("in"));
+      requestAnimationFrame(() => {
+        setPageAnim("in");
+        // Con "atrás", volver al mismo lugar de la sección (espera a que se dibuje).
+        if (scroll) setTimeout(() => window.scrollTo({ top:scroll, behavior:"auto" }), 60);
+      });
     }, 240);
   };
+
+  const navTo = (p) => {
+    if (p === pageRef.current) { window.scrollTo({ top:0, behavior:"smooth" }); return; }
+    empujarPagina({ page:p }, urlDePagina(p));
+    cambiarPagina(p);
+  };
+
+  // Primera entrada del historial = la sección con la que se entró; "atrás"/"adelante" cambian de sección.
+  useEffect(() => {
+    reemplazarPagina({ page: pageRef.current });
+    alNavegar((st) => {
+      const p = PAGINAS.includes(st.page) ? st.page : paginaDeUrl();
+      if (p !== pageRef.current) cambiarPagina(p, Number(st.scroll) || 0);
+    });
+    return () => alNavegar(null);
+  }, []);
 
   const pageStyle = {
     opacity: pageAnim === "in" ? 1 : 0,
