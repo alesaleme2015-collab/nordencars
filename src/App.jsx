@@ -2940,7 +2940,7 @@ function VenderPage({ navTo }) {
   };
 
   const beneficios = [
-    ["Te lo compramos", "Si nos interesa, te hacemos una oferta concreta y cerramos rápido."],
+    ["Te lo compramos", "Lo tasamos, te hacemos una oferta concreta y cerramos rápido."],
     ["Consignación", "Lo publicamos y lo vendemos por vos: sin perder tiempo con curiosos."],
     ["Parte de pago", "Lo tomamos como entrega para un 0km o un usado de nuestro stock."],
     ["Papeles resueltos", "Nos ocupamos de la transferencia con nuestra gestoría."],
