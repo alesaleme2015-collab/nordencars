@@ -53,15 +53,6 @@ const ERP_URL = "https://sistema.nordencars.store";
 const MARCAS_0KM = ["Toyota","Fiat","Chevrolet","BAIC","BYD","Jeep","RAM","Volkswagen","Peugeot","Ford","Haval","Citroën","KIA","BMW","MINI","Audi","Hyundai"];
 const CARROCERIAS = ["Todos","Sedán","SUV","Pick-up","Hatchback","Coupé","Otro"];
 
-const STOCK_LOCAL = [
-  {id:"l1",marca:"Volkswagen",modelo:"Vento GLI",version:"2.0 TSI DSG",anio:2018,tipo:"Usado",carroceria:"Sedán",precio_usd:32000000,kilometraje:68000,color:"Blanco Perlado",descripcion:"Motor turbo 2.0 TSI, DSG 6 velocidades, interior deportivo con costuras rojas. Impecable.",destacado:true,fotos:[IMG_VW_FRONT,IMG_VW_INT]},
-  {id:"l2",marca:"BMW",modelo:"M235i",version:"Coupé M Sport",anio:2016,tipo:"Usado",carroceria:"Coupé",precio_usd:48000000,kilometraje:95000,color:"Estoril Blue",descripcion:"Motor inline 6 turbo 326cv, paquete M Sport, automático 8 velocidades. Una bestia.",destacado:true,fotos:[IMG_BMW_FULL,IMG_BMW_FRONT,IMG_BMW_INT]},
-  {id:"l3",marca:"Toyota",modelo:"Hilux",version:"SRX 4x4 AT",anio:2022,tipo:"Usado",carroceria:"Pick-up",precio_usd:78000000,kilometraje:52000,color:"Blanco",descripcion:"La pick-up más vendida del país. Full equipada, 4x4, automática.",destacado:false,fotos:[]},
-  {id:"l4",marca:"Jeep",modelo:"Compass",version:"Trailhawk 4x4",anio:2022,tipo:"Usado",carroceria:"SUV",precio_usd:52000000,kilometraje:38000,color:"Azul Hydro",descripcion:"SUV de lujo con 4x4 inteligente y cuero premium.",destacado:false,fotos:[]},
-  {id:"l5",marca:"BYD",modelo:"Dolphin",version:"Plus",anio:2024,tipo:"0km",carroceria:"Hatchback",precio_usd:38000000,kilometraje:0,color:"Azul Oceano",descripcion:"100% eléctrico. 204cv, carga rápida, 400km de autonomía.",destacado:false,fotos:[]},
-  {id:"l6",marca:"Chevrolet",modelo:"Tracker",version:"Premier AT",anio:2024,tipo:"0km",carroceria:"SUV",precio_usd:42000000,kilometraje:0,color:"Negro",descripcion:"SUV compacto 0km, motor turbo, cámara 360°.",destacado:false,fotos:[]},
-];
-
 const BRAND_DOMAINS = {
   "Toyota":"toyota.com","Fiat":"fiat.com","Chevrolet":"chevrolet.com",
   "BAIC":"baicmotor.com","BYD":"byd.com","Jeep":"jeep.com","RAM":"ramtrucks.com",
@@ -696,6 +687,35 @@ const precioDe = (car) => {
   return `${car.precio_moneda === "USD" ? "US$" : "$"} ${v.toLocaleString("es-AR")}`;
 };
 
+/* Mientras llega el stock real del ERP: tarjetas vacías (nunca autos de muestra). */
+function CarSkeleton() {
+  return (
+    <div style={{ background:C.zinc, minHeight:360, display:"flex", flexDirection:"column" }}>
+      <div style={{ aspectRatio:"4/3", background:C.zinc2, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
+      <div style={{ padding:"18px 18px 22px", display:"flex", flexDirection:"column", gap:10 }}>
+        <div style={{ height:12, width:"40%", background:C.zinc3, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
+        <div style={{ height:18, width:"75%", background:C.zinc3, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
+        <div style={{ height:14, width:"55%", background:C.zinc3, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
+      </div>
+      <style>{"@keyframes ncPulso{0%,100%{opacity:.55}50%{opacity:1}}"}</style>
+    </div>
+  );
+}
+
+/* Si el ERP no respondió después de reintentar: avisar en vez de mostrar autos que no existen. */
+function StockNoDisponible({ reintentar }) {
+  return (
+    <div style={{ textAlign:"center", padding:"60px 16px", color:C.muted, fontFamily:"sans-serif" }}>
+      <div style={{ fontSize:15, marginBottom:6, color:C.white }}>No pudimos cargar el stock</div>
+      <div style={{ fontSize:12, color:C.muted2, marginBottom:18 }}>Puede ser la conexión. Probá de nuevo o consultanos directo.</div>
+      <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
+        <Btn onClick={reintentar}>Reintentar</Btn>
+        <Btn primary href={`https://wa.me/${WA_NORDEN}?text=${encodeURIComponent("Hola Norden Cars, quiero ver los autos que tienen disponibles")}`}>Consultar por WhatsApp</Btn>
+      </div>
+    </div>
+  );
+}
+
 function CarCard({ car, onClick, comparar }) {
   const [hov, setHov] = useState(false);
   const [fotoRef, fotoVista] = useReveal(.15);
@@ -1266,7 +1286,7 @@ function HeroStatItem({ pre, n, suf, l, last, mob }) {
 }
 
 /* ─── HOME PAGE ─────────────────────────────────────────────────────────────── */
-function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, videosData, abrirTeilen }) {
+function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, reintentarStock, config, fotosClientes, videosData, abrirTeilen }) {
   const preview = stockData.filter(v => v.destacado).slice(0,4);
   const shown = preview.length >= 2 ? preview : stockData.slice(0,4);
   const mob = useIsMobile();
@@ -1408,9 +1428,13 @@ function HomePage({ navTo, setSelectedCar, stockData, config, fotosClientes, vid
           <div><Reveal><Tag>Stock destacado</Tag></Reveal><Reveal delay={.1}><SecH>Vehículos <Red>disponibles</Red></SecH></Reveal></div>
           <Reveal><Btn onClick={() => navTo("stock")}>Ver todo el stock →</Btn></Reveal>
         </div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:1, background:C.bg }}>
-          {shown.map((car,i) => <Reveal key={car.id} delay={i*.07}><CarCard car={car} onClick={setSelectedCar}/></Reveal>)}
-        </div>
+        {stockError && !shown.length
+          ? <StockNoDisponible reintentar={reintentarStock}/>
+          : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:1, background:C.bg }}>
+              {loadingStock && !shown.length
+                ? [0,1,2,3].map(i => <CarSkeleton key={i}/>)
+                : shown.map((car,i) => <Reveal key={car.id} delay={i*.07}><CarCard car={car} onClick={setSelectedCar}/></Reveal>)}
+            </div>}
       </section>
 
       {/* ── BRANDS ── */}
@@ -1830,7 +1854,7 @@ function StockFilterBar({ label, opts, val, set }) {
 }
 
 /* ─── STOCK PAGE ─────────────────────────────────────────────────────────────── */
-function StockPage({ stockData, setSelectedCar, loading }) {
+function StockPage({ stockData, setSelectedCar, loading, error, reintentar }) {
   const [comp, setComp] = useState([]);       // ids elegidos para comparar (hasta 3)
   const [verComp, setVerComp] = useState(false);
   const toggleComp = (id) => setComp(c => c.includes(id) ? c.filter(x => x !== id) : c.length >= 3 ? c : [...c, id]);
@@ -1854,7 +1878,7 @@ function StockPage({ stockData, setSelectedCar, loading }) {
       <PageHeader
         tag="Catálogo completo"
         bgWord="STOCK"
-        subtitle={loading ? "Cargando vehículos..." : `${filtered.length} vehículo${filtered.length!==1?"s":""} disponible${filtered.length!==1?"s":""}`}
+        subtitle={loading ? "Cargando vehículos..." : error && !stockData.length ? "Stock no disponible por el momento" : `${filtered.length} vehículo${filtered.length!==1?"s":""} disponible${filtered.length!==1?"s":""}`}
       >
         Stock <Red>NordenCars</Red>
       </PageHeader>
@@ -1869,7 +1893,13 @@ function StockPage({ stockData, setSelectedCar, loading }) {
       </div>
       {/* Grid */}
       <div style={{ padding:"46px 5vw", background:"linear-gradient(to bottom,#0d0d0d,#111)" }}>
-        {filtered.length === 0
+        {loading && !stockData.length
+          ? <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:1, background:C.bg }}>
+              {[0,1,2,3,4,5].map(i => <CarSkeleton key={i}/>)}
+            </div>
+          : error && !stockData.length
+          ? <StockNoDisponible reintentar={reintentar}/>
+          : filtered.length === 0
           ? <div style={{ textAlign:"center", padding:"70px 0", color:C.muted, fontFamily:"sans-serif" }}>
               <div style={{ fontSize:38, marginBottom:10 }}>🔍</div>
               <div style={{ fontSize:15, marginBottom:5 }}>No hay vehículos con esos filtros</div>
@@ -2289,12 +2319,10 @@ const TEILEN_URL = "https://teilen.com.ar/cotizador.php";
 function useOkm() {
   const [okm, setOkm] = useState({ modelos: [], cargando: true, error: false });
   useEffect(() => {
-    let vivo = true;
     fetch(`${ERP_URL}/api/publico/okm`, { headers: { Accept: "application/json" } })
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(d => { if (vivo) setOkm({ modelos: Array.isArray(d.modelos) ? d.modelos : [], cargando: false, error: false }); })
       .catch(() => { if (vivo) setOkm({ modelos: [], cargando: false, error: true }); });
-    return () => { vivo = false; };
   }, []);
   return okm;
 }
@@ -3183,9 +3211,11 @@ export default function App() {
   const [pageAnim, setPageAnim] = useState("in"); // "in" | "out"
   const [scrolled, setScrolled] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
-  const [stockData, setStockData] = useState(STOCK_LOCAL);
+  const [stockData, setStockData] = useState([]);
   const config = SIN_CONFIG; // textos editables de la web vieja: hoy van los de por defecto
   const [loadingStock, setLoadingStock] = useState(true);
+  const [stockError, setStockError] = useState(false);
+  const [stockIntento, setStockIntento] = useState(0); // "Reintentar" lo vuelve a pedir
   const [appLoading, setAppLoading] = useState(() => { try { return !sessionStorage.getItem("nc_splash_seen"); } catch { return true; } });
   const fotosClientes = CLIENTES_LOCAL;
   const videosData = SIN_VIDEOS;
@@ -3272,30 +3302,38 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // Load stock + fotos desde el ERP (fuente unica de verdad).
-    // Si por algun motivo el ERP no responde, mantenemos STOCK_LOCAL como
-    // fallback para que la web nunca se quede sin contenido.
-    setLoadingStock(true);
-    fetch(`${ERP_URL}/api/publico/stock`, { headers: { Accept: "application/json" } })
-      .then(r => {
-        if (!r.ok) throw new Error("ERP respondio " + r.status);
-        return r.json();
-      })
-      .then(data => {
-        if (Array.isArray(data) && data.length) {
-          // El endpoint del ERP ya devuelve los campos en el formato que
-          // esta web espera (marca, modelo, version, anio, kilometraje,
-          // tipo, carroceria, precio_usd, color, descripcion, destacado,
-          // fotos[]). No hace falta transformar aca.
+    // Stock + fotos desde el ERP (fuente unica de verdad). Nunca se muestran
+    // autos de muestra: con datos celulares el ERP a veces tarda o falla, y
+    // salian autos que no existen (Ale, 2026-11-02). Se reintenta y, si no
+    // hay caso, se ofrece reintentar o consultar por WhatsApp.
+    cargarStock();
+  }, [stockIntento]);
+
+  function cargarStock() {
+    setLoadingStock(true); setStockError(false);
+    const intentar = (n) => {
+      const ctrl = new AbortController();
+      const corte = setTimeout(() => ctrl.abort(), 12000);
+      fetch(`${ERP_URL}/api/publico/stock`, { headers: { Accept: "application/json" }, cache: "no-store", signal: ctrl.signal })
+        .then(r => {
+          if (!r.ok) throw new Error("ERP respondio " + r.status);
+          return r.json();
+        })
+        .then(data => {
+          if (!Array.isArray(data)) throw new Error("Respuesta inesperada del ERP");
+          // El endpoint del ERP ya devuelve los campos en el formato que esta web espera.
           setStockData(data);
-        }
-        setLoadingStock(false);
-      })
-      .catch((e) => {
-        console.warn("[NordenCars] No se pudo cargar stock del ERP:", e);
-        setLoadingStock(false);
-      });
-  }, []);
+          setLoadingStock(false);
+        })
+        .catch((e) => {
+          console.warn(`[NordenCars] No se pudo cargar stock del ERP (intento ${n}):`, e);
+          if (n < 3) setTimeout(() => intentar(n + 1), n * 2000);
+          else { setLoadingStock(false); setStockError(true); }
+        })
+        .finally(() => clearTimeout(corte));
+    };
+    intentar(1);
+  }
 
   const cambiarPagina = (p, scroll = 0) => {
     pageRef.current = p;
@@ -3349,9 +3387,9 @@ export default function App() {
       <Nav page={page} navTo={navTo} scrolled={scrolled}/>
 
       <div style={pageStyle}>
-        {page==="home"     && <HomePage navTo={navTo} setSelectedCar={setSelectedCar} stockData={stockData} config={config} fotosClientes={fotosClientes} videosData={videosData} abrirTeilen={abrirTeilen}/>}
+        {page==="home"     && <HomePage navTo={navTo} setSelectedCar={setSelectedCar} stockData={stockData} loadingStock={loadingStock} stockError={stockError} reintentarStock={() => setStockIntento(n => n + 1)} config={config} fotosClientes={fotosClientes} videosData={videosData} abrirTeilen={abrirTeilen}/>}
         {page==="okm"      && <OkmPage navTo={navTo} okm={okm} abrirTeilen={abrirTeilen}/>}
-        {page==="stock"    && <StockPage stockData={stockData} setSelectedCar={setSelectedCar} loading={loadingStock}/>}
+        {page==="stock"    && <StockPage stockData={stockData} setSelectedCar={setSelectedCar} loading={loadingStock} error={stockError} reintentar={() => setStockIntento(n => n + 1)}/>}
         {page==="nosotros" && <NosotrosPage navTo={navTo}/>}
         {page==="contacto" && <ContactoPage navTo={navTo}/>}
         {page==="vender"   && <VenderPage navTo={navTo}/>}
