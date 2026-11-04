@@ -2380,7 +2380,7 @@ function OkmCard({ m, onClick }) {
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:700, color: hov ? C.red2 : C.white, transition:"color .3s" }}>{m.desde ? fmtPrecio(m.desde.precio, m.desde.moneda) : "Consultanos"}</div>
           </div>
           <span style={{ fontSize:12, letterSpacing:1.5, textTransform:"uppercase", color: hov ? C.white : C.muted, fontFamily:"sans-serif", whiteSpace:"nowrap", transition:"color .3s" }}>
-            {m.versiones.length} {m.versiones.length === 1 ? "versión" : "versiones"} →
+            {m.versiones.length === 0 ? "Ver más" : `${m.versiones.length} ${m.versiones.length === 1 ? "versión" : "versiones"}`} →
           </span>
         </div>
       </div>
@@ -2415,7 +2415,11 @@ function OkmModal({ m, onClose, abrirTeilen }) {
             <Tag>0km · {m.marca}</Tag>
             <SecH style={{ fontSize:"clamp(34px,4vw,48px)", marginBottom:6 }}>{m.modelo}</SecH>
             <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif", marginBottom:18 }}>{m.vigente_al ? `Lista vigente al ${fmtFecha(m.vigente_al)}` : "Consultanos el precio actualizado por WhatsApp"}</div>
-            <div style={{ display:"flex", flexDirection:"column", gap:1, background:C.border, marginBottom:18 }}>
+            {m.versiones.length === 0 && (
+              // Modelo que vendemos sin lista cargada todavía: versiones y precio por WhatsApp.
+              <p style={{ fontSize:13, color:C.white, fontFamily:"sans-serif", lineHeight:1.6, marginBottom:18 }}>Consultanos versiones, colores y precio final para Tucumán: te respondemos al toque.</p>
+            )}
+            <div style={{ display:"flex", flexDirection:"column", gap:1, background:C.border, marginBottom: m.versiones.length ? 18 : 0 }}>
               {m.versiones.map(v => (
                 <div key={v.id} style={{ background:C.carbon, padding:"12px 0", display:"flex", justifyContent:"space-between", alignItems:"center", gap:12 }}>
                   <div style={{ minWidth:0 }}>
