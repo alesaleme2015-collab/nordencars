@@ -2319,10 +2319,12 @@ const TEILEN_URL = "https://teilen.com.ar/cotizador.php";
 function useOkm() {
   const [okm, setOkm] = useState({ modelos: [], cargando: true, error: false });
   useEffect(() => {
+    let vivo = true;
     fetch(`${ERP_URL}/api/publico/okm`, { headers: { Accept: "application/json" } })
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(d => { if (vivo) setOkm({ modelos: Array.isArray(d.modelos) ? d.modelos : [], cargando: false, error: false }); })
       .catch(() => { if (vivo) setOkm({ modelos: [], cargando: false, error: true }); });
+    return () => { vivo = false; };
   }, []);
   return okm;
 }
