@@ -2414,7 +2414,7 @@ function OkmModal({ m, onClose, abrirTeilen }) {
           <div style={{ padding: mob ? "22px 18px" : "34px 30px" }}>
             <Tag>0km · {m.marca}</Tag>
             <SecH style={{ fontSize:"clamp(34px,4vw,48px)", marginBottom:6 }}>{m.modelo}</SecH>
-            <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif", marginBottom:18 }}>{m.vigente_al ? `Lista vigente al ${fmtFecha(m.vigente_al)}` : "Consultanos el precio actualizado por WhatsApp"}</div>
+            {m.versiones.length > 0 && <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif", marginBottom:18 }}>{m.vigente_al ? `Lista vigente al ${fmtFecha(m.vigente_al)}` : "Consultanos el precio actualizado por WhatsApp"}</div>}
             {m.versiones.length === 0 && (
               // Modelo que vendemos sin lista cargada todavía: versiones y precio por WhatsApp.
               <p style={{ fontSize:13, color:C.white, fontFamily:"sans-serif", lineHeight:1.6, marginBottom:18 }}>Consultanos versiones, colores y precio final para Tucumán: te respondemos al toque.</p>
