@@ -2414,7 +2414,7 @@ function OkmModal({ m, onClose, abrirTeilen }) {
           <div style={{ padding: mob ? "22px 18px" : "34px 30px" }}>
             <Tag>0km · {m.marca}</Tag>
             <SecH style={{ fontSize:"clamp(34px,4vw,48px)", marginBottom:6 }}>{m.modelo}</SecH>
-            <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif", marginBottom:18 }}>Lista vigente al {fmtFecha(m.vigente_al)}</div>
+            <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif", marginBottom:18 }}>{m.vigente_al ? `Lista vigente al ${fmtFecha(m.vigente_al)}` : "Consultanos el precio actualizado por WhatsApp"}</div>
             <div style={{ display:"flex", flexDirection:"column", gap:1, background:C.border, marginBottom:18 }}>
               {m.versiones.map(v => (
                 <div key={v.id} style={{ background:C.carbon, padding:"12px 0", display:"flex", justifyContent:"space-between", alignItems:"center", gap:12 }}>
