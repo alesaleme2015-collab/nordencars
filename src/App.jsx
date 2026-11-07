@@ -2313,7 +2313,7 @@ const slugOkm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").
 const fotoOkm = (m) => m.foto || OKM_FOTOS_LOCAL[`${slugOkm(m.marca)}-${slugOkm(m.modelo)}`] || null;
 const fmtPrecio = (v, moneda) => v == null ? "" : `${moneda === "USD" ? "US$" : "$"} ${Math.round(Number(v)).toLocaleString("es-AR")}`;
 const fmtFecha = (iso) => { if (!iso) return ""; const [y, m, d] = String(iso).slice(0, 10).split("-"); return `${d}/${m}/${y}`; };
-const LEYENDA_OKM = "Precios finales sujetos a stock y a la lista vigente de cada marca. Pueden cambiar sin previo aviso. Consultanos antes de decidir.";
+const LEYENDA_OKM = "Precios finales sujetos a stock y a la lista vigente de cada marca. Pueden cambiar sin previo aviso. Financiación sujeta a aprobación crediticia de la entidad y a la circular vigente de cada marca; la cuota no incluye el seguro del automotor. Consultanos antes de decidir.";
 const TEILEN_URL = "https://teilen.com.ar/cotizador.php";
 
 function useOkm() {
@@ -2424,7 +2424,14 @@ function OkmModal({ m, onClose, abrirTeilen }) {
                 <div key={v.id} style={{ background:C.carbon, padding:"12px 0", display:"flex", justifyContent:"space-between", alignItems:"center", gap:12 }}>
                   <div style={{ minWidth:0 }}>
                     <div style={{ fontSize:13, color:C.white, fontFamily:"sans-serif" }}>{v.version || m.modelo}{v.anio ? <span style={{ color:C.muted }}> · {v.anio}</span> : null}</div>
-                    {v.cuota ? <div style={{ fontSize:11, color:"#4ade80", fontFamily:"sans-serif", marginTop:2 }}>{v.anticipo ? `Anticipo ${fmtPrecio(v.anticipo, v.moneda)} + ` : ""}{v.cuotas ? `${v.cuotas} cuotas de ` : "cuotas desde "}{fmtPrecio(v.cuota, "ARS")}</div> : null}
+                    {/* Financiación de la circular de la marca (ERP, tasa fija): anticipo + cuotas con este precio, en pesos. */}
+                    {v.financiacion?.length > 0
+                      ? v.financiacion.slice(0, 3).map(f => (
+                          <div key={f.cuotas} style={{ fontSize:11, color:"#4ade80", fontFamily:"sans-serif", marginTop:2 }}>
+                            Anticipo {fmtPrecio(f.anticipo, "ARS")} + {f.cuotas} cuotas de {fmtPrecio(f.cuota, "ARS")}{f.tna === 0 ? " · tasa 0%" : ` · TNA ${f.tna}%`}
+                          </div>
+                        ))
+                      : v.cuota ? <div style={{ fontSize:11, color:"#4ade80", fontFamily:"sans-serif", marginTop:2 }}>{v.anticipo ? `Anticipo ${fmtPrecio(v.anticipo, v.moneda)} + ` : ""}{v.cuotas ? `${v.cuotas} cuotas de ` : "cuotas desde "}{fmtPrecio(v.cuota, "ARS")}</div> : null}
                   </div>
                   <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
                     {v.precio != null
