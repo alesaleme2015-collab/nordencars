@@ -2313,7 +2313,52 @@ const slugOkm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").
 const fotoOkm = (m) => m.foto || OKM_FOTOS_LOCAL[`${slugOkm(m.marca)}-${slugOkm(m.modelo)}`] || null;
 const fmtPrecio = (v, moneda) => v == null ? "" : `${moneda === "USD" ? "US$" : "$"} ${Math.round(Number(v)).toLocaleString("es-AR")}`;
 const fmtFecha = (iso) => { if (!iso) return ""; const [y, m, d] = String(iso).slice(0, 10).split("-"); return `${d}/${m}/${y}`; };
-const LEYENDA_OKM = "Precios finales sujetos a stock y a la lista vigente de cada marca. Pueden cambiar sin previo aviso. Financiación sujeta a aprobación crediticia de la entidad y a la circular vigente de cada marca; la cuota no incluye el seguro del automotor. Consultanos antes de decidir.";
+// Financiación de una versión 0km (circular de la marca, viene del ERP): un botón
+// que despliega pestañas por cantidad de cuotas; al elegir una, anticipo y cuota
+// en grande con la tipografía de la web (Ale, 2026-11-07: más premium y legible).
+function FinanciacionVersion({ opciones }) {
+  const [abierto, setAbierto] = useState(false);
+  const [sel, setSel] = useState(0);
+  const o = opciones[Math.min(sel, opciones.length - 1)];
+  const desde = Math.min(...opciones.map(x => x.cuota));
+  return (
+    <div style={{ marginTop:10 }}>
+      <button type="button" onClick={() => setAbierto(a => !a)} aria-expanded={abierto}
+        style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"7px 12px", borderRadius:8, border:"1px solid rgba(74,222,128,.35)", background:"rgba(74,222,128,.08)", color:"#4ade80", cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif", fontSize:15, fontWeight:600, letterSpacing:.5, textTransform:"uppercase" }}>
+        Tasa 0% · cuotas desde {fmtPrecio(desde, "ARS")}
+        <span style={{ display:"inline-block", transition:"transform .25s", transform: abierto ? "rotate(180deg)" : "none" }}>▾</span>
+      </button>
+      {abierto && (
+        <div style={{ marginTop:10, padding:"14px 14px 12px", borderRadius:10, border:`1px solid ${C.border2}`, background:"rgba(255,255,255,.03)" }}>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:12 }}>
+            {opciones.map((x, i) => (
+              <button key={x.cuotas} type="button" onClick={() => setSel(i)}
+                style={{ padding:"6px 14px", borderRadius:20, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:700,
+                  border: i === sel ? "1px solid #4ade80" : `1px solid ${C.border2}`, background: i === sel ? "#4ade80" : "transparent", color: i === sel ? "#0a0c10" : C.white }}>
+                {x.cuotas} cuotas
+              </button>
+            ))}
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+            <div>
+              <div style={{ fontSize:12, letterSpacing:1.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>Anticipo</div>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:26, fontWeight:700, color:C.white, lineHeight:1.1 }}>{fmtPrecio(o.anticipo, "ARS")}</div>
+            </div>
+            <div>
+              <div style={{ fontSize:12, letterSpacing:1.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>{o.cuotas} cuotas fijas de</div>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:26, fontWeight:700, color:"#4ade80", lineHeight:1.1 }}>{fmtPrecio(o.cuota, "ARS")}</div>
+            </div>
+          </div>
+          <div style={{ fontSize:12, color:C.muted, fontFamily:"sans-serif", marginTop:8 }}>
+            {o.tna === 0 ? "Tasa 0%" : `TNA ${o.tna}%`} fija en pesos · la cuota no incluye el seguro del auto
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const LEYENDA_OKM ="Precios finales sujetos a stock y a la lista vigente de cada marca. Pueden cambiar sin previo aviso. Financiación sujeta a aprobación crediticia de la entidad y a la circular vigente de cada marca; la cuota no incluye el seguro del automotor. Consultanos antes de decidir.";
 const TEILEN_URL = "https://teilen.com.ar/cotizador.php";
 
 function useOkm() {
@@ -2421,24 +2466,22 @@ function OkmModal({ m, onClose, abrirTeilen }) {
             )}
             <div style={{ display:"flex", flexDirection:"column", gap:1, background:C.border, marginBottom: m.versiones.length ? 18 : 0 }}>
               {m.versiones.map(v => (
-                <div key={v.id} style={{ background:C.carbon, padding:"12px 0", display:"flex", justifyContent:"space-between", alignItems:"center", gap:12 }}>
-                  <div style={{ minWidth:0 }}>
-                    <div style={{ fontSize:13, color:C.white, fontFamily:"sans-serif" }}>{v.version || m.modelo}{v.anio ? <span style={{ color:C.muted }}> · {v.anio}</span> : null}</div>
-                    {/* Financiación de la circular de la marca (ERP, tasa fija): anticipo + cuotas con este precio, en pesos. */}
-                    {v.financiacion?.length > 0
-                      ? v.financiacion.slice(0, 3).map(f => (
-                          <div key={f.cuotas} style={{ fontSize:11, color:"#4ade80", fontFamily:"sans-serif", marginTop:2 }}>
-                            Anticipo {fmtPrecio(f.anticipo, "ARS")} + {f.cuotas} cuotas de {fmtPrecio(f.cuota, "ARS")}{f.tna === 0 ? " · tasa 0%" : ` · TNA ${f.tna}%`}
-                          </div>
-                        ))
-                      : v.cuota ? <div style={{ fontSize:11, color:"#4ade80", fontFamily:"sans-serif", marginTop:2 }}>{v.anticipo ? `Anticipo ${fmtPrecio(v.anticipo, v.moneda)} + ` : ""}{v.cuotas ? `${v.cuotas} cuotas de ` : "cuotas desde "}{fmtPrecio(v.cuota, "ARS")}</div> : null}
+                <div key={v.id} style={{ background:C.carbon, padding:"14px 0" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12 }}>
+                    <div style={{ minWidth:0 }}>
+                      <div style={{ fontSize:15, color:C.white, fontFamily:"sans-serif" }}>{v.version || m.modelo}{v.anio ? <span style={{ color:C.muted }}> · {v.anio}</span> : null}</div>
+                      {/* Financiación de la placa (vieja), solo si no hay circular cargada */}
+                      {!(v.financiacion?.length > 0) && v.cuota ? <div style={{ fontSize:13, color:"#4ade80", fontFamily:"sans-serif", marginTop:3 }}>{v.anticipo ? `Anticipo ${fmtPrecio(v.anticipo, v.moneda)} + ` : ""}{v.cuotas ? `${v.cuotas} cuotas de ` : "cuotas desde "}{fmtPrecio(v.cuota, "ARS")}</div> : null}
+                    </div>
+                    <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
+                      {v.precio != null
+                        ? <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:700, color:C.white }}>{fmtPrecio(v.precio, v.moneda)}</span>
+                        : <span style={{ fontSize:11, letterSpacing:1.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>Consultá precio</span>}
+                      <a href={wa(v)} target="_blank" rel="noreferrer" aria-label="Consultar por WhatsApp" style={{ width:32, height:32, borderRadius:"50%", background:"#128C7E", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><WaSvg size={15}/></a>
+                    </div>
                   </div>
-                  <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
-                    {v.precio != null
-                      ? <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:700, color:C.white }}>{fmtPrecio(v.precio, v.moneda)}</span>
-                      : <span style={{ fontSize:11, letterSpacing:1.5, textTransform:"uppercase", color:C.muted, fontFamily:"sans-serif" }}>Consultá precio</span>}
-                    <a href={wa(v)} target="_blank" rel="noreferrer" aria-label="Consultar por WhatsApp" style={{ width:32, height:32, borderRadius:"50%", background:"#128C7E", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><WaSvg size={15}/></a>
-                  </div>
+                  {/* Financiación de la circular de la marca (ERP, tasa fija): desplegable por cantidad de cuotas */}
+                  {v.financiacion?.length > 0 && <FinanciacionVersion opciones={v.financiacion}/>}
                 </div>
               ))}
             </div>
