@@ -2358,7 +2358,9 @@ function FinanciacionVersion({ opciones }) {
   );
 }
 
-const LEYENDA_OKM ="Precios finales sujetos a stock y a la lista vigente de cada marca. Pueden cambiar sin previo aviso. Financiación sujeta a aprobación crediticia de la entidad y a la circular vigente de cada marca; la cuota no incluye el seguro del automotor. Consultanos antes de decidir.";
+// Ale (2026-11-13): la foto es una por modelo, no de cada versión.
+const LEYENDA_FOTO_OKM = "Imagen a modo ilustrativo";
+const LEYENDA_OKM ="Imágenes a modo ilustrativo. Precios finales sujetos a stock y a la lista vigente de cada marca. Pueden cambiar sin previo aviso. Financiación sujeta a aprobación crediticia de la entidad y a la circular vigente de cada marca; la cuota no incluye el seguro del automotor. Consultanos antes de decidir.";
 const TEILEN_URL = "https://teilen.com.ar/cotizador.php";
 
 function useOkm() {
@@ -2412,6 +2414,7 @@ function OkmCard({ m, onClick }) {
           ? <img src={foto} alt={`${m.marca} ${m.modelo}`} loading="lazy" style={{ position:"relative", maxWidth:"82%", maxHeight:150, objectFit:"contain", marginTop:18,
               transform: hov ? "scale(1.08) translateX(6px)" : "scale(1)", transition:"transform .7s cubic-bezier(.16,1,.3,1)", filter:"drop-shadow(0 14px 18px rgba(0,0,0,.55))" }}/>
           : <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:54, letterSpacing:-2, textTransform:"uppercase", color:"transparent", WebkitTextStroke:"1px rgba(255,255,255,.14)", marginTop:16, textAlign:"center", lineHeight:.9, padding:"0 12px" }}>{m.modelo}</div>}
+        {foto && <div style={{ position:"absolute", right:12, bottom:8, zIndex:1, fontSize:11, color:C.muted, fontFamily:"sans-serif", letterSpacing:.3 }}>{LEYENDA_FOTO_OKM}</div>}
         {/* Barrido de luz */}
         <div style={{ position:"absolute", top:0, bottom:0, width:"40%", left: hov ? "130%" : "-60%", transition: hov ? "left .9s cubic-bezier(.16,1,.3,1)" : "none",
           background:"linear-gradient(105deg, transparent, rgba(255,255,255,.08), transparent)", pointerEvents:"none" }}/>
@@ -2455,6 +2458,7 @@ function OkmModal({ m, onClose, abrirTeilen }) {
             {foto
               ? <img src={foto} alt="" style={{ maxWidth:"100%", maxHeight: mob ? 170 : 240, objectFit:"contain", filter:"drop-shadow(0 18px 22px rgba(0,0,0,.6))", animation:"okmCar .8s cubic-bezier(.16,1,.3,1)" }}/>
               : <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:64, textTransform:"uppercase", color:"transparent", WebkitTextStroke:"1px rgba(255,255,255,.18)", textAlign:"center", lineHeight:.9 }}>{m.modelo}</div>}
+            {foto && <div style={{ position:"absolute", right:14, bottom:10, fontSize:11.5, color:C.muted, fontFamily:"sans-serif", letterSpacing:.3 }}>{LEYENDA_FOTO_OKM}</div>}
           </div>
           <div style={{ padding: mob ? "22px 18px" : "34px 30px" }}>
             <Tag>0km · {m.marca}</Tag>
