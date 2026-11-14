@@ -3333,15 +3333,30 @@ export default function App() {
       }
       e.preventDefault();
       const max = (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight;
+      // Si la animación estaba quieta, arrancar desde donde está la página AHORA
+      // (Ale 14/11: después de arrastrar la barra de la derecha, la ruedita la
+      // devolvía de golpe al lugar viejo porque el destino había quedado guardado).
+      if (!active) { current = window.scrollY; target = current; }
       target = Math.max(0, Math.min(max, target + e.deltaY));
-      if (!active) { active = true; current = window.scrollY; raf = requestAnimationFrame(tick); }
+      if (!active) { active = true; raf = requestAnimationFrame(tick); }
     };
     const sync = () => { target = window.scrollY; current = window.scrollY; };
+    // Si algo más mueve la página en medio de la animación (arrastrar la barra,
+    // teclado, un link), se corta la animación y se toma esa posición.
+    const onScroll = () => {
+      if (active && Math.abs(window.scrollY - current) > 3) {
+        if (raf) cancelAnimationFrame(raf);
+        active = false;
+        sync();
+      }
+    };
 
     window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", sync);
     return () => {
       window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", sync);
       if (raf) cancelAnimationFrame(raf);
       html.style.scrollBehavior = original;
