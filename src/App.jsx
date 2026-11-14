@@ -436,8 +436,7 @@ function SecH({ children, style = {} }) {
   );
 }
 
-// claro: botón secundario sobre fondo claro (texto y borde oscuros).
-function Btn({ children, primary, full, small, onClick, disabled = false, href, target = "_blank", claro }) {
+function Btn({ children, primary, full, small, onClick, disabled = false, href, target = "_blank" }) {
   const [hov, setHov] = useState(false);
   const [tx, setTx] = useState(0);
   const [ty, setTy] = useState(0);
@@ -460,8 +459,8 @@ function Btn({ children, primary, full, small, onClick, disabled = false, href, 
     cursor: disabled ? "not-allowed" : "pointer", border:"none",
     transition:"background .3s, color .3s, box-shadow .3s, transform .25s cubic-bezier(.16,1,.3,1), outline-color .3s",
     background: primary ? (hov ? C.red2 : C.red) : "transparent",
-    color: claro && !primary ? "#0a0c10" : C.white, opacity: disabled ? .5 : 1, textDecoration:"none",
-    outline: primary ? "none" : claro ? `1px solid ${hov ? "rgba(10,12,16,.5)" : "rgba(10,12,16,.18)"}` : `1px solid ${hov ? "rgba(245,245,245,.38)" : "rgba(245,245,245,.12)"}`,
+    color: C.white, opacity: disabled ? .5 : 1, textDecoration:"none",
+    outline: primary ? "none" : `1px solid ${hov ? "rgba(245,245,245,.38)" : "rgba(245,245,245,.12)"}`,
     transform: primary
       ? `translate(${tx}px, ${ty - (hov ? 1 : 0)}px)`
       : "none",
@@ -697,15 +696,14 @@ const precioDe = (car) => {
 };
 
 /* Mientras llega el stock real del ERP: tarjetas vacías (nunca autos de muestra). */
-function CarSkeleton({ claro }) {
-  const fondo = claro ? "#fff" : C.zinc, foto = claro ? "#e8e9ed" : C.zinc2, linea = claro ? "#e3e4e8" : C.zinc3;
+function CarSkeleton() {
   return (
-    <div style={{ background:fondo, minHeight:360, display:"flex", flexDirection:"column", borderRadius: claro ? 12 : 0, overflow:"hidden" }}>
-      <div style={{ aspectRatio:"4/3", background:foto, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
+    <div style={{ background:C.zinc, minHeight:360, display:"flex", flexDirection:"column", borderRadius:12, overflow:"hidden" }}>
+      <div style={{ aspectRatio:"4/3", background:C.zinc2, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
       <div style={{ padding:"18px 18px 22px", display:"flex", flexDirection:"column", gap:10 }}>
-        <div style={{ height:12, width:"40%", background:linea, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
-        <div style={{ height:18, width:"75%", background:linea, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
-        <div style={{ height:14, width:"55%", background:linea, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
+        <div style={{ height:12, width:"40%", background:C.zinc3, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
+        <div style={{ height:18, width:"75%", background:C.zinc3, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
+        <div style={{ height:14, width:"55%", background:C.zinc3, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
       </div>
       <style>{"@keyframes ncPulso{0%,100%{opacity:.55}50%{opacity:1}}"}</style>
     </div>
@@ -726,8 +724,7 @@ function StockNoDisponible({ reintentar }) {
   );
 }
 
-// claro: versión "showroom" para el stock destacado del inicio (fondo claro, sin giro 3D).
-function CarCard({ car, onClick, comparar, claro }) {
+function CarCard({ car, onClick, comparar }) {
   const [hov, setHov] = useState(false);
   const [fotoRef, fotoVista] = useReveal(.15);
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, mx: 50, my: 50 });
@@ -756,25 +753,15 @@ function CarCard({ car, onClick, comparar, claro }) {
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
       onClick={() => onClick(car)}
-      style={claro ? {
-        // Showroom: tarjeta blanca, curva sutil, sombra en capas y elevación suave
-        background:"#fff", cursor:"pointer", position:"relative", overflow:"hidden", borderRadius:12,
-        border:`1px solid ${hov ? "rgba(220,38,38,.28)" : "rgba(10,12,16,.06)"}`,
-        transform: hov ? "translateY(-6px)" : "translateY(0)",
-        boxShadow: hov
-          ? "0 2px 4px rgba(10,12,16,.04), 0 12px 24px rgba(10,12,16,.08), 0 32px 64px rgba(10,12,16,.12)"
-          : "0 1px 2px rgba(10,12,16,.04), 0 6px 16px rgba(10,12,16,.05)",
-        transition:"transform .6s cubic-bezier(.16,1,.3,1), box-shadow .6s cubic-bezier(.16,1,.3,1), border-color .3s",
-        willChange:"transform",
-      } : {
+      style={{
         background: hov ? C.zinc2 : C.zinc,
-        cursor:"pointer", position:"relative", overflow:"hidden",
+        cursor:"pointer", position:"relative", overflow:"hidden", borderRadius:12,
         border:`1px solid ${hov ? "rgba(220,38,38,.4)" : C.border}`,
         transformStyle:"preserve-3d",
         transform: hov
           ? `perspective(900px) rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg) translateY(-6px)`
           : "perspective(900px) rotateX(0) rotateY(0) translateY(0)",
-        boxShadow: hov ? "0 24px 70px rgba(0,0,0,.7)" : "none",
+        boxShadow: hov ? "0 24px 70px rgba(0,0,0,.7)" : "0 1px 2px rgba(0,0,0,.3), 0 10px 30px -12px rgba(0,0,0,.6)",
         transition: hov
           ? "transform .12s linear, background .3s, border-color .3s, box-shadow .3s"
           : "transform .55s cubic-bezier(.16,1,.3,1), background .3s, border-color .3s, box-shadow .3s",
@@ -783,20 +770,20 @@ function CarCard({ car, onClick, comparar, claro }) {
       {/* Spotlight que sigue al cursor */}
       <div style={{
         position:"absolute", inset:0,
-        background: `radial-gradient(420px circle at ${tilt.mx}% ${tilt.my}%, rgba(220,38,38,${claro ? .05 : .10}), transparent 55%)`,
+        background: `radial-gradient(420px circle at ${tilt.mx}% ${tilt.my}%, rgba(220,38,38,.10), transparent 55%)`,
         opacity: hov ? 1 : 0,
         transition:"opacity .35s",
         pointerEvents:"none", zIndex:3,
       }}/>
       {/* Image */}
-      <div ref={fotoRef} style={{ height:200, overflow:"hidden", position:"relative", background: claro ? "#e8e9ed" : C.zinc3 }}>
+      <div ref={fotoRef} style={{ height:200, overflow:"hidden", position:"relative", background:C.zinc3 }}>
         {img
           ? <img src={img} alt={car.modelo} loading="lazy" style={{ width:"100%", height:"100%", objectFit:"cover",
-              clipPath: fotoVista ? "inset(0)" : "inset(0 100% 0 0)", transform: !fotoVista ? "scale(1.18)" : hov ? (claro ? "scale(1.06)" : "scale(1.07)") : "scale(1)",
-              transition: claro ? "transform .6s cubic-bezier(.16,1,.3,1), clip-path 1.1s cubic-bezier(.77,0,.18,1)" : "transform .9s cubic-bezier(.16,1,.3,1), clip-path 1.1s cubic-bezier(.77,0,.18,1)" }}/>
+              clipPath: fotoVista ? "inset(0)" : "inset(0 100% 0 0)", transform: !fotoVista ? "scale(1.18)" : hov ? "scale(1.07)" : "scale(1)",
+              transition:"transform .9s cubic-bezier(.16,1,.3,1), clip-path 1.1s cubic-bezier(.77,0,.18,1)" }}/>
           : <div style={{ width:"100%", height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6 }}>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:46, fontWeight:900, color: claro ? "rgba(10,12,16,.08)" : "rgba(255,255,255,.03)", letterSpacing:-3 }}>{car.marca}</div>
-              <div style={{ fontSize:11.5, letterSpacing:3, textTransform:"uppercase", color: claro ? "rgba(10,12,16,.4)" : "rgba(255,255,255,.11)", fontFamily:"sans-serif" }}>Foto próximamente</div>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:46, fontWeight:900, color:"rgba(255,255,255,.03)", letterSpacing:-3 }}>{car.marca}</div>
+              <div style={{ fontSize:11.5, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.11)", fontFamily:"sans-serif" }}>Foto próximamente</div>
             </div>
         }
         <div style={{ position:"absolute", top:11, left:11, display:"flex", flexDirection:"column", alignItems:"flex-start", gap:5, zIndex:2 }}>
@@ -818,15 +805,15 @@ function CarCard({ car, onClick, comparar, claro }) {
       {/* Body */}
       <div style={{ padding:"18px 20px" }}>
         <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:4, fontFamily:"sans-serif" }}>{car.marca}</div>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:25, fontWeight:700, textTransform:"uppercase", color: claro ? "#0a0c10" : C.white, lineHeight:1, letterSpacing:-.5, marginBottom:2 }}>{car.modelo}</div>
-        {car.version && <div style={{ fontSize:12, color: claro ? "#555b67" : C.muted, marginBottom:2, fontFamily:"sans-serif" }}>{car.version}</div>}
-        <div style={{ fontSize:12, color: claro ? "#666c78" : C.muted2, marginBottom:15, fontFamily:"sans-serif" }}>{car.anio} · {km} · {car.color||""}</div>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:13, borderTop:`1px solid ${claro ? "rgba(10,12,16,.08)" : C.border}` }}>
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:25, fontWeight:700, textTransform:"uppercase", color:C.white, lineHeight:1, letterSpacing:-.5, marginBottom:2 }}>{car.modelo}</div>
+        {car.version && <div style={{ fontSize:12, color:C.muted, marginBottom:2, fontFamily:"sans-serif" }}>{car.version}</div>}
+        <div style={{ fontSize:12, color:C.muted2, marginBottom:15, fontFamily:"sans-serif" }}>{car.anio} · {km} · {car.color||""}</div>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:13, borderTop:`1px solid ${C.border}` }}>
           <div>
-            <div style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", color: claro ? "#666c78" : C.muted2, fontFamily:"sans-serif", marginBottom:2 }}>Precio</div>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize: claro ? 23 : 21, fontWeight:700, color: claro ? "#0a0c10" : C.white }}>{precio}</div>
+            <div style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", color:C.muted2, fontFamily:"sans-serif", marginBottom:2 }}>Precio</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:21, fontWeight:700, color:C.white }}>{precio}</div>
           </div>
-          <div style={{ fontSize:11.5, letterSpacing:2, textTransform:"uppercase", color:hov?C.red:(claro ? "#555b67" : C.muted), fontFamily:"sans-serif", transition:"color .3s" }}>Ver más →</div>
+          <div style={{ fontSize:11.5, letterSpacing:2, textTransform:"uppercase", color:hov?C.red:C.muted, fontFamily:"sans-serif", transition:"color .3s" }}>Ver más →</div>
         </div>
       </div>
     </div>
@@ -1359,7 +1346,7 @@ function FinanciacionPage({ navTo, abrirTeilen }) {
       <AlianzaTeilen abrirTeilen={abrirTeilen}/>
       <SectionDivider/>
       <section style={{ padding:"100px 5vw", background:C.bg }}>
-        <Reveal><Tag>Cómo funciona · La historia de Martín</Tag></Reveal>
+        <Reveal><Tag>Cómo funciona · Paso a paso</Tag></Reveal>
         <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Así se compra en <Red>Norden</Red></SecH></Reveal>
         <Reveal delay={.2}><HistoriaCompra mobile={mob}/></Reveal>
         <Reveal delay={.4}>
@@ -1548,18 +1535,17 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
       <Marquee/>
 
       {/* ── STOCK PREVIEW ── */}
-      {/* Showroom claro (Ale 14/11): corta el negro y hace brillar las fotos de los autos */}
-      <section style={{ padding:"100px 5vw", background:"#F5F5F7", colorScheme:"light" }}>
+      <section style={{ padding:"100px 5vw", background:"linear-gradient(to bottom,#0d0d0d,#111)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:48, flexWrap:"wrap", gap:18 }}>
-          <div><Reveal><Tag>Stock destacado</Tag></Reveal><Reveal delay={.1}><SecH style={{ color:"#0a0c10" }}>Vehículos <Red>disponibles</Red></SecH></Reveal></div>
-          <Reveal><Btn claro onClick={() => navTo("stock")}>Ver todo el stock →</Btn></Reveal>
+          <div><Reveal><Tag>Stock destacado</Tag></Reveal><Reveal delay={.1}><SecH>Vehículos <Red>disponibles</Red></SecH></Reveal></div>
+          <Reveal><Btn onClick={() => navTo("stock")}>Ver todo el stock →</Btn></Reveal>
         </div>
         {stockError && !shown.length
-          ? <div style={{ background:C.bg, borderRadius:12 }}><StockNoDisponible reintentar={reintentarStock}/></div>
+          ? <StockNoDisponible reintentar={reintentarStock}/>
           : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:24 }}>
               {loadingStock && !shown.length
-                ? [0,1,2,3].map(i => <CarSkeleton key={i} claro/>)
-                : shown.map((car,i) => <Reveal key={car.id} delay={i*.07}><CarCard car={car} onClick={setSelectedCar} claro/></Reveal>)}
+                ? [0,1,2,3].map(i => <CarSkeleton key={i}/>)
+                : shown.map((car,i) => <Reveal key={car.id} delay={i*.07}><CarCard car={car} onClick={setSelectedCar}/></Reveal>)}
             </div>}
       </section>
 
@@ -1603,7 +1589,7 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
           </Reveal>
           <div>
             <Reveal><Tag>Quiénes somos</Tag></Reveal>
-            <Reveal delay={.1}><SecH style={{ marginBottom:24 }}>La historia <Red>real</Red></SecH></Reveal>
+            <Reveal delay={.1}><SecH style={{ marginBottom:24 }}>Nuestra <Red>historia</Red></SecH></Reveal>
             <Reveal delay={.2}>
               <CitaFundadores>Hola a todos. Somos Gonchi y Ale. Lo que empezó como una pasión por los autos se formaliza con este paso. Nuestro objetivo: ayudarte a encontrar el vehículo que buscás, al precio justo y con la transparencia que merecés.</CitaFundadores>
             </Reveal>
@@ -1884,7 +1870,7 @@ function StockPage({ stockData, setSelectedCar, loading, error, reintentar }) {
       {/* Grid */}
       <div style={{ padding:"46px 5vw", background:"linear-gradient(to bottom,#0d0d0d,#111)" }}>
         {loading && !stockData.length
-          ? <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:1, background:C.bg }}>
+          ? <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:24 }}>
               {[0,1,2,3,4,5].map(i => <CarSkeleton key={i}/>)}
             </div>
           : error && !stockData.length
@@ -1895,7 +1881,7 @@ function StockPage({ stockData, setSelectedCar, loading, error, reintentar }) {
               <div style={{ fontSize:15, marginBottom:5 }}>No hay vehículos con esos filtros</div>
               <div style={{ fontSize:11, color:C.muted2 }}>Probá otros filtros o consultanos directamente</div>
             </div>
-          : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:1, background:C.bg }}>
+          : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:24 }}>
               {filtered.map(car => <CarCard key={car.id} car={car} onClick={setSelectedCar} comparar={{ on: comp.includes(car.id), lleno: comp.length >= 3, toggle: toggleComp }}/>)}
             </div>
         }
@@ -2107,7 +2093,7 @@ function NosotrosPage({ navTo }) {
   return (
     <div style={{ paddingTop:68 }}>
       <PageHeader tag="Quiénes somos" bgWord="NOSOTROS">
-        La historia <Red>real</Red>
+        Nuestra <Red>historia</Red>
       </PageHeader>
       <section style={{ padding:"80px 5vw", background:"#0c0c0c" }}>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:76, alignItems:"start" }}>
@@ -2115,7 +2101,7 @@ function NosotrosPage({ navTo }) {
             <FotoFundadores leyenda="Fundadores NordenCars"/>
           </Reveal>
           <div>
-            <Reveal><Tag>Nuestra historia</Tag></Reveal>
+            <Reveal><Tag>Desde 2022</Tag></Reveal>
             <Reveal delay={.1}><SecH style={{ marginBottom:22 }}>Pasión por <Red>los autos</Red></SecH></Reveal>
             <div style={{ width:36, height:2, background:C.red, marginBottom:22 }}/>
             {["Hola a todos. Somos Gonchi y Ale, y esto es Norden Cars. Lo que empezó hace unos años como una pasión compartida por los autos y un camino recorrido en la compra-venta, se formaliza con este paso.",

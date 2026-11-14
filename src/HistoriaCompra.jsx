@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
 /*
- * La historia de Martín (Ale, 2026-10-28): el proceso de compra en 8 pasos, como
+ * Cómo se compra en Norden (Ale, 2026-10-28): el proceso de compra en 8 pasos, como
  * historias de Instagram. Pasa sola mientras está a la vista, se pausa con el
  * mouse encima y se avanza tocando, con las flechas o deslizando.
  *
- * 2026-11-14 (Ale): sin dibujos animados. Cada paso se muestra en un tablero
+ * 2026-11-14 (Ale): sin dibujos animados ni personaje (antes era "la historia de
+ * Martín"); los pasos se cuentan en segunda persona, como guía para el cliente. Cada paso se muestra en un tablero
  * digital tipo instrumental de auto: un cuentavueltas de 8 segmentos que se va
  * encendiendo, la etapa (elección / financiación / entrega) y el avance real.
  * Todo es SVG dibujado acá: no carga imágenes (salvo el logo).
@@ -17,14 +18,14 @@ const LOGO = "/images/img_logo_tight.png"; // 1400×336
 const DURACION = 6.5; // segundos por paso
 
 const PASOS = [
-  { t: "Llega a Norden", d: "Martín entra a nuestra oficina en Yerba Buena. Lo recibimos sin apuro y con un café." },
-  { t: "Pregunta por un auto", d: "Viene por una SUV puntual que vio en Instagram. Lo asesoramos: versión, kilómetros, service y si es la que le conviene." },
-  { t: "Le mostramos el auto", d: "Lo ve en persona, lo revisa y se sube. Sin vueltas y sin compromiso." },
-  { t: "Anticipo + cuotas", d: "Quiere poner un anticipo y financiar el resto con crédito prendario. Le decimos que sí." },
-  { t: "Elige su plan", d: "Le mostramos los planes de financiación. Elige el que entra en su presupuesto y en la cuota que quiere pagar por mes." },
-  { t: "Anticipo y firma", d: "Paga el anticipo y firma el crédito. Todo por escrito, todo claro." },
-  { t: "¡Las llaves!", d: "Le entregamos el auto con la documentación para circular. Se va manejando ese mismo día." },
-  { t: "La transferencia", d: "Los papeles de la transferencia pasan a nuestros gestores, que hacen todo el trámite. Martín no tiene que hacer nada más." },
+  { t: "Llegás a Norden", d: "Venís a nuestra oficina en Galería Mercato, Yerba Buena. Te recibimos sin apuro y con un café." },
+  { t: "Consultás por un auto", d: "Nos contás qué buscás o qué viste en Instagram. Te asesoramos: versión, kilómetros, service y si es el que te conviene." },
+  { t: "Lo ves en persona", d: "Lo revisás, te subís y lo probás. Sin vueltas y sin compromiso." },
+  { t: "Anticipo + cuotas", d: "Si querés poner un anticipo y financiar el resto con crédito prendario, lo armamos." },
+  { t: "Elegís tu plan", d: "Te mostramos los planes de financiación y elegís el que entra en tu presupuesto y en la cuota que querés pagar por mes." },
+  { t: "Anticipo y firma", d: "Pagás el anticipo y firmás el crédito. Todo por escrito, todo claro." },
+  { t: "¡Las llaves!", d: "Te entregamos el auto con la documentación para circular. Te vas manejando ese mismo día." },
+  { t: "La transferencia", d: "Nuestros gestores hacen todo el trámite de la transferencia. Vos no tenés que hacer nada más." },
 ];
 // Etapas reales del proceso (pasos 1-3, 4-6, 7-8)
 const ETAPAS = ["Elección", "Financiación", "Entrega"];
@@ -293,7 +294,7 @@ export default function HistoriaCompra({ mobile }) {
             <button onClick={siguiente} aria-label="Siguiente" style={flecha(false)}>→</button>
           </div>
         )}
-        <p style={{ fontSize: 12, color: "#7a7f8a", fontFamily: "sans-serif", marginTop: 14 }}>Historia ilustrativa. Financiación sujeta a aprobación crediticia.</p>
+        <p style={{ fontSize: 12, color: "#7a7f8a", fontFamily: "sans-serif", marginTop: 14 }}>Financiación sujeta a aprobación crediticia.</p>
       </div>
     </div>
   );
