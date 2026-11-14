@@ -110,7 +110,7 @@ function useCounter(target, duration = 1400) {
     if (!started) return;
     const startTime = performance.now();
     const raf = (now) => {
-      const progress = Math.min((now - startTime) / duration, 1);
+      const progress = Math.max(0, Math.min((now - startTime) / duration, 1)); // el primer cuadro puede venir "antes" del inicio: sin números negativos
       const ease = 1 - Math.pow(1 - progress, 3);
       setCount(Math.round(ease * target));
       if (progress < 1) requestAnimationFrame(raf);
@@ -1426,6 +1426,80 @@ function marcasInicio(okm) {
   return [...enOrden, ...nuevas];
 }
 
+/* ─── VIDEO DE PORTADA (Ale 14/11) ─────────────────────────────────────────────
+   Material de las marcas que mandaron los comerciales (Golf GTI de VW y Fastback
+   Abarth de Fiat), cortado y comprimido: compu 1,7 MB (horizontal), celular 1,2 MB
+   (vertical). Si no puede reproducirse (ahorro de datos, conexión lenta, "menos
+   movimiento"), queda la portada de siempre. Se pausa cuando la portada no se ve.
+   Los tramos son los del armado con ffmpeg: si se cambia el video, actualizarlos. */
+const HERO_VIDEO = {
+  compu: { src: "/videos/hero-compu.mp4", poster: "/videos/hero-compu.jpg", tramos: [{ hasta: 99, auto: "Nuevo Golf GTI", marca: "Volkswagen" }] },
+  celu:  { src: "/videos/hero-celu.mp4",  poster: "/videos/hero-celu.jpg",  tramos: [
+    { hasta: 3.6, auto: "Fastback Abarth", marca: "Fiat" },
+    { hasta: 5.6, auto: "Nuevo Golf GTI",  marca: "Volkswagen" },
+    { hasta: 99,  auto: "Fastback Abarth", marca: "Fiat" },
+  ] },
+};
+function puedeVideo() {
+  try {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return false;
+    const c = navigator.connection;
+    if (c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || ""))) return false;
+  } catch { /* navegador viejo: se intenta igual */ }
+  return true;
+}
+function HeroVideo({ mobile, onListo }) {
+  const ref = useRef(null);
+  const [ok] = useState(puedeVideo);
+  const [listo, setListo] = useState(false);
+  const [tramo, setTramo] = useState(0);
+  const [avance, setAvance] = useState(0);
+  const v = mobile ? HERO_VIDEO.celu : HERO_VIDEO.compu;
+
+  // Pausar cuando la portada sale de la pantalla (batería y datos)
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) el.play?.().catch(() => {}); else el.pause?.(); }, { threshold: .15 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ok, mobile]);
+
+  if (!ok) return null;
+  const alAvanzar = (e) => {
+    const t = e.currentTarget.currentTime, d = e.currentTarget.duration || 1;
+    const k = v.tramos.findIndex(x => t < x.hasta);
+    setTramo(k < 0 ? v.tramos.length - 1 : k);
+    setAvance(t / d);
+  };
+  const actual = v.tramos[tramo] || v.tramos[0];
+  return (
+    <>
+      <video key={v.src} ref={ref} src={v.src} poster={v.poster} autoPlay muted loop playsInline preload="auto" aria-hidden
+        onPlaying={() => { setListo(true); onListo?.(true); }} onError={() => onListo?.(false)} onTimeUpdate={alAvanzar}
+        style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity: listo ? 1 : 0, transition:"opacity 1.2s ease", zIndex:0 }}/>
+      {/* Degradado para que el título, los botones y los números se lean siempre */}
+      <div style={{ position:"absolute", inset:0, zIndex:0, pointerEvents:"none", opacity: listo ? 1 : 0, transition:"opacity 1.2s ease",
+        background: mobile
+          ? "linear-gradient(to bottom, rgba(5,5,5,.88) 0%, rgba(5,5,5,.62) 40%, rgba(5,5,5,.18) 62%, rgba(5,5,5,.25) 80%, rgba(5,5,5,.95) 100%)"
+          : "linear-gradient(90deg, rgba(5,5,5,.92) 0%, rgba(5,5,5,.6) 42%, rgba(5,5,5,.15) 100%), linear-gradient(to top, rgba(5,5,5,.95) 0%, rgba(5,5,5,0) 30%)" }}/>
+      {/* Qué auto se está viendo */}
+      {listo && (
+        // En celular va a la izquierda: a la derecha están los botones de chat y WhatsApp
+        <div aria-hidden style={{ position:"absolute", ...(mobile ? { left:"5vw", flexDirection:"row-reverse" } : { right:"5vw" }), bottom: mobile ? 100 : 112, zIndex:2, display:"flex", alignItems:"center", gap:12, fontFamily:"sans-serif", pointerEvents:"none" }}>
+          <div style={{ textAlign: mobile ? "left" : "right" }}>
+            <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:"rgba(245,245,245,.6)" }}>{actual.marca}</div>
+            <div key={actual.auto} style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize: mobile ? 17 : 20, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", color:C.white, animation:"fadeUp .5s both" }}>{actual.auto}</div>
+          </div>
+          <div style={{ width:2, height:38, borderRadius:2, background:"rgba(255,255,255,.18)", overflow:"hidden" }}>
+            <div style={{ width:"100%", height:`${Math.round(avance * 100)}%`, background:C.red }}/>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingStock, stockError, reintentarStock, config, fotosClientes }) {
   const preview = stockData.filter(v => v.destacado).slice(0,4);
   const shown = preview.length >= 2 ? preview : stockData.slice(0,4);
@@ -1462,6 +1536,9 @@ function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingS
     return () => window.removeEventListener("resize", ck);
   }, []);
 
+  // Con el video andando se ocultan las barras de luz y los autos 3D (quedan de respaldo)
+  const [conVideo, setConVideo] = useState(false);
+
   // Título split por palabra para animación con stagger
   const titleLines = [
     { words: ["Tu", "próximo"], red: false },
@@ -1485,6 +1562,7 @@ function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingS
           position:"absolute", inset:0, display:"flex", gap:"1.4vw",
           justifyContent:"center", alignItems:"center", padding:"0 4vw",
           transform:`translate3d(0, ${carLift*0.22}px, 0)`, willChange:"transform",
+          opacity: conVideo ? 0 : 1, transition:"opacity 1.2s ease",
         }}>
           {HERO_BARS.map((b, i) => (
             <div key={i} style={{
@@ -1496,10 +1574,13 @@ function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingS
         </div>
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right,rgba(5,5,5,1) 18%,rgba(5,5,5,.55) 46%,rgba(5,5,5,.08) 100%)" }}/>
 
+        {/* Video de portada (si no puede reproducirse, queda lo de siempre) */}
+        <HeroVideo mobile={isMobile} onListo={setConVideo}/>
+
         {/* Auto 0km: flota sobre las líneas y se inclina en 3D con el mouse */}
         <div style={isMobile
-          ? { position:"absolute", left:"5%", right:"5%", top:"60%", bottom:"4%", zIndex:1, perspective:1000, pointerEvents:"none" }
-          : { position:"absolute", right:0, top:0, bottom:0, width:"54%", zIndex:1, perspective:1300, pointerEvents:"none", transform:`translate3d(0, ${carLift*0.3}px, 0)` }}>
+          ? { position:"absolute", left:"5%", right:"5%", top:"60%", bottom:"4%", zIndex:1, perspective:1000, pointerEvents:"none", opacity: conVideo ? 0 : 1, transition:"opacity 1s ease" }
+          : { position:"absolute", right:0, top:0, bottom:0, width:"54%", zIndex:1, perspective:1300, pointerEvents:"none", transform:`translate3d(0, ${carLift*0.3}px, 0)`, opacity: conVideo ? 0 : 1, transition:"opacity 1s ease" }}>
           <div style={{ position:"absolute", bottom:"12%", left:"50%", width:"48%", height:24, transform:"translateX(-50%)", background:"radial-gradient(ellipse, rgba(0,0,0,.5), transparent 72%)", filter:"blur(8px)" }}/>
           <div style={{ position:"absolute", inset:"6% 5% 12% 5%", transformStyle:"preserve-3d", transform:`rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`, transition:"transform .2s ease-out" }}>
             <div className="hero-float" style={{ position:"absolute", inset:0 }}>
@@ -1537,7 +1618,7 @@ function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingS
               </div>
             ))}
           </h1>
-          <p style={{ fontSize:14, fontWeight:300, lineHeight:1.8, color:"rgba(245,245,245,.44)", maxWidth:450, marginBottom:42, fontFamily:"sans-serif", animation:"fadeUp .8s .85s both" }}>
+          <p style={{ fontSize:14, fontWeight:300, lineHeight:1.8, color: conVideo ? "rgba(245,245,245,.78)" : "rgba(245,245,245,.44)", maxWidth:450, marginBottom:42, fontFamily:"sans-serif", animation:"fadeUp .8s .85s both" }}>
             {config.hero_subtitulo || "Al precio justo, con la transparencia que merecés. 0km y usados seleccionados en Yerba Buena, Tucumán."}
           </p>
           <div style={{ display:"flex", gap:13, flexWrap:"wrap", animation:"fadeUp .8s 1s both" }}>
@@ -1546,8 +1627,8 @@ function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingS
           </div>
         </div>
 
-        {/* Scroll indicator */}
-        <div style={{ position:"absolute", right:"5vw", bottom:88, display:"flex", flexDirection:"column", alignItems:"center", gap:9, zIndex:2, opacity: heroOpacity, transition:"opacity .25s" }}>
+        {/* Scroll indicator (con video, su lugar lo ocupa el nombre del auto) */}
+        <div style={{ position:"absolute", right:"5vw", bottom:88, display: conVideo ? "none" : "flex", flexDirection:"column", alignItems:"center", gap:9, zIndex:2, opacity: heroOpacity, transition:"opacity .25s" }}>
           <span style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:"#2e2e2e", writingMode:"vertical-rl", fontFamily:"sans-serif" }}>Scroll</span>
           <div style={{ width:1, height:58, background:"linear-gradient(to bottom,#DC2626,transparent)", animation:"pulse 2s ease-in-out infinite" }}/>
         </div>
