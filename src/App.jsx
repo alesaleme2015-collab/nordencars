@@ -50,6 +50,9 @@ const ERP_URL = "https://sistema.nordencars.store";
 
 
 /* ─── CONSTANTES ───────────────────────────────────────────────────────────── */
+// Marcas del inicio (Ale 14/11): salen del sistema (Precios 0km) y se suman solas
+// cuando se carga una nueva (ORA, ArcFox…). Esta lista vieja solo agrega las que
+// todavía no tienen modelos cargados en el sistema, y da el orden mientras carga.
 const MARCAS_0KM = ["Toyota","Fiat","Chevrolet","BAIC","BYD","Jeep","RAM","Volkswagen","Peugeot","Ford","Haval","Citroën","KIA","BMW","MINI","Audi","Hyundai"];
 const CARROCERIAS = ["Todos","Sedán","SUV","Pick-up","Hatchback","Coupé","Otro"];
 
@@ -1015,7 +1018,7 @@ function CitaFundadores({ children }) {
 // Las 17 iguales (Ale 14/11): logo en su pastilla blanca (la arma el ERP para cada
 // marca, también las que no tienen ícono público: BAIC, BYD, Haval) + nombre.
 // Si el logo no carga, queda el nombre solo, con el mismo tamaño de tarjeta.
-function MarcaCard({ brand, onClick, chica }) {
+function MarcaCard({ brand, onClick, chica, logo }) {
   const [imgOk, setImgOk] = useState(true);
   const slug = brand.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   return (
@@ -1024,7 +1027,7 @@ function MarcaCard({ brand, onClick, chica }) {
       <span className="nc-glow"/>
       <span style={{ position:"relative", zIndex:2, height: chica ? 34 : 42, display:"flex", alignItems:"center", justifyContent:"center" }}>
         {imgOk
-          ? <img src={`${ERP_URL}/api/publico/logo-okm/${slug}`} alt={brand} loading="lazy" onError={() => setImgOk(false)} style={{ height: chica ? 34 : 42, width:"auto", maxWidth: chica ? 86 : 120, objectFit:"contain", display:"block", borderRadius:6 }}/>
+          ? <img src={logo || `${ERP_URL}/api/publico/logo-okm/${slug}`} alt={brand} loading="lazy" onError={() => setImgOk(false)} style={{ height: chica ? 34 : 42, width:"auto", maxWidth: chica ? 86 : 120, objectFit:"contain", display:"block", borderRadius:6 }}/>
           : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:900, textTransform:"uppercase", color:C.white }}>{brand}</span>}
       </span>
       <span style={{ position:"relative", zIndex:2, fontFamily:"'Barlow Condensed',sans-serif", fontSize: chica ? 12 : 13, fontWeight:700, textTransform:"uppercase", letterSpacing: chica ? 1.5 : 2.5, color:"rgba(245,245,245,.62)" }}>{brand}</span>
@@ -1371,7 +1374,7 @@ function EntregasPage({ navTo, fotosClientes, videosData }) {
       <section style={{ padding:"70px 5vw 90px", background:C.bg }}>
         <Reveal>
           <p style={{ fontSize:15, fontWeight:300, color:"rgba(245,245,245,.62)", lineHeight:1.7, maxWidth:620, fontFamily:"sans-serif", marginBottom:22 }}>
-            Cada foto es un cliente nuestro el día que se llevó su auto. Sin fotos de catálogo.
+            Estos son algunos de los clientes que ya confiaron en nosotros. <b style={{ color:C.white, fontWeight:500 }}>¿Qué esperás para ser el próximo?</b>
           </p>
           <a href={GOOGLE_RESENA} target="_blank" rel="noreferrer" data-cursor-label="Opinar"
             style={{ display:"inline-flex", alignItems:"center", gap:10, padding:"11px 18px", border:`1px solid ${C.border2}`, borderRadius:8, color:C.white, textDecoration:"none", fontFamily:"sans-serif", fontSize:13 }}>
@@ -1398,7 +1401,21 @@ function EntregasPage({ navTo, fotosClientes, videosData }) {
 }
 
 
-function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, reintentarStock, config, fotosClientes }) {
+const claveMarcaWeb = (m) => String(m).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
+// [{ nombre, logo, enSistema }]: primero las del sistema (en el orden de siempre y
+// después las nuevas), al final las de la lista vieja que el sistema todavía no tiene.
+function marcasInicio(modelos = []) {
+  const delSistema = new Map();
+  for (const m of modelos) if (m?.marca && !delSistema.has(claveMarcaWeb(m.marca))) delSistema.set(claveMarcaWeb(m.marca), { nombre: m.marca, logo: m.logo_pastilla || null, enSistema: true });
+  if (!delSistema.size) return MARCAS_0KM.map(n => ({ nombre: n, logo: null, enSistema: false }));
+  const viejas = MARCAS_0KM.map(n => ({ nombre: n, clave: claveMarcaWeb(n) }));
+  const enOrden = viejas.filter(v => delSistema.has(v.clave)).map(v => delSistema.get(v.clave));
+  const nuevas = [...delSistema.entries()].filter(([k]) => !viejas.some(v => v.clave === k)).map(([, v]) => v).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  const sinCargar = viejas.filter(v => !delSistema.has(v.clave)).map(v => ({ nombre: v.nombre, logo: null, enSistema: false }));
+  return [...enOrden, ...nuevas, ...sinCargar];
+}
+
+function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingStock, stockError, reintentarStock, config, fotosClientes }) {
   const preview = stockData.filter(v => v.destacado).slice(0,4);
   const shown = preview.length >= 2 ? preview : stockData.slice(0,4);
   const mob = useIsMobile();
@@ -1569,7 +1586,7 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
           gap: mob ? 10 : 16,
           background:"transparent",
         }}>
-          {MARCAS_0KM.map((m,i) => <Reveal key={m} delay={i*.022}><MarcaCard brand={m} chica={mob} onClick={() => navTo("okm")}/></Reveal>)}
+          {marcasInicio(okm?.modelos).map((m,i) => <Reveal key={m.nombre} delay={Math.min(i, 16)*.022}><MarcaCard brand={m.nombre} logo={m.logo} chica={mob} onClick={() => verMarcaOkm(m.enSistema ? m.nombre : null)}/></Reveal>)}
         </div>
       </section>
 
@@ -2639,9 +2656,9 @@ function TeilenModal({ onClose, precio }) {
   );
 }
 
-function OkmPage({ navTo, okm, abrirTeilen }) {
+function OkmPage({ navTo, okm, abrirTeilen, marcaInicial }) {
   const mob = useIsMobile();
-  const [marca, setMarca] = useState("Todas");
+  const [marca, setMarca] = useState(marcaInicial || "Todas");
   const [q, setQ] = useState("");
   const [sel, setSel] = useState(null);
   const marcas = ["Todas", ...Array.from(new Set(okm.modelos.map(m => m.marca)))];
@@ -3253,6 +3270,7 @@ export default function App() {
   }, []);
   const videosData = SIN_VIDEOS;
   const okm = useOkm();
+  const [okmMarca, setOkmMarca] = useState(null); // marca tocada en el inicio → 0km filtrada
   const [teilen, setTeilen] = useState(false);
   const abrirTeilen = (precio) => setTeilen({ precio: typeof precio === "number" ? precio : null });
 
@@ -3398,6 +3416,7 @@ export default function App() {
   };
 
   const navTo = (p) => {
+    setOkmMarca(null); // entrar a 0km desde el menú muestra todas las marcas
     if (p === pageRef.current) { window.scrollTo({ top:0, behavior:"smooth" }); return; }
     empujarPagina({ page:p }, urlDePagina(p));
     cambiarPagina(p);
@@ -3435,8 +3454,8 @@ export default function App() {
       <Nav page={page} navTo={navTo} scrolled={scrolled}/>
 
       <div style={pageStyle}>
-        {page==="home"     && <HomePage navTo={navTo} setSelectedCar={setSelectedCar} stockData={stockData} loadingStock={loadingStock} stockError={stockError} reintentarStock={() => setStockIntento(n => n + 1)} config={config} fotosClientes={fotosClientes}/>}
-        {page==="okm"      && <OkmPage navTo={navTo} okm={okm} abrirTeilen={abrirTeilen}/>}
+        {page==="home"     && <HomePage okm={okm} verMarcaOkm={(m) => { navTo("okm"); setOkmMarca(m); }} navTo={navTo} setSelectedCar={setSelectedCar} stockData={stockData} loadingStock={loadingStock} stockError={stockError} reintentarStock={() => setStockIntento(n => n + 1)} config={config} fotosClientes={fotosClientes}/>}
+        {page==="okm"      && <OkmPage navTo={navTo} okm={okm} abrirTeilen={abrirTeilen} marcaInicial={okmMarca}/>}
         {page==="stock"    && <StockPage stockData={stockData} setSelectedCar={setSelectedCar} loading={loadingStock} error={stockError} reintentar={() => setStockIntento(n => n + 1)}/>}
         {page==="financiacion" && <FinanciacionPage navTo={navTo} abrirTeilen={abrirTeilen}/>}
         {page==="entregas" && <EntregasPage navTo={navTo} fotosClientes={fotosClientes} videosData={videosData}/>}
