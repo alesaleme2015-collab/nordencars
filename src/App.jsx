@@ -422,12 +422,17 @@ const BigH = ({ children, sz = "clamp(52px,8.5vw,108px)", style = {} }) => (
   <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:sz, fontWeight:900, lineHeight:.88, letterSpacing:-3, textTransform:"uppercase", color:C.white, ...style }}>{children}</h1>
 );
 // Títulos de sección: entran con una cortina de abajo hacia arriba, de borroso a nítido.
+// Se observa un envoltorio y no el h2: Chrome calcula la visibilidad con el recorte
+// (clip-path) ya aplicado, y como el título arranca 100% recortado nunca "se veía"
+// y quedaba escondido para siempre (bug desde el 28/10, arreglado el 14/11).
 function SecH({ children, style = {} }) {
   const [ref, v] = useReveal(.2);
   return (
-    <h2 ref={ref} style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"clamp(30px,4vw,58px)", fontWeight:800, textTransform:"uppercase", lineHeight:.92, letterSpacing:-1, color:C.white,
+    <div ref={ref}>
+    <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"clamp(30px,4vw,58px)", fontWeight:800, textTransform:"uppercase", lineHeight:.92, letterSpacing:-1, color:C.white,
       clipPath: v ? "inset(-20% -5% -25% -5%)" : "inset(0 0 100% 0)", transform: v ? "none" : "translateY(.4em)", filter: v ? "none" : "blur(6px)",
       transition:"clip-path 1.1s cubic-bezier(.16,1,.3,1), transform 1.1s cubic-bezier(.16,1,.3,1), filter .9s ease", ...style }}>{children}</h2>
+    </div>
   );
 }
 
