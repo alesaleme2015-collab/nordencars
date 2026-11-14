@@ -127,7 +127,7 @@ function useReveal(threshold = 0.07) {
 function Reveal({ children, delay = 0 }) {
   const [ref, v] = useReveal();
   return (
-    <div ref={ref} style={{ opacity: v ? 1 : 0, transform: v ? "translateY(0)" : "translateY(26px)", transition: `opacity .72s cubic-bezier(.16,1,.3,1) ${delay}s, transform .72s cubic-bezier(.16,1,.3,1) ${delay}s` }}>
+    <div ref={ref} style={{ opacity: v ? 1 : 0, transform: v ? "translateY(0)" : "translateY(30px)", transition: `opacity .9s cubic-bezier(.16,1,.3,1) ${delay}s, transform 1s cubic-bezier(.16,1,.3,1) ${delay}s` }}>
       {children}
     </div>
   );
@@ -422,16 +422,22 @@ const BigH = ({ children, sz = "clamp(52px,8.5vw,108px)", style = {} }) => (
   <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:sz, fontWeight:900, lineHeight:.88, letterSpacing:-3, textTransform:"uppercase", color:C.white, ...style }}>{children}</h1>
 );
 // Títulos de sección: entran con una cortina de abajo hacia arriba, de borroso a nítido.
+// Se observa un envoltorio y no el h2: Chrome calcula la visibilidad con el recorte
+// (clip-path) ya aplicado, y como el título arranca 100% recortado nunca "se veía"
+// y quedaba escondido para siempre (bug desde el 28/10, arreglado el 14/11).
 function SecH({ children, style = {} }) {
   const [ref, v] = useReveal(.2);
   return (
-    <h2 ref={ref} style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"clamp(30px,4vw,58px)", fontWeight:800, textTransform:"uppercase", lineHeight:.92, letterSpacing:-1, color:C.white,
+    <div ref={ref}>
+    <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"clamp(30px,4vw,58px)", fontWeight:800, textTransform:"uppercase", lineHeight:.92, letterSpacing:-1, color:C.white,
       clipPath: v ? "inset(-20% -5% -25% -5%)" : "inset(0 0 100% 0)", transform: v ? "none" : "translateY(.4em)", filter: v ? "none" : "blur(6px)",
       transition:"clip-path 1.1s cubic-bezier(.16,1,.3,1), transform 1.1s cubic-bezier(.16,1,.3,1), filter .9s ease", ...style }}>{children}</h2>
+    </div>
   );
 }
 
-function Btn({ children, primary, full, small, onClick, disabled = false, href, target = "_blank" }) {
+// claro: botón secundario sobre fondo claro (texto y borde oscuros).
+function Btn({ children, primary, full, small, onClick, disabled = false, href, target = "_blank", claro }) {
   const [hov, setHov] = useState(false);
   const [tx, setTx] = useState(0);
   const [ty, setTy] = useState(0);
@@ -454,8 +460,8 @@ function Btn({ children, primary, full, small, onClick, disabled = false, href, 
     cursor: disabled ? "not-allowed" : "pointer", border:"none",
     transition:"background .3s, color .3s, box-shadow .3s, transform .25s cubic-bezier(.16,1,.3,1), outline-color .3s",
     background: primary ? (hov ? C.red2 : C.red) : "transparent",
-    color: C.white, opacity: disabled ? .5 : 1, textDecoration:"none",
-    outline: primary ? "none" : `1px solid ${hov ? "rgba(245,245,245,.38)" : "rgba(245,245,245,.12)"}`,
+    color: claro && !primary ? "#0a0c10" : C.white, opacity: disabled ? .5 : 1, textDecoration:"none",
+    outline: primary ? "none" : claro ? `1px solid ${hov ? "rgba(10,12,16,.5)" : "rgba(10,12,16,.18)"}` : `1px solid ${hov ? "rgba(245,245,245,.38)" : "rgba(245,245,245,.12)"}`,
     transform: primary
       ? `translate(${tx}px, ${ty - (hov ? 1 : 0)}px)`
       : "none",
@@ -601,7 +607,7 @@ function Nav({ page, navTo, scrolled }) {
 
   return (
     <>
-      <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:400, background: scrolled ? "rgba(9,9,9,.97)" : "rgba(9,9,9,.65)", backdropFilter:"blur(20px)", borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent", transition:"all .4s" }}>
+      <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:400, background: scrolled ? "rgba(9,10,13,.78)" : "rgba(9,9,9,.55)", backdropFilter:"blur(16px) saturate(1.4)", WebkitBackdropFilter:"blur(16px) saturate(1.4)", borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent", transition:"all .4s" }}>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 5vw", height:64 }}>
           <button onClick={() => go("home")} style={{ background:"none", border:"none", cursor:"pointer", padding:0 }}>
             <img src={IMG_LOGO} alt="NordenCars" style={{ height:34 }}/>
@@ -609,9 +615,9 @@ function Nav({ page, navTo, scrolled }) {
           {!compacto && (
             <div style={{ display:"flex", alignItems:"center", gap:34 }}>
               {links.filter(([p]) => p !== "vender").map(([p,l]) => (
-                <button key={p} onClick={() => go(p)} className="nav-link"
+                <button key={p} onClick={() => go(p)} className="nav-link" data-activo={page===p ? "1" : "0"}
                   style={{ background:"none", border:"none", cursor:"pointer", padding:"6px 0", fontSize:12.5, letterSpacing:2.4, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:500,
-                    color: page===p ? C.white : "rgba(245,245,245,.62)", borderBottom:`2px solid ${page===p ? C.red : "transparent"}`, transition:"color .25s, border-color .25s" }}>
+                    color: page===p ? C.white : "rgba(245,245,245,.62)", transition:"color .25s" }}>
                   {l}
                 </button>
               ))}
@@ -691,14 +697,15 @@ const precioDe = (car) => {
 };
 
 /* Mientras llega el stock real del ERP: tarjetas vacías (nunca autos de muestra). */
-function CarSkeleton() {
+function CarSkeleton({ claro }) {
+  const fondo = claro ? "#fff" : C.zinc, foto = claro ? "#e8e9ed" : C.zinc2, linea = claro ? "#e3e4e8" : C.zinc3;
   return (
-    <div style={{ background:C.zinc, minHeight:360, display:"flex", flexDirection:"column" }}>
-      <div style={{ aspectRatio:"4/3", background:C.zinc2, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
+    <div style={{ background:fondo, minHeight:360, display:"flex", flexDirection:"column", borderRadius: claro ? 12 : 0, overflow:"hidden" }}>
+      <div style={{ aspectRatio:"4/3", background:foto, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
       <div style={{ padding:"18px 18px 22px", display:"flex", flexDirection:"column", gap:10 }}>
-        <div style={{ height:12, width:"40%", background:C.zinc3, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
-        <div style={{ height:18, width:"75%", background:C.zinc3, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
-        <div style={{ height:14, width:"55%", background:C.zinc3, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
+        <div style={{ height:12, width:"40%", background:linea, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
+        <div style={{ height:18, width:"75%", background:linea, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
+        <div style={{ height:14, width:"55%", background:linea, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
       </div>
       <style>{"@keyframes ncPulso{0%,100%{opacity:.55}50%{opacity:1}}"}</style>
     </div>
@@ -719,7 +726,8 @@ function StockNoDisponible({ reintentar }) {
   );
 }
 
-function CarCard({ car, onClick, comparar }) {
+// claro: versión "showroom" para el stock destacado del inicio (fondo claro, sin giro 3D).
+function CarCard({ car, onClick, comparar, claro }) {
   const [hov, setHov] = useState(false);
   const [fotoRef, fotoVista] = useReveal(.15);
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, mx: 50, my: 50 });
@@ -748,7 +756,17 @@ function CarCard({ car, onClick, comparar }) {
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
       onClick={() => onClick(car)}
-      style={{
+      style={claro ? {
+        // Showroom: tarjeta blanca, curva sutil, sombra en capas y elevación suave
+        background:"#fff", cursor:"pointer", position:"relative", overflow:"hidden", borderRadius:12,
+        border:`1px solid ${hov ? "rgba(220,38,38,.28)" : "rgba(10,12,16,.06)"}`,
+        transform: hov ? "translateY(-6px)" : "translateY(0)",
+        boxShadow: hov
+          ? "0 2px 4px rgba(10,12,16,.04), 0 12px 24px rgba(10,12,16,.08), 0 32px 64px rgba(10,12,16,.12)"
+          : "0 1px 2px rgba(10,12,16,.04), 0 6px 16px rgba(10,12,16,.05)",
+        transition:"transform .6s cubic-bezier(.16,1,.3,1), box-shadow .6s cubic-bezier(.16,1,.3,1), border-color .3s",
+        willChange:"transform",
+      } : {
         background: hov ? C.zinc2 : C.zinc,
         cursor:"pointer", position:"relative", overflow:"hidden",
         border:`1px solid ${hov ? "rgba(220,38,38,.4)" : C.border}`,
@@ -765,20 +783,20 @@ function CarCard({ car, onClick, comparar }) {
       {/* Spotlight que sigue al cursor */}
       <div style={{
         position:"absolute", inset:0,
-        background: `radial-gradient(420px circle at ${tilt.mx}% ${tilt.my}%, rgba(220,38,38,.10), transparent 55%)`,
+        background: `radial-gradient(420px circle at ${tilt.mx}% ${tilt.my}%, rgba(220,38,38,${claro ? .05 : .10}), transparent 55%)`,
         opacity: hov ? 1 : 0,
         transition:"opacity .35s",
         pointerEvents:"none", zIndex:3,
       }}/>
       {/* Image */}
-      <div ref={fotoRef} style={{ height:200, overflow:"hidden", position:"relative", background:C.zinc3 }}>
+      <div ref={fotoRef} style={{ height:200, overflow:"hidden", position:"relative", background: claro ? "#e8e9ed" : C.zinc3 }}>
         {img
           ? <img src={img} alt={car.modelo} loading="lazy" style={{ width:"100%", height:"100%", objectFit:"cover",
-              clipPath: fotoVista ? "inset(0)" : "inset(0 100% 0 0)", transform: !fotoVista ? "scale(1.18)" : hov ? "scale(1.07)" : "scale(1)",
-              transition:"transform .9s cubic-bezier(.16,1,.3,1), clip-path 1.1s cubic-bezier(.77,0,.18,1)" }}/>
+              clipPath: fotoVista ? "inset(0)" : "inset(0 100% 0 0)", transform: !fotoVista ? "scale(1.18)" : hov ? (claro ? "scale(1.06)" : "scale(1.07)") : "scale(1)",
+              transition: claro ? "transform .6s cubic-bezier(.16,1,.3,1), clip-path 1.1s cubic-bezier(.77,0,.18,1)" : "transform .9s cubic-bezier(.16,1,.3,1), clip-path 1.1s cubic-bezier(.77,0,.18,1)" }}/>
           : <div style={{ width:"100%", height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6 }}>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:46, fontWeight:900, color:"rgba(255,255,255,.03)", letterSpacing:-3 }}>{car.marca}</div>
-              <div style={{ fontSize:11.5, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.11)", fontFamily:"sans-serif" }}>Foto próximamente</div>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:46, fontWeight:900, color: claro ? "rgba(10,12,16,.08)" : "rgba(255,255,255,.03)", letterSpacing:-3 }}>{car.marca}</div>
+              <div style={{ fontSize:11.5, letterSpacing:3, textTransform:"uppercase", color: claro ? "rgba(10,12,16,.4)" : "rgba(255,255,255,.11)", fontFamily:"sans-serif" }}>Foto próximamente</div>
             </div>
         }
         <div style={{ position:"absolute", top:11, left:11, display:"flex", flexDirection:"column", alignItems:"flex-start", gap:5, zIndex:2 }}>
@@ -800,15 +818,15 @@ function CarCard({ car, onClick, comparar }) {
       {/* Body */}
       <div style={{ padding:"18px 20px" }}>
         <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:4, fontFamily:"sans-serif" }}>{car.marca}</div>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:25, fontWeight:700, textTransform:"uppercase", color:C.white, lineHeight:1, letterSpacing:-.5, marginBottom:2 }}>{car.modelo}</div>
-        {car.version && <div style={{ fontSize:12, color:C.muted, marginBottom:2, fontFamily:"sans-serif" }}>{car.version}</div>}
-        <div style={{ fontSize:12, color:C.muted2, marginBottom:15, fontFamily:"sans-serif" }}>{car.anio} · {km} · {car.color||""}</div>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:13, borderTop:`1px solid ${C.border}` }}>
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:25, fontWeight:700, textTransform:"uppercase", color: claro ? "#0a0c10" : C.white, lineHeight:1, letterSpacing:-.5, marginBottom:2 }}>{car.modelo}</div>
+        {car.version && <div style={{ fontSize:12, color: claro ? "#555b67" : C.muted, marginBottom:2, fontFamily:"sans-serif" }}>{car.version}</div>}
+        <div style={{ fontSize:12, color: claro ? "#666c78" : C.muted2, marginBottom:15, fontFamily:"sans-serif" }}>{car.anio} · {km} · {car.color||""}</div>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:13, borderTop:`1px solid ${claro ? "rgba(10,12,16,.08)" : C.border}` }}>
           <div>
-            <div style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", color:C.muted2, fontFamily:"sans-serif", marginBottom:2 }}>Precio</div>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:21, fontWeight:700, color:C.white }}>{precio}</div>
+            <div style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", color: claro ? "#666c78" : C.muted2, fontFamily:"sans-serif", marginBottom:2 }}>Precio</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize: claro ? 23 : 21, fontWeight:700, color: claro ? "#0a0c10" : C.white }}>{precio}</div>
           </div>
-          <div style={{ fontSize:11.5, letterSpacing:2, textTransform:"uppercase", color:hov?C.red:C.muted, fontFamily:"sans-serif", transition:"color .3s" }}>Ver más →</div>
+          <div style={{ fontSize:11.5, letterSpacing:2, textTransform:"uppercase", color:hov?C.red:(claro ? "#555b67" : C.muted), fontFamily:"sans-serif", transition:"color .3s" }}>Ver más →</div>
         </div>
       </div>
     </div>
@@ -918,7 +936,7 @@ function ServiceIcon({ name, size = 30 }) {
 function FlipCard({ s }) {
   const [flipped, setFlipped] = useState(false);
   return (
-    <div onMouseEnter={() => setFlipped(true)} onMouseLeave={() => setFlipped(false)}
+    <div onMouseEnter={() => setFlipped(true)} onMouseLeave={() => setFlipped(false)} className="nc-spot"
       style={{ perspective:1100, cursor:"pointer", height:186 }}>
       <div style={{
         position:"relative", width:"100%", height:"100%",
@@ -929,12 +947,13 @@ function FlipCard({ s }) {
         {/* Front */}
         <div style={{
           position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden",
-          background:C.zinc, padding:"26px 22px",
+          background:"linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), #10131a", padding:"26px 22px",
           display:"flex", flexDirection:"column", justifyContent:"space-between",
-          borderTop:`1px solid ${flipped?C.red:"rgba(255,255,255,.06)"}`, transition:"border-color .4s",
+          borderRadius:10, border:"1px solid rgba(255,255,255,.08)", overflow:"hidden",
         }}>
-          <div style={{ color:C.red, height:32, display:"flex", alignItems:"center" }}><ServiceIcon name={s.i}/></div>
-          <div>
+          <span className="nc-glow"/>
+          <div style={{ position:"relative", zIndex:2, color:C.red, height:32, display:"flex", alignItems:"center" }}><ServiceIcon name={s.i}/></div>
+          <div style={{ position:"relative", zIndex:2 }}>
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:19, fontWeight:700, textTransform:"uppercase", color:C.white, lineHeight:1.08, marginBottom:9, letterSpacing:.3 }}>{s.t}</div>
             <div style={{ fontSize:11, letterSpacing:2.5, color:C.muted2, textTransform:"uppercase", fontFamily:"sans-serif", display:"flex", alignItems:"center", gap:7 }}><span style={{ width:14, height:1, background:C.red }}/>Ver más</div>
           </div>
@@ -942,10 +961,10 @@ function FlipCard({ s }) {
         {/* Back */}
         <div style={{
           position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden",
-          background:"linear-gradient(155deg,#181112 0%,#110c0d 100%)", padding:"26px 22px",
+          background:"linear-gradient(155deg,#1a1213 0%,#110c0d 100%)", padding:"26px 22px",
           transform:"rotateY(180deg)",
           display:"flex", flexDirection:"column", justifyContent:"center",
-          borderLeft:`2px solid ${C.red}`,
+          borderRadius:10, border:"1px solid rgba(220,38,38,.35)", overflow:"hidden",
         }}>
           <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, textTransform:"uppercase", letterSpacing:2, color:C.red, marginBottom:10 }}>{s.t}</div>
           <p style={{ fontSize:12.5, fontWeight:300, lineHeight:1.7, color:"rgba(245,245,245,.74)", fontFamily:"sans-serif", margin:0 }}>{s.d}</p>
@@ -973,63 +992,56 @@ function ReviewTile({ r }) {
   );
 }
 
-/* ─── BRAND CARD (marcas 0km) — estilo Apple/Porsche ───────────────────────── */
-// Logo + nombre siempre visibles. Hover: logo se ilumina, línea roja crece, leve scale up.
-function FlipBrandCard({ brand }) {
-  const [hov, setHov] = useState(false);
-  const [imgOk, setImgOk] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const ck = () => setIsMobile(window.innerWidth < 760);
-    ck(); window.addEventListener("resize", ck);
-    return () => window.removeEventListener("resize", ck);
-  }, []);
-  // Simple Icons: logo monocromo por marca. Slug = nombre sin acentos en minúscula.
-  const slug = brand.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-  const logoSrc = `https://cdn.simpleicons.org/${slug}`;
-  if (isMobile) {
-    return (
-      <div style={{ height:120, background:"linear-gradient(180deg,#161616,#0e0e0e)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:12, padding:14, borderBottom:`2px solid ${C.red}` }}>
-        {imgOk
-          ? <img src={logoSrc} alt={brand} onError={() => setImgOk(false)} style={{ maxWidth:"70%", maxHeight:50, objectFit:"contain", filter:"brightness(0) invert(1)" }}/>
-          : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:900, color:C.white }}>{brand}</span>}
-        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:2, color:"rgba(245,245,245,.55)" }}>{brand}</span>
-      </div>
-    );
-  }
+/* ─── FUNDADORES: foto y cita con acabado editorial (Ale 14/11: no se tocan ni
+   la foto ni el texto, solo el marco) ─────────────────────────────────────── */
+function FotoFundadores({ leyenda }) {
   return (
-    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ perspective:900, cursor:"pointer", height:130 }}>
-      <div style={{
-        position:"relative", width:"100%", height:"100%", transformStyle:"preserve-3d",
-        transform: hov ? "rotateY(180deg)" : "rotateY(0deg)",
-        transition:"transform .6s cubic-bezier(.16,1,.3,1)",
-      }}>
-        {/* Frente: nombre de la marca */}
-        <div style={{
-          position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden",
-          background:"linear-gradient(180deg,#141414 0%,#0e0e0e 100%)",
-          display:"flex", alignItems:"center", justifyContent:"center",
-        }}>
-          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:900, letterSpacing:-.5, textTransform:"uppercase", color:"rgba(245,245,245,.5)" }}>{brand}</span>
-        </div>
-        {/* Dorso: logo de la marca (se revela al girar) */}
-        <div style={{
-          position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden",
-          transform:"rotateY(180deg)",
-          background:"linear-gradient(180deg,#1d1d1d 0%,#121212 100%)",
-          display:"flex", alignItems:"center", justifyContent:"center", padding:20,
-          borderBottom:`2px solid ${C.red}`,
-        }}>
-          {imgOk ? (
-            <img src={logoSrc} alt={brand} onError={() => setImgOk(false)}
-              style={{ maxWidth:"68%", maxHeight:44, objectFit:"contain", filter:"brightness(0) invert(1)" }}/>
-          ) : (
-            <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:900, letterSpacing:-.5, textTransform:"uppercase", color:C.white }}>{brand}</span>
-          )}
+    <div style={{ position:"relative", isolation:"isolate" }}>
+      {/* Acento rojo detrás, como antes */}
+      <div style={{ position:"absolute", top:-10, right:-10, width:"36%", height:"36%", border:`2px solid ${C.red}`, borderRadius:12, zIndex:-1 }}/>
+      <div style={{ position:"relative", borderRadius:12, overflow:"hidden", border:"1px solid rgba(255,255,255,.12)",
+        boxShadow:"0 2px 6px rgba(0,0,0,.4), 0 30px 60px -12px rgba(0,0,0,.75), 0 60px 120px -30px rgba(0,0,0,.6)" }}>
+        <img src={IMG_GONCHI} alt="Alejandro y Gonchi — NordenCars" style={{ width:"100%", display:"block", objectFit:"cover" }}/>
+        <div style={{ position:"absolute", inset:0, boxShadow:"inset 0 0 0 1px rgba(255,255,255,.06), inset 0 -120px 120px -60px rgba(0,0,0,.55)", pointerEvents:"none" }}/>
+        <div style={{ position:"absolute", bottom:0, left:0, right:0, background:"linear-gradient(to top,rgba(0,0,0,.88),transparent)", padding:"22px 20px 18px" }}>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:15, fontWeight:700, textTransform:"uppercase", color:"#fff", letterSpacing:1.5 }}>Alejandro <Red>&</Red> Gonchi · {leyenda}</div>
         </div>
       </div>
     </div>
+  );
+}
+function CitaFundadores({ children }) {
+  return (
+    <figure style={{ position:"relative", margin:"0 0 30px", padding:"26px 26px 22px 30px", borderRadius:12,
+      background:"linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.01))", border:"1px solid rgba(255,255,255,.08)",
+      boxShadow:"0 24px 60px -24px rgba(0,0,0,.7)" }}>
+      <div aria-hidden style={{ position:"absolute", top:-26, left:18, fontFamily:"'Barlow Condensed',sans-serif", fontSize:110, fontWeight:900, lineHeight:1, color:C.red, opacity:.9 }}>“</div>
+      <blockquote style={{ margin:0, fontSize:17, fontWeight:300, lineHeight:1.75, color:"rgba(245,245,245,.8)", fontFamily:"sans-serif" }}>{children}</blockquote>
+      <figcaption style={{ marginTop:16, display:"flex", alignItems:"center", gap:10, fontFamily:"'Barlow Condensed',sans-serif", fontSize:14, fontWeight:700, letterSpacing:2, textTransform:"uppercase", color:C.muted }}>
+        <span style={{ width:24, height:2, background:C.red }}/>Ale & Gonchi · Fundadores
+      </figcaption>
+    </figure>
+  );
+}
+
+/* ─── MARCA 0KM (inicio) ───────────────────────────────────────────────────── */
+// Las 17 iguales (Ale 14/11): logo en su pastilla blanca (la arma el ERP para cada
+// marca, también las que no tienen ícono público: BAIC, BYD, Haval) + nombre.
+// Si el logo no carga, queda el nombre solo, con el mismo tamaño de tarjeta.
+function MarcaCard({ brand, onClick, chica }) {
+  const [imgOk, setImgOk] = useState(true);
+  const slug = brand.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  return (
+    <button onClick={onClick} className="nc-spot nc-tile" data-cursor-label="Ver 0km" aria-label={`Ver 0km ${brand}`}
+      style={{ width:"100%", height: chica ? 104 : 132, cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap: chica ? 10 : 14, padding: chica ? "12px 6px" : "16px 12px", color:"inherit", font:"inherit" }}>
+      <span className="nc-glow"/>
+      <span style={{ position:"relative", zIndex:2, height: chica ? 34 : 42, display:"flex", alignItems:"center", justifyContent:"center" }}>
+        {imgOk
+          ? <img src={`${ERP_URL}/api/publico/logo-okm/${slug}`} alt={brand} loading="lazy" onError={() => setImgOk(false)} style={{ height: chica ? 34 : 42, width:"auto", maxWidth: chica ? 86 : 120, objectFit:"contain", display:"block", borderRadius:6 }}/>
+          : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:900, textTransform:"uppercase", color:C.white }}>{brand}</span>}
+      </span>
+      <span style={{ position:"relative", zIndex:2, fontFamily:"'Barlow Condensed',sans-serif", fontSize: chica ? 12 : 13, fontWeight:700, textTransform:"uppercase", letterSpacing: chica ? 1.5 : 2.5, color:"rgba(245,245,245,.62)" }}>{brand}</span>
+    </button>
   );
 }
 
@@ -1386,17 +1398,18 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
       <Marquee/>
 
       {/* ── STOCK PREVIEW ── */}
-      <section style={{ padding:"100px 5vw", background:"linear-gradient(to bottom,#0d0d0d,#111)" }}>
+      {/* Showroom claro (Ale 14/11): corta el negro y hace brillar las fotos de los autos */}
+      <section style={{ padding:"100px 5vw", background:"#F5F5F7", colorScheme:"light" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:48, flexWrap:"wrap", gap:18 }}>
-          <div><Reveal><Tag>Stock destacado</Tag></Reveal><Reveal delay={.1}><SecH>Vehículos <Red>disponibles</Red></SecH></Reveal></div>
-          <Reveal><Btn onClick={() => navTo("stock")}>Ver todo el stock →</Btn></Reveal>
+          <div><Reveal><Tag>Stock destacado</Tag></Reveal><Reveal delay={.1}><SecH style={{ color:"#0a0c10" }}>Vehículos <Red>disponibles</Red></SecH></Reveal></div>
+          <Reveal><Btn claro onClick={() => navTo("stock")}>Ver todo el stock →</Btn></Reveal>
         </div>
         {stockError && !shown.length
-          ? <StockNoDisponible reintentar={reintentarStock}/>
-          : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:1, background:C.bg }}>
+          ? <div style={{ background:C.bg, borderRadius:12 }}><StockNoDisponible reintentar={reintentarStock}/></div>
+          : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:24 }}>
               {loadingStock && !shown.length
-                ? [0,1,2,3].map(i => <CarSkeleton key={i}/>)
-                : shown.map((car,i) => <Reveal key={car.id} delay={i*.07}><CarCard car={car} onClick={setSelectedCar}/></Reveal>)}
+                ? [0,1,2,3].map(i => <CarSkeleton key={i} claro/>)
+                : shown.map((car,i) => <Reveal key={car.id} delay={i*.07}><CarCard car={car} onClick={setSelectedCar} claro/></Reveal>)}
             </div>}
       </section>
 
@@ -1416,11 +1429,11 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
         </div>
         <div style={{
           display:"grid",
-          gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",
-          gap:1,
+          gridTemplateColumns: mob ? "repeat(3,1fr)" : "repeat(auto-fill,minmax(160px,1fr))",
+          gap: mob ? 10 : 16,
           background:"transparent",
         }}>
-          {MARCAS_0KM.map((m,i) => <Reveal key={m} delay={i*.022}><FlipBrandCard brand={m}/></Reveal>)}
+          {MARCAS_0KM.map((m,i) => <Reveal key={m} delay={i*.022}><MarcaCard brand={m} chica={mob} onClick={() => navTo("okm")}/></Reveal>)}
         </div>
       </section>
 
@@ -1439,7 +1452,7 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
         <div style={{ position:"relative", zIndex:1 }}>
           <Reveal><Tag>Por qué elegirnos</Tag></Reveal>
           <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Nuestro <Red>compromiso</Red></SecH></Reveal>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(198px,1fr))", gap:1, background:"transparent" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(198px,1fr))", gap:18, background:"transparent" }}>
             {[{i:"stock",t:"Stock seleccionado",d:"Cada auto pasa una revisión rigurosa antes de entrar al catálogo. Solo publicamos lo que recomendaríamos a un amigo."},
               {i:"inspeccion",t:"Inspección pre-compra",d:"Revisión técnica completa del vehículo: te mostramos el estado real, sin sorpresas, antes de que compres."},
               {i:"transparencia",t:"Transparencia total",d:"Historial completo y documentación en orden. Sin letras chicas, sin sorpresas. Lo que acordamos es lo que firmamos."},
@@ -1508,19 +1521,14 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
       <section style={{ padding:"100px 5vw", background:`linear-gradient(to bottom, ${C.bg} 0%, ${C.carbon} 100%)` }}>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:72, alignItems:"center" }}>
           <Reveal>
-            <div style={{ position:"relative" }}>
-              <img src={IMG_GONCHI} alt="Alejandro y Gonchi — NordenCars" style={{ width:"100%", display:"block", objectFit:"cover" }}/>
-              <div style={{ position:"absolute", top:-8, right:-8, width:"36%", height:"36%", border:`2px solid ${C.red}`, zIndex:-1 }}/>
-              <div style={{ position:"absolute", bottom:0, left:0, right:0, background:"linear-gradient(to top,rgba(0,0,0,.88),transparent)", padding:"18px" }}>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:14, fontWeight:700, textTransform:"uppercase", color:"#fff", letterSpacing:1 }}>Alejandro <Red>&</Red> Gonchi · Fundadores</div>
-              </div>
-            </div>
+            <FotoFundadores leyenda="Fundadores"/>
           </Reveal>
           <div>
             <Reveal><Tag>Quiénes somos</Tag></Reveal>
-            <Reveal delay={.1}><SecH style={{ marginBottom:20 }}>La historia <Red>real</Red></SecH></Reveal>
-            <div style={{ width:36, height:2, background:C.red, marginBottom:20 }}/>
-            <Reveal delay={.2}><p style={{ fontSize:14, fontWeight:300, lineHeight:1.85, color:"rgba(245,245,245,.46)", marginBottom:18, fontFamily:"sans-serif" }}>"Hola a todos. Somos Gonchi y Ale. Lo que empezó como una pasión por los autos se formaliza con este paso. Nuestro objetivo: ayudarte a encontrar el vehículo que buscás, al precio justo y con la transparencia que merecés."</p></Reveal>
+            <Reveal delay={.1}><SecH style={{ marginBottom:24 }}>La historia <Red>real</Red></SecH></Reveal>
+            <Reveal delay={.2}>
+              <CitaFundadores>Hola a todos. Somos Gonchi y Ale. Lo que empezó como una pasión por los autos se formaliza con este paso. Nuestro objetivo: ayudarte a encontrar el vehículo que buscás, al precio justo y con la transparencia que merecés.</CitaFundadores>
+            </Reveal>
             <Reveal delay={.3}><Btn primary onClick={() => navTo("nosotros")}>Conocer nuestra historia</Btn></Reveal>
           </div>
         </div>
@@ -2069,14 +2077,7 @@ function NosotrosPage({ navTo }) {
       <section style={{ padding:"80px 5vw", background:"#0c0c0c" }}>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:76, alignItems:"start" }}>
           <Reveal>
-            <div style={{ position:"relative" }}>
-              <img src={IMG_GONCHI} alt="Alejandro y Gonchi — NordenCars" style={{ width:"100%", display:"block", objectFit:"cover" }}/>
-              <div style={{ position:"absolute", top:-9, right:-9, width:"36%", height:"36%", border:`2px solid ${C.red}`, zIndex:-1 }}/>
-              <div style={{ position:"absolute", bottom:-9, left:-9, width:"28%", height:"22%", background:C.red, zIndex:-1, opacity:.5 }}/>
-              <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"18px", background:"linear-gradient(to top,rgba(0,0,0,.9),transparent)" }}>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:14, fontWeight:700, textTransform:"uppercase", color:"#fff", letterSpacing:1 }}>Alejandro <Red>&</Red> Gonchi · Fundadores NordenCars</div>
-              </div>
-            </div>
+            <FotoFundadores leyenda="Fundadores NordenCars"/>
           </Reveal>
           <div>
             <Reveal><Tag>Nuestra historia</Tag></Reveal>
@@ -2085,7 +2086,7 @@ function NosotrosPage({ navTo }) {
             {["Hola a todos. Somos Gonchi y Ale, y esto es Norden Cars. Lo que empezó hace unos años como una pasión compartida por los autos y un camino recorrido en la compra-venta, se formaliza con este paso.",
               "¿Nuestro objetivo? Ayudarte a encontrar ese 0km o usado que buscás, al precio justo y con la transparencia que te merecés. No solo vendemos autos y camionetas; brindamos el servicio y la confianza que a nosotros nos gustaría recibir.",
               "Nos podés encontrar en nuestra oficina comercial en Galería Mercato, Casco Viejo, Yerba Buena, Tucumán. ¡Bienvenidos a la comunidad de Norden Cars!"
-            ].map((t,i) => <Reveal key={i} delay={i*.12}><p style={{ fontSize:14, fontWeight:300, lineHeight:1.85, color:"rgba(245,245,245,.46)", marginBottom:16, fontFamily:"sans-serif" }}>"{t}"</p></Reveal>)}
+            ].map((t,i) => <Reveal key={i} delay={i*.12}><p style={{ fontSize:15, fontWeight:300, lineHeight:1.85, color:"rgba(245,245,245,.66)", marginBottom:16, fontFamily:"sans-serif", borderLeft:"2px solid rgba(220,38,38,.55)", paddingLeft:20 }}>"{t}"</p></Reveal>)}
             <Reveal delay={.42}>
               <div style={{ display:"flex", gap:10, marginTop:28 }}>
                 <a href={`https://wa.me/${WA_NORDEN}?text=Hola%20Norden%20Cars%2C%20vengo%20de%20la%20web...`} target="_blank" rel="noreferrer"
@@ -2482,12 +2483,15 @@ function AlianzaTeilen({ abrirTeilen }) {
           </Reveal>
         </div>
         <Reveal delay={.2}>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:1, background:C.border, border:`1px solid ${C.border}` }}>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
             {[["1","Elegí el auto","0km o usado de nuestro stock."],["2","Simulá","Anticipo y cuota que te queden cómodos."],["3","Lo gestionamos","Carpeta y firma del crédito con Teilen."],["4","Te lo llevás","Con los papeles para circular."]].map(([n, t, d]) => (
-              <div key={n} style={{ background:"#0b0e15", padding:"20px 18px" }}>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:26, fontWeight:800, color:C.red, lineHeight:1 }}>{n}</div>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700, textTransform:"uppercase", color:C.white, margin:"8px 0 4px" }}>{t}</div>
-                <div style={{ fontSize:12, color:"rgba(245,245,245,.5)", lineHeight:1.5, fontFamily:"sans-serif" }}>{d}</div>
+              <div key={n} className="nc-spot nc-tile" style={{ padding:"20px 18px" }}>
+                <span className="nc-glow"/>
+                <div style={{ position:"relative", zIndex:2 }}>
+                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:26, fontWeight:800, color:C.red, lineHeight:1 }}>{n}</div>
+                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700, textTransform:"uppercase", color:C.white, margin:"8px 0 4px" }}>{t}</div>
+                  <div style={{ fontSize:12, color:"rgba(245,245,245,.55)", lineHeight:1.5, fontFamily:"sans-serif" }}>{d}</div>
+                </div>
               </div>
             ))}
           </div>
@@ -3207,6 +3211,21 @@ export default function App() {
   const [stockIntento, setStockIntento] = useState(0); // "Reintentar" lo vuelve a pedir
   const [appLoading, setAppLoading] = useState(() => { try { return !sessionStorage.getItem("nc_splash_seen"); } catch { return true; } });
   const fotosClientes = CLIENTES_LOCAL;
+
+  // Luz que sigue al mouse en las tarjetas .nc-spot (marcas, por qué elegirnos, Teilen):
+  // un solo listener para toda la página; solo escribe dos variables CSS.
+  useEffect(() => {
+    if (!window.matchMedia?.("(hover: hover)").matches) return; // en celular no hay mouse
+    const mover = (e) => {
+      const el = e.target.closest?.(".nc-spot");
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      el.style.setProperty("--my", `${e.clientY - r.top}px`);
+    };
+    document.addEventListener("pointermove", mover, { passive: true });
+    return () => document.removeEventListener("pointermove", mover);
+  }, []);
   const videosData = SIN_VIDEOS;
   const okm = useOkm();
   const [teilen, setTeilen] = useState(false);
