@@ -181,3 +181,42 @@
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* ─── 2026-11-14: tarjetas despegadas + luz que sigue al mouse ───────────── */
+/* Tarjeta oscura con curva sutil (Marcas, Por qué elegirnos, pasos Teilen). */
+.nc-tile {
+  position: relative; border-radius: 10px; overflow: hidden;
+  background: linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+  border: 1px solid rgba(255,255,255,.08);
+  transition: border-color .4s, transform .5s cubic-bezier(.16,1,.3,1), box-shadow .5s;
+}
+.nc-spot:hover .nc-tile, .nc-tile.nc-spot:hover { border-color: rgba(255,255,255,.14); }
+/* Halo rojo: las coordenadas (--mx/--my) las pone un solo listener en App. */
+.nc-glow {
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  opacity: 0; transition: opacity .45s;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(220,38,38,.15), transparent 65%);
+}
+.nc-glow::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+  background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), rgba(239,68,68,.9), transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.nc-spot:hover .nc-glow { opacity: 1; }
+
+/* Menú de arriba: subrayado que crece al pasar el mouse */
+.nav-link { position: relative; }
+.nav-link::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: #DC2626;
+  transform: scaleX(0); transform-origin: right; transition: transform .45s cubic-bezier(.16,1,.3,1);
+}
+.nav-link:hover::after, .nav-link[data-activo="1"]::after { transform: scaleX(1); transform-origin: left; }
+.nav-link:hover { color: #F5F5F5 !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nc-glow, .nav-link::after { transition: none; }
+}
+
+/* Servicios del inicio: el botón de cada tarjeta se enciende con la tarjeta */
+.nc-spot:hover .srv-cta { background: #DC2626 !important; border-color: #DC2626 !important; }

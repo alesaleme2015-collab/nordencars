@@ -23,6 +23,9 @@ const WA_NORDEN      = "5493816375262";
 const WA_NORDEN_DISP = "+54 9 381 637-5262";
 // Link para dejar una opinión de Norden en Google (Ale, 2026-10-29). El mismo usa el ERP.
 const GOOGLE_RESENA = "https://g.page/r/CTczIyYkYCQJEBM/review";
+// Ficha de Norden Cars en Google Maps (Ale 14/11: "Cómo llegar" mandaba a una búsqueda
+// genérica de Galería Mercato). En el celular abre la app de Maps en nuestra ficha.
+const MAPS_NORDEN = "https://www.google.com/maps?cid=658757153877865271";
 // Barras del fondo del hero (líneas de luz animadas, estilo "shader").
 // Valores deterministas: cada barra titila con su propio ritmo, altura y desfase.
 const HERO_BARS = Array.from({ length: 18 }, (_, i) => ({
@@ -50,6 +53,9 @@ const ERP_URL = "https://sistema.nordencars.store";
 
 
 /* ─── CONSTANTES ───────────────────────────────────────────────────────────── */
+// Marcas del inicio (Ale 14/11): salen del sistema (Precios 0km) y se suman solas
+// cuando se carga una nueva (ORA, ArcFox…). Esta lista solo da el orden y sirve de
+// respaldo si el ERP no responde.
 const MARCAS_0KM = ["Toyota","Fiat","Chevrolet","BAIC","BYD","Jeep","RAM","Volkswagen","Peugeot","Ford","Haval","Citroën","KIA","BMW","MINI","Audi","Hyundai"];
 const CARROCERIAS = ["Todos","Sedán","SUV","Pick-up","Hatchback","Coupé","Otro"];
 
@@ -127,7 +133,7 @@ function useReveal(threshold = 0.07) {
 function Reveal({ children, delay = 0 }) {
   const [ref, v] = useReveal();
   return (
-    <div ref={ref} style={{ opacity: v ? 1 : 0, transform: v ? "translateY(0)" : "translateY(26px)", transition: `opacity .72s cubic-bezier(.16,1,.3,1) ${delay}s, transform .72s cubic-bezier(.16,1,.3,1) ${delay}s` }}>
+    <div ref={ref} style={{ opacity: v ? 1 : 0, transform: v ? "translateY(0)" : "translateY(30px)", transition: `opacity .9s cubic-bezier(.16,1,.3,1) ${delay}s, transform 1s cubic-bezier(.16,1,.3,1) ${delay}s` }}>
       {children}
     </div>
   );
@@ -456,7 +462,7 @@ function Btn({ children, primary, full, small, onClick, disabled = false, href, 
     width: full ? "100%" : "auto", display:"inline-block", textAlign:"center",
     fontSize: small ? 11 : 12.5, fontWeight:600, letterSpacing:2, textTransform:"uppercase",
     fontFamily:"sans-serif", padding: small ? "8px 16px" : "13px 30px",
-    cursor: disabled ? "not-allowed" : "pointer", border:"none",
+    cursor: disabled ? "not-allowed" : "pointer", border:"none", borderRadius:8,
     transition:"background .3s, color .3s, box-shadow .3s, transform .25s cubic-bezier(.16,1,.3,1), outline-color .3s",
     background: primary ? (hov ? C.red2 : C.red) : "transparent",
     color: C.white, opacity: disabled ? .5 : 1, textDecoration:"none",
@@ -597,26 +603,26 @@ function FloatWa() {
 /* ─── NAV ───────────────────────────────────────────────────────────────────── */
 function Nav({ page, navTo, scrolled }) {
   // En compu el menú va a la vista; las tres rayitas quedan solo para celular/tablet.
-  const compacto = useIsMobile(1100);
+  const compacto = useIsMobile(1200);
   const [menuAbierto, setMenuOpen] = useState(false);
   const menuOpen = menuAbierto && compacto; // si se agranda la ventana, el menú lateral se cierra solo
   useCapaAtras(menuOpen, () => setMenuOpen(false)); // "atrás" cierra el menú
   const go = (p) => { navTo(p); setMenuOpen(false); };
-  const links = [["home","Inicio"],["stock","Stock"],["okm","0km"],["vender","Vendé tu auto"],["nosotros","Nosotros"],["contacto","Contacto"]];
+  const links = [["home","Inicio"],["stock","Stock"],["okm","0km"],["financiacion","Financiación"],["vender","Vendé tu auto"],["entregas","Entregas"],["nosotros","Nosotros"],["contacto","Contacto"]];
 
   return (
     <>
-      <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:400, background: scrolled ? "rgba(9,9,9,.97)" : "rgba(9,9,9,.65)", backdropFilter:"blur(20px)", borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent", transition:"all .4s" }}>
+      <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:400, background: scrolled ? "rgba(9,10,13,.78)" : "rgba(9,9,9,.55)", backdropFilter:"blur(16px) saturate(1.4)", WebkitBackdropFilter:"blur(16px) saturate(1.4)", borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent", transition:"all .4s" }}>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 5vw", height:64 }}>
           <button onClick={() => go("home")} style={{ background:"none", border:"none", cursor:"pointer", padding:0 }}>
             <img src={IMG_LOGO} alt="NordenCars" style={{ height:34 }}/>
           </button>
           {!compacto && (
-            <div style={{ display:"flex", alignItems:"center", gap:34 }}>
-              {links.filter(([p]) => p !== "vender").map(([p,l]) => (
-                <button key={p} onClick={() => go(p)} className="nav-link"
+            <div style={{ display:"flex", alignItems:"center", gap:30 }}>
+              {links.filter(([p]) => p !== "vender" && p !== "home").map(([p,l]) => (
+                <button key={p} onClick={() => go(p)} className="nav-link" data-activo={page===p ? "1" : "0"}
                   style={{ background:"none", border:"none", cursor:"pointer", padding:"6px 0", fontSize:12.5, letterSpacing:2.4, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:500,
-                    color: page===p ? C.white : "rgba(245,245,245,.62)", borderBottom:`2px solid ${page===p ? C.red : "transparent"}`, transition:"color .25s, border-color .25s" }}>
+                    color: page===p ? C.white : "rgba(245,245,245,.62)", transition:"color .25s" }}>
                   {l}
                 </button>
               ))}
@@ -682,7 +688,7 @@ function EtiquetasAuto({ car, grande }) {
   if (car.recien_ingresado) et.push(["Recién ingresado", C.red]);
   if (!et.length) return null;
   return et.map(([t, bg]) => (
-    <span key={t} style={{ fontSize: grande ? 12 : 11, fontWeight:700, letterSpacing:1.2, textTransform:"uppercase", padding: grande ? "5px 11px" : "4px 9px", background:bg, color:"#fff", fontFamily:"sans-serif", boxShadow:"0 4px 14px rgba(0,0,0,.35)", whiteSpace:"nowrap" }}>{t}</span>
+    <span key={t} style={{ fontSize: grande ? 12 : 11, fontWeight:700, letterSpacing:1.2, textTransform:"uppercase", padding: grande ? "5px 11px" : "4px 9px", borderRadius:6, background:bg, color:"#fff", fontFamily:"sans-serif", boxShadow:"0 4px 14px rgba(0,0,0,.35)", whiteSpace:"nowrap" }}>{t}</span>
   ));
 }
 
@@ -698,7 +704,7 @@ const precioDe = (car) => {
 /* Mientras llega el stock real del ERP: tarjetas vacías (nunca autos de muestra). */
 function CarSkeleton() {
   return (
-    <div style={{ background:C.zinc, minHeight:360, display:"flex", flexDirection:"column" }}>
+    <div style={{ background:C.zinc, minHeight:360, display:"flex", flexDirection:"column", borderRadius:12, overflow:"hidden" }}>
       <div style={{ aspectRatio:"4/3", background:C.zinc2, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
       <div style={{ padding:"18px 18px 22px", display:"flex", flexDirection:"column", gap:10 }}>
         <div style={{ height:12, width:"40%", background:C.zinc3, animation:"ncPulso 1.4s ease-in-out infinite" }}/>
@@ -755,13 +761,13 @@ function CarCard({ car, onClick, comparar }) {
       onClick={() => onClick(car)}
       style={{
         background: hov ? C.zinc2 : C.zinc,
-        cursor:"pointer", position:"relative", overflow:"hidden",
+        cursor:"pointer", position:"relative", overflow:"hidden", borderRadius:12,
         border:`1px solid ${hov ? "rgba(220,38,38,.4)" : C.border}`,
         transformStyle:"preserve-3d",
         transform: hov
           ? `perspective(900px) rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg) translateY(-6px)`
           : "perspective(900px) rotateX(0) rotateY(0) translateY(0)",
-        boxShadow: hov ? "0 24px 70px rgba(0,0,0,.7)" : "none",
+        boxShadow: hov ? "0 24px 70px rgba(0,0,0,.7)" : "0 1px 2px rgba(0,0,0,.3), 0 10px 30px -12px rgba(0,0,0,.6)",
         transition: hov
           ? "transform .12s linear, background .3s, border-color .3s, box-shadow .3s"
           : "transform .55s cubic-bezier(.16,1,.3,1), background .3s, border-color .3s, box-shadow .3s",
@@ -787,10 +793,10 @@ function CarCard({ car, onClick, comparar }) {
             </div>
         }
         <div style={{ position:"absolute", top:11, left:11, display:"flex", flexDirection:"column", alignItems:"flex-start", gap:5, zIndex:2 }}>
-          <span style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", padding:"4px 9px", background:car.tipo==="0km"?C.red:"rgba(0,0,0,.82)", color:car.tipo==="0km"?"#fff":"rgba(255,255,255,.62)", border:car.tipo==="0km"?"none":`1px solid ${C.border2}`, fontFamily:"sans-serif" }}>{car.tipo}</span>
+          <span style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", padding:"4px 9px", borderRadius:6, background:car.tipo==="0km"?C.red:"rgba(0,0,0,.82)", color:car.tipo==="0km"?"#fff":"rgba(255,255,255,.62)", border:car.tipo==="0km"?"none":`1px solid ${C.border2}`, fontFamily:"sans-serif" }}>{car.tipo}</span>
           <EtiquetasAuto car={car}/>
         </div>
-        {car.carroceria && <span style={{ position:"absolute", top:11, right:11, fontSize:11, letterSpacing:1.5, textTransform:"uppercase", padding:"4px 9px", background:"rgba(0,0,0,.78)", color:"rgba(255,255,255,.48)", fontFamily:"sans-serif" }}>{car.carroceria}</span>}
+        {car.carroceria && <span style={{ position:"absolute", top:11, right:11, fontSize:11, letterSpacing:1.5, textTransform:"uppercase", padding:"4px 9px", borderRadius:6, background:"rgba(0,0,0,.78)", color:"rgba(255,255,255,.48)", fontFamily:"sans-serif" }}>{car.carroceria}</span>}
         <div style={{ position:"absolute", bottom:0, left:0, width:hov?"100%":"0%", height:2, background:C.red, transition:"width .42s cubic-bezier(.16,1,.3,1)" }}/>
         {comparar && (
           <button onClick={e => { e.stopPropagation(); comparar.toggle(car.id); }} data-cursor-label={comparar.on ? "Quitar" : "Comparar"}
@@ -923,7 +929,7 @@ function ServiceIcon({ name, size = 30 }) {
 function FlipCard({ s }) {
   const [flipped, setFlipped] = useState(false);
   return (
-    <div onMouseEnter={() => setFlipped(true)} onMouseLeave={() => setFlipped(false)}
+    <div onMouseEnter={() => setFlipped(true)} onMouseLeave={() => setFlipped(false)} className="nc-spot"
       style={{ perspective:1100, cursor:"pointer", height:186 }}>
       <div style={{
         position:"relative", width:"100%", height:"100%",
@@ -934,12 +940,13 @@ function FlipCard({ s }) {
         {/* Front */}
         <div style={{
           position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden",
-          background:C.zinc, padding:"26px 22px",
+          background:"linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), #10131a", padding:"26px 22px",
           display:"flex", flexDirection:"column", justifyContent:"space-between",
-          borderTop:`1px solid ${flipped?C.red:"rgba(255,255,255,.06)"}`, transition:"border-color .4s",
+          borderRadius:10, border:"1px solid rgba(255,255,255,.08)", overflow:"hidden",
         }}>
-          <div style={{ color:C.red, height:32, display:"flex", alignItems:"center" }}><ServiceIcon name={s.i}/></div>
-          <div>
+          <span className="nc-glow"/>
+          <div style={{ position:"relative", zIndex:2, color:C.red, height:32, display:"flex", alignItems:"center" }}><ServiceIcon name={s.i}/></div>
+          <div style={{ position:"relative", zIndex:2 }}>
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:19, fontWeight:700, textTransform:"uppercase", color:C.white, lineHeight:1.08, marginBottom:9, letterSpacing:.3 }}>{s.t}</div>
             <div style={{ fontSize:11, letterSpacing:2.5, color:C.muted2, textTransform:"uppercase", fontFamily:"sans-serif", display:"flex", alignItems:"center", gap:7 }}><span style={{ width:14, height:1, background:C.red }}/>Ver más</div>
           </div>
@@ -947,10 +954,10 @@ function FlipCard({ s }) {
         {/* Back */}
         <div style={{
           position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden",
-          background:"linear-gradient(155deg,#181112 0%,#110c0d 100%)", padding:"26px 22px",
+          background:"linear-gradient(155deg,#1a1213 0%,#110c0d 100%)", padding:"26px 22px",
           transform:"rotateY(180deg)",
           display:"flex", flexDirection:"column", justifyContent:"center",
-          borderLeft:`2px solid ${C.red}`,
+          borderRadius:10, border:"1px solid rgba(220,38,38,.35)", overflow:"hidden",
         }}>
           <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, textTransform:"uppercase", letterSpacing:2, color:C.red, marginBottom:10 }}>{s.t}</div>
           <p style={{ fontSize:12.5, fontWeight:300, lineHeight:1.7, color:"rgba(245,245,245,.74)", fontFamily:"sans-serif", margin:0 }}>{s.d}</p>
@@ -978,69 +985,63 @@ function ReviewTile({ r }) {
   );
 }
 
-/* ─── BRAND CARD (marcas 0km) — estilo Apple/Porsche ───────────────────────── */
-// Logo + nombre siempre visibles. Hover: logo se ilumina, línea roja crece, leve scale up.
-function FlipBrandCard({ brand }) {
-  const [hov, setHov] = useState(false);
-  const [imgOk, setImgOk] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const ck = () => setIsMobile(window.innerWidth < 760);
-    ck(); window.addEventListener("resize", ck);
-    return () => window.removeEventListener("resize", ck);
-  }, []);
-  // Simple Icons: logo monocromo por marca. Slug = nombre sin acentos en minúscula.
-  const slug = brand.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-  const logoSrc = `https://cdn.simpleicons.org/${slug}`;
-  if (isMobile) {
-    return (
-      <div style={{ height:120, background:"linear-gradient(180deg,#161616,#0e0e0e)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:12, padding:14, borderBottom:`2px solid ${C.red}` }}>
-        {imgOk
-          ? <img src={logoSrc} alt={brand} onError={() => setImgOk(false)} style={{ maxWidth:"70%", maxHeight:50, objectFit:"contain", filter:"brightness(0) invert(1)" }}/>
-          : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:900, color:C.white }}>{brand}</span>}
-        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:2, color:"rgba(245,245,245,.55)" }}>{brand}</span>
-      </div>
-    );
-  }
+/* ─── FUNDADORES: foto y cita con acabado editorial (Ale 14/11: no se tocan ni
+   la foto ni el texto, solo el marco) ─────────────────────────────────────── */
+function FotoFundadores({ leyenda }) {
   return (
-    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ perspective:900, cursor:"pointer", height:130 }}>
-      <div style={{
-        position:"relative", width:"100%", height:"100%", transformStyle:"preserve-3d",
-        transform: hov ? "rotateY(180deg)" : "rotateY(0deg)",
-        transition:"transform .6s cubic-bezier(.16,1,.3,1)",
-      }}>
-        {/* Frente: nombre de la marca */}
-        <div style={{
-          position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden",
-          background:"linear-gradient(180deg,#141414 0%,#0e0e0e 100%)",
-          display:"flex", alignItems:"center", justifyContent:"center",
-        }}>
-          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:900, letterSpacing:-.5, textTransform:"uppercase", color:"rgba(245,245,245,.5)" }}>{brand}</span>
-        </div>
-        {/* Dorso: logo de la marca (se revela al girar) */}
-        <div style={{
-          position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden",
-          transform:"rotateY(180deg)",
-          background:"linear-gradient(180deg,#1d1d1d 0%,#121212 100%)",
-          display:"flex", alignItems:"center", justifyContent:"center", padding:20,
-          borderBottom:`2px solid ${C.red}`,
-        }}>
-          {imgOk ? (
-            <img src={logoSrc} alt={brand} onError={() => setImgOk(false)}
-              style={{ maxWidth:"68%", maxHeight:44, objectFit:"contain", filter:"brightness(0) invert(1)" }}/>
-          ) : (
-            <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:900, letterSpacing:-.5, textTransform:"uppercase", color:C.white }}>{brand}</span>
-          )}
+    <div style={{ position:"relative", isolation:"isolate" }}>
+      <div style={{ position:"relative", borderRadius:12, overflow:"hidden", border:"1px solid rgba(255,255,255,.12)",
+        boxShadow:"0 2px 6px rgba(0,0,0,.4), 0 30px 60px -12px rgba(0,0,0,.75), 0 60px 120px -30px rgba(0,0,0,.6)" }}>
+        <img src={IMG_GONCHI} alt="Alejandro y Gonchi — NordenCars" style={{ width:"100%", display:"block", objectFit:"cover" }}/>
+        <div style={{ position:"absolute", inset:0, boxShadow:"inset 0 0 0 1px rgba(255,255,255,.06), inset 0 -120px 120px -60px rgba(0,0,0,.55)", pointerEvents:"none" }}/>
+        <div style={{ position:"absolute", bottom:0, left:0, right:0, background:"linear-gradient(to top,rgba(0,0,0,.88),transparent)", padding:"22px 20px 18px" }}>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:15, fontWeight:700, textTransform:"uppercase", color:"#fff", letterSpacing:1.5 }}>Alejandro <Red>&</Red> Gonchi · {leyenda}</div>
         </div>
       </div>
     </div>
   );
 }
+function CitaFundadores({ children }) {
+  return (
+    <figure style={{ position:"relative", margin:"0 0 30px", padding:"58px 28px 26px 30px", borderRadius:12,
+      background:"linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.01))", border:"1px solid rgba(255,255,255,.08)",
+      boxShadow:"0 24px 60px -24px rgba(0,0,0,.7)" }}>
+      <div aria-hidden style={{ position:"absolute", top:10, left:22, fontFamily:"'Barlow Condensed',sans-serif", fontSize:72, fontWeight:900, lineHeight:1, color:C.red, opacity:.85 }}>“</div>
+      <blockquote style={{ margin:0, fontSize:17, fontWeight:300, lineHeight:1.75, color:"rgba(245,245,245,.8)", fontFamily:"sans-serif" }}>{children}</blockquote>
+    </figure>
+  );
+}
+
+/* ─── MARCA 0KM (inicio) ───────────────────────────────────────────────────── */
+// Las 17 iguales (Ale 14/11): logo en su pastilla blanca (la arma el ERP para cada
+// marca, también las que no tienen ícono público: BAIC, BYD, Haval) + nombre.
+// Si el logo no carga, queda el nombre solo, con el mismo tamaño de tarjeta.
+// Logos en blanco parejo sobre fondo oscuro (Ale 14/11: las pastillas blancas de
+// distinto ancho parecían stickers). Los emblemas rellenos (óvalo de Ford, escudo de
+// Peugeot) en blanco quedan como una mancha: esos van en gris claro. Si se carga
+// una marca nueva con emblema relleno, sumarla acá.
+const MARCAS_ESCUDO = ["ford", "peugeot"];
+function MarcaCard({ brand, onClick, chica, logo, logoPastilla }) {
+  const [imgOk, setImgOk] = useState(true);
+  const slug = brand.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  return (
+    <button onClick={onClick} className="nc-spot nc-tile" data-cursor-label="Ver 0km" aria-label={`Ver 0km ${brand}`}
+      style={{ width:"100%", height: chica ? 104 : 132, cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap: chica ? 10 : 14, padding: chica ? "12px 6px" : "16px 12px", color:"inherit", font:"inherit" }}>
+      <span className="nc-glow"/>
+      <span style={{ position:"relative", zIndex:2, height: chica ? 34 : 42, display:"flex", alignItems:"center", justifyContent:"center" }}>
+        {imgOk
+          ? <img src={logo || logoPastilla || `${ERP_URL}/api/publico/logo-okm/${slug}`} alt={brand} loading="lazy" onError={() => setImgOk(false)} style={{ height: chica ? 30 : 38, width:"auto", maxWidth: chica ? 80 : 118, objectFit:"contain", display:"block",
+              filter: !logo ? "none" : MARCAS_ESCUDO.includes(slug) ? "grayscale(1) brightness(1.7)" : "brightness(0) invert(1)", opacity: logo ? .92 : 1 }}/>
+          : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:900, textTransform:"uppercase", color:C.white }}>{brand}</span>}
+      </span>
+      <span style={{ position:"relative", zIndex:2, fontFamily:"'Barlow Condensed',sans-serif", fontSize: chica ? 12 : 13, fontWeight:700, textTransform:"uppercase", letterSpacing: chica ? 1.5 : 2.5, color:"rgba(245,245,245,.62)" }}>{brand}</span>
+    </button>
+  );
+}
 
 /* ─── PROCESO ORBITAL (sistema solar del proceso de compra) ─────────────────── */
 /* ─── CLIENTES CAROUSEL ─────────────────────────────────────────────────────── */
-function ClientesCarousel({ fotos = [] }) {
+function ClientesCarousel({ fotos = [], verMas }) {
   if (!fotos.length) return null;
   const doubled = [...fotos, ...fotos];
   return (
@@ -1049,15 +1050,19 @@ function ClientesCarousel({ fotos = [] }) {
         <Tag>Clientes felices</Tag>
         <SecH>Una gran <Red>comunidad</Red></SecH>
         <p style={{ fontSize:14, fontWeight:300, color:"rgba(245,245,245,.52)", lineHeight:1.75, maxWidth:560, marginTop:14, fontFamily:"sans-serif" }}>Somos una gran comunidad. Muchos clientes ya confían en nuestros servicios y productos. <span style={{ color:C.white, fontWeight:400 }}>¿Qué esperás para sumarte?</span></p>
+        <div style={{ display:"flex", alignItems:"center", gap:14, flexWrap:"wrap", marginTop:20 }}>
         <a href={GOOGLE_RESENA} target="_blank" rel="noreferrer" data-cursor-label="Opinar"
-          style={{ display:"inline-flex", alignItems:"center", gap:10, marginTop:20, padding:"11px 18px", border:`1px solid ${C.border2}`, color:C.white, textDecoration:"none", fontFamily:"sans-serif", fontSize:13 }}>
+          style={{ display:"inline-flex", alignItems:"center", gap:10, borderRadius:8, padding:"11px 18px", border:`1px solid ${C.border2}`, color:C.white, textDecoration:"none", fontFamily:"sans-serif", fontSize:13 }}>
           <span style={{ color:"#facc15", letterSpacing:2 }}>★★★★★</span>
           ¿Ya compraste en Norden? <b style={{ color:C.red2, fontWeight:600 }}>Dejanos tu opinión en Google</b>
         </a>
+        {verMas && <Btn onClick={verMas}>Ver todas las entregas →</Btn>}
+        </div>
       </div></Reveal>
-      <div style={{ display:"flex", width:"max-content", animation:"marquee 50s linear infinite", gap:3 }}>
+      {/* Margen por foto (no "gap") para que la vuelta de la cinta no dé un saltito */}
+      <div style={{ display:"flex", width:"max-content", animation:"marquee 60s linear infinite" }}>
         {doubled.map((f,i) => (
-          <div key={i} style={{ flexShrink:0, width:238, height:330, overflow:"hidden" }}>
+          <div key={i} style={{ flexShrink:0, width:238, height:330, overflow:"hidden", borderRadius:12, marginRight:16, border:"1px solid rgba(255,255,255,.08)" }}>
             <img src={f.url} alt="" loading="lazy" style={{ width:"100%", height:"100%", objectFit:"cover", filter:"brightness(.82) saturate(.9)", transition:"filter .4s" }}
               onMouseEnter={e => e.currentTarget.style.filter="brightness(1) saturate(1)"}
               onMouseLeave={e => e.currentTarget.style.filter="brightness(.82) saturate(.9)"}/>
@@ -1191,7 +1196,7 @@ function Footer({ navTo }) {
         </div>
         <div>
           <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:14, fontFamily:"sans-serif" }}>Navegación</div>
-          {[["home","Inicio"],["stock","Stock"],["okm","0km"],["vender","Vendé tu auto"],["nosotros","Nosotros"],["contacto","Contacto"]].map(([p,l]) => (
+          {[["home","Inicio"],["stock","Stock"],["okm","0km"],["financiacion","Financiación"],["vender","Vendé tu auto"],["entregas","Entregas"],["nosotros","Nosotros"],["contacto","Contacto"]].map(([p,l]) => (
             <div key={p} style={{ marginBottom:9 }}>
               <FooterLink onClick={() => navTo(p)}>{l}</FooterLink>
             </div>
@@ -1254,7 +1259,174 @@ function HeroStatItem({ pre, n, suf, l, last, mob }) {
 }
 
 /* ─── HOME PAGE ─────────────────────────────────────────────────────────────── */
-function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, reintentarStock, config, fotosClientes, videosData, abrirTeilen }) {
+/* ─── PÁGINAS NUEVAS Y AVANCES DEL INICIO (Ale 14/11) ────────────────────────
+   El inicio muestra un avance de cada tema y lleva a su página; el detalle vive en
+   Financiación, Entregas, Nosotros y Contacto. Nada se borró: cada cosa se mudó. */
+
+// "Por qué elegirnos" (antes en el inicio; ahora en Nosotros)
+function Compromiso() {
+  return (
+    <section style={{ padding:"100px 5vw", background:`linear-gradient(to bottom, ${C.bg} 0%, ${C.carbon} 100%)`, position:"relative", overflow:"hidden" }}>
+      <CornerBrackets size={22} inset={28} color="rgba(220,38,38,.55)"/>
+      {/* Mesh glow rojo arriba */}
+      <div style={{
+        position:"absolute", top:-120, left:"50%", transform:"translateX(-50%)",
+        width:680, height:240,
+        background:"radial-gradient(ellipse, rgba(220,38,38,.10), transparent 70%)",
+        filter:"blur(24px)", pointerEvents:"none",
+      }}/>
+      <div style={{ position:"relative", zIndex:1 }}>
+        <Reveal><Tag>Por qué elegirnos</Tag></Reveal>
+        <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Nuestro <Red>compromiso</Red></SecH></Reveal>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(198px,1fr))", gap:18, background:"transparent" }}>
+          {[{i:"stock",t:"Stock seleccionado",d:"Cada auto pasa una revisión rigurosa antes de entrar al catálogo. Solo publicamos lo que recomendaríamos a un amigo."},
+            {i:"inspeccion",t:"Inspección pre-compra",d:"Revisión técnica completa del vehículo: te mostramos el estado real, sin sorpresas, antes de que compres."},
+            {i:"transparencia",t:"Transparencia total",d:"Historial completo y documentación en orden. Sin letras chicas, sin sorpresas. Lo que acordamos es lo que firmamos."},
+            {i:"financiacion",t:"Financiación",d:"Trabajamos con múltiples entidades. Te armamos el plan de cuotas que mejor se ajuste a tus posibilidades."},
+            {i:"permutas",t:"Permutas",d:"Tomamos tu auto como parte de pago al mejor precio del mercado. Simple, rápido y sin vueltas."},
+            {i:"agil",t:"Gestión ágil",d:"Transferencia y trámites resueltos rápido. Vos solo te preocupás por estrenar tu nuevo vehículo."},
+            {i:"local",t:"Presencia local",d:"Galería Mercato, Yerba Buena. Atención presencial, personalizada y sin apuros. También por WhatsApp."},
+          ].map((s,i) => <Reveal key={i} delay={i*.055}><FlipCard s={s}/></Reveal>)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const SERVICIOS = [
+  { i:"financiacion", p:"financiacion", t:"Financiación", d:"Simulá anticipo y cuota con Teilen y mirá paso a paso cómo se compra.", cta:"Simular mi crédito" },
+  { i:"permutas", p:"vender", t:"Vendé o permutá", d:"Te lo compramos, lo consignamos o lo tomamos como parte de pago. Respuesta en menos de 24 h.", cta:"Tasar mi auto" },
+  { i:"transparencia", p:"nosotros", t:"Por qué Norden", d:"Stock revisado, transparencia total y gestoría propia. Conocé quiénes somos.", cta:"Conocernos" },
+];
+function ServiciosInicio({ navTo }) {
+  return (
+    <section style={{ padding:"100px 5vw", background:`linear-gradient(to bottom, ${C.bg} 0%, ${C.carbon} 100%)` }}>
+      <Reveal><Tag>Servicios</Tag></Reveal>
+      <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Todo en un <Red>solo lugar</Red></SecH></Reveal>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))", gap:18 }}>
+        {SERVICIOS.map((s, k) => (
+          <Reveal key={s.p} delay={k * .08}>
+            <button onClick={() => navTo(s.p)} className="nc-spot nc-tile" data-cursor-label="Ver más"
+              style={{ width:"100%", minHeight:250, textAlign:"left", cursor:"pointer", padding:"30px 28px", background:"linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.01) 60%), #0f1217", display:"flex", flexDirection:"column", justifyContent:"space-between", gap:26, color:"inherit", font:"inherit" }}>
+              <span className="nc-glow"/>
+              {/* Número grande de fondo */}
+              <span aria-hidden style={{ position:"absolute", top:14, right:22, zIndex:1, fontFamily:"'Barlow Condensed',sans-serif", fontSize:92, fontWeight:900, lineHeight:1, color:"transparent", WebkitTextStroke:"1px rgba(255,255,255,.1)", letterSpacing:-2, pointerEvents:"none" }}>0{k + 1}</span>
+              <span style={{ position:"relative", zIndex:2, width:52, height:52, borderRadius:"50%", background:"rgba(220,38,38,.1)", border:"1px solid rgba(220,38,38,.25)", color:C.red, display:"flex", alignItems:"center", justifyContent:"center" }}><ServiceIcon name={s.i} size={24}/></span>
+              <span style={{ position:"relative", zIndex:2, display:"block" }}>
+                <span style={{ display:"block", fontFamily:"'Barlow Condensed',sans-serif", fontSize:28, fontWeight:800, textTransform:"uppercase", color:C.white, lineHeight:1, marginBottom:10 }}>{s.t}</span>
+                <span style={{ display:"block", fontSize:14, fontWeight:300, lineHeight:1.65, color:"rgba(245,245,245,.62)", fontFamily:"sans-serif", marginBottom:18 }}>{s.d}</span>
+                <span className="srv-cta" style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"10px 16px", borderRadius:8, border:"1px solid rgba(220,38,38,.45)", background:"rgba(220,38,38,.08)", fontSize:12, fontWeight:600, letterSpacing:2, textTransform:"uppercase", color:C.white, fontFamily:"sans-serif", transition:"background .3s, border-color .3s" }}>{s.cta} <span style={{ color:C.red2 }}>→</span></span>
+              </span>
+            </button>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CierreInicio() {
+  return (
+    <section style={{ padding:"90px 5vw", background:C.bg, borderTop:`1px solid ${C.border}`, position:"relative", overflow:"hidden" }}>
+      <div style={{ position:"absolute", left:"50%", top:"-60%", transform:"translateX(-50%)", width:"70%", height:"160%", background:"radial-gradient(ellipse, rgba(220,38,38,.12), transparent 65%)", pointerEvents:"none" }}/>
+      <div style={{ position:"relative", textAlign:"center", maxWidth:760, margin:"0 auto" }}>
+        <Reveal><div style={{ display:"flex", justifyContent:"center" }}><Tag>Yerba Buena · Tucumán</Tag></div></Reveal>
+        <Reveal delay={.1}><SecH style={{ marginBottom:18 }}>¿Buscás auto? <Red>Hablemos</Red></SecH></Reveal>
+        <Reveal delay={.18}>
+          <p style={{ fontSize:15, fontWeight:300, color:"rgba(245,245,245,.62)", lineHeight:1.7, fontFamily:"sans-serif", marginBottom:28 }}>
+            Galería Mercato, Casco Viejo · Lunes a viernes de 9 a 13 y de 16:30 a 20:30 · Sábados de 9 a 12:30
+          </p>
+        </Reveal>
+        <Reveal delay={.26}>
+          <div style={{ display:"flex", gap:13, flexWrap:"wrap", justifyContent:"center" }}>
+            <Btn primary href={`https://wa.me/${WA_NORDEN}?text=${encodeURIComponent("Hola Norden Cars, vengo de la web")}`}>Escribinos por WhatsApp</Btn>
+            <Btn href={MAPS_NORDEN}>Cómo llegar</Btn>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+function FinanciacionPage({ navTo, abrirTeilen }) {
+  const mob = useIsMobile();
+  return (
+    <div style={{ paddingTop:68 }}>
+      <PageHeader tag="Financiación" bgWord="CUOTAS">
+        Tu auto, <Red>en cuotas</Red>
+      </PageHeader>
+      <AlianzaTeilen abrirTeilen={abrirTeilen}/>
+      <SectionDivider/>
+      <section style={{ padding:"100px 5vw", background:C.bg }}>
+        <Reveal><Tag>Cómo funciona · Paso a paso</Tag></Reveal>
+        <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Así se compra en <Red>Norden</Red></SecH></Reveal>
+        <Reveal delay={.2}><HistoriaCompra mobile={mob}/></Reveal>
+        <Reveal delay={.4}>
+          <div style={{ marginTop:38, display:"flex", gap:13, flexWrap:"wrap" }}>
+            <Btn primary onClick={() => navTo("stock")}>Ver stock disponible</Btn>
+            <Btn href={`https://wa.me/${WA_NORDEN}?text=Hola%2C%20quiero%20empezar%20el%20proceso%20de%20compra...`}>Empezar por WhatsApp</Btn>
+          </div>
+        </Reveal>
+      </section>
+      <Footer navTo={navTo}/>
+    </div>
+  );
+}
+
+function EntregasPage({ navTo, fotosClientes, videosData }) {
+  const mob = useIsMobile();
+  return (
+    <div style={{ paddingTop:68 }}>
+      <PageHeader tag="Clientes felices" bgWord="ENTREGAS">
+        Ellos ya manejan <Red>su Norden</Red>
+      </PageHeader>
+      <section style={{ padding:"70px 5vw 90px", background:C.bg }}>
+        <Reveal>
+          <p style={{ fontSize:15, fontWeight:300, color:"rgba(245,245,245,.62)", lineHeight:1.7, maxWidth:620, fontFamily:"sans-serif", marginBottom:22 }}>
+            Estos son algunos de los clientes que ya confiaron en nosotros. <b style={{ color:C.white, fontWeight:500 }}>¿Qué esperás para ser el próximo?</b>
+          </p>
+          <a href={GOOGLE_RESENA} target="_blank" rel="noreferrer" data-cursor-label="Opinar"
+            style={{ display:"inline-flex", alignItems:"center", gap:10, padding:"11px 18px", border:`1px solid ${C.border2}`, borderRadius:8, color:C.white, textDecoration:"none", fontFamily:"sans-serif", fontSize:13 }}>
+            <span style={{ color:"#facc15", letterSpacing:2 }}>★★★★★</span>
+            ¿Ya compraste en Norden? <b style={{ color:C.red2, fontWeight:600 }}>Dejanos tu opinión en Google</b>
+          </a>
+        </Reveal>
+        <div style={{ marginTop:40, display:"grid", gridTemplateColumns: mob ? "repeat(2,minmax(0,1fr))" : "repeat(auto-fill,minmax(220px,1fr))", gap: mob ? 8 : 14 }}>
+          {fotosClientes.map((f, k) => (
+            <Reveal key={f.url} delay={(k % 4) * .06}>
+              <div className="entrega-foto" style={{ aspectRatio:"4/5", borderRadius:10, overflow:"hidden", border:"1px solid rgba(255,255,255,.08)", background:C.zinc }}>
+                <img src={f.url} alt="Entrega a un cliente de Norden Cars" loading="lazy" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+        <style>{".entrega-foto img{filter:brightness(.88);transition:transform .8s cubic-bezier(.16,1,.3,1),filter .5s}.entrega-foto:hover img{transform:scale(1.05);filter:none}"}</style>
+      </section>
+      <VideosSection videos={videosData}/>
+      <InstagramPerfil/>
+      <Footer navTo={navTo}/>
+    </div>
+  );
+}
+
+
+const claveMarcaWeb = (m) => String(m).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
+// [{ nombre, logo, enSistema }]: las del sistema, en el orden de siempre y después las nuevas.
+function marcasInicio(okm) {
+  const modelos = okm?.modelos || [];
+  const delSistema = new Map();
+  for (const m of modelos) if (m?.marca && !delSistema.has(claveMarcaWeb(m.marca))) delSistema.set(claveMarcaWeb(m.marca), { nombre: m.marca, logo: m.logo || null, logoPastilla: m.logo_pastilla || null, enSistema: true });
+  if (okm?.cargando) return [];
+  if (!delSistema.size) return MARCAS_0KM.map(n => ({ nombre: n, logo: null, enSistema: false })); // el ERP no respondió
+  const viejas = MARCAS_0KM.map(n => ({ nombre: n, clave: claveMarcaWeb(n) }));
+  const enOrden = viejas.filter(v => delSistema.has(v.clave)).map(v => delSistema.get(v.clave));
+  const nuevas = [...delSistema.entries()].filter(([k]) => !viejas.some(v => v.clave === k)).map(([, v]) => v).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  // Ale 14/11: solo las marcas con modelos cargados (una marca sin nada que mostrar
+  // es un callejón sin salida). Cuando se cargan sus modelos, aparecen solas.
+  return [...enOrden, ...nuevas];
+}
+
+function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingStock, stockError, reintentarStock, config, fotosClientes }) {
   const preview = stockData.filter(v => v.destacado).slice(0,4);
   const shown = preview.length >= 2 ? preview : stockData.slice(0,4);
   const mob = useIsMobile();
@@ -1369,7 +1541,7 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
             {config.hero_subtitulo || "Al precio justo, con la transparencia que merecés. 0km y usados seleccionados en Yerba Buena, Tucumán."}
           </p>
           <div style={{ display:"flex", gap:13, flexWrap:"wrap", animation:"fadeUp .8s 1s both" }}>
-            <div className="btn-glow" style={{ display:"inline-block", borderRadius:2 }}><Btn primary onClick={() => navTo("stock")}>Ver Stock Disponible</Btn></div>
+            <div className="btn-glow" style={{ display:"inline-block", borderRadius:8 }}><Btn primary onClick={() => navTo("stock")}>Ver Stock Disponible</Btn></div>
             <Btn onClick={() => navTo("vender")}>Vender mi Auto</Btn>
           </div>
         </div>
@@ -1398,7 +1570,7 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
         </div>
         {stockError && !shown.length
           ? <StockNoDisponible reintentar={reintentarStock}/>
-          : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:1, background:C.bg }}>
+          : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:24 }}>
               {loadingStock && !shown.length
                 ? [0,1,2,3].map(i => <CarSkeleton key={i}/>)
                 : shown.map((car,i) => <Reveal key={car.id} delay={i*.07}><CarCard car={car} onClick={setSelectedCar}/></Reveal>)}
@@ -1421,161 +1593,41 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
         </div>
         <div style={{
           display:"grid",
-          gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",
-          gap:1,
+          gridTemplateColumns: mob ? "repeat(3,1fr)" : "repeat(5,1fr)", // 15 marcas: 5×3 en compu, 3×5 en celular
+          gap: mob ? 10 : 16,
           background:"transparent",
         }}>
-          {MARCAS_0KM.map((m,i) => <Reveal key={m} delay={i*.022}><FlipBrandCard brand={m}/></Reveal>)}
+          {marcasInicio(okm).map((m,i) => <Reveal key={m.nombre} delay={Math.min(i, 16)*.022}><MarcaCard brand={m.nombre} logo={m.logo} logoPastilla={m.logoPastilla} chica={mob} onClick={() => verMarcaOkm(m.enSistema ? m.nombre : null)}/></Reveal>)}
         </div>
       </section>
 
       <SectionDivider/>
 
-      {/* ── SERVICES (flip cards) — sección VIP con corner brackets ── */}
-      <section style={{ padding:"100px 5vw", background:`linear-gradient(to bottom, ${C.bg} 0%, ${C.carbon} 100%)`, position:"relative", overflow:"hidden" }}>
-        <CornerBrackets size={22} inset={28} color="rgba(220,38,38,.55)"/>
-        {/* Mesh glow rojo arriba */}
-        <div style={{
-          position:"absolute", top:-120, left:"50%", transform:"translateX(-50%)",
-          width:680, height:240,
-          background:"radial-gradient(ellipse, rgba(220,38,38,.10), transparent 70%)",
-          filter:"blur(24px)", pointerEvents:"none",
-        }}/>
-        <div style={{ position:"relative", zIndex:1 }}>
-          <Reveal><Tag>Por qué elegirnos</Tag></Reveal>
-          <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Nuestro <Red>compromiso</Red></SecH></Reveal>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(198px,1fr))", gap:1, background:"transparent" }}>
-            {[{i:"stock",t:"Stock seleccionado",d:"Cada auto pasa una revisión rigurosa antes de entrar al catálogo. Solo publicamos lo que recomendaríamos a un amigo."},
-              {i:"inspeccion",t:"Inspección pre-compra",d:"Revisión técnica completa del vehículo: te mostramos el estado real, sin sorpresas, antes de que compres."},
-              {i:"transparencia",t:"Transparencia total",d:"Historial completo y documentación en orden. Sin letras chicas, sin sorpresas. Lo que acordamos es lo que firmamos."},
-              {i:"financiacion",t:"Financiación",d:"Trabajamos con múltiples entidades. Te armamos el plan de cuotas que mejor se ajuste a tus posibilidades."},
-              {i:"permutas",t:"Permutas",d:"Tomamos tu auto como parte de pago al mejor precio del mercado. Simple, rápido y sin vueltas."},
-              {i:"agil",t:"Gestión ágil",d:"Transferencia y trámites resueltos rápido. Vos solo te preocupás por estrenar tu nuevo vehículo."},
-              {i:"local",t:"Presencia local",d:"Galería Mercato, Yerba Buena. Atención presencial, personalizada y sin apuros. También por WhatsApp."},
-            ].map((s,i) => <Reveal key={i} delay={i*.055}><FlipCard s={s}/></Reveal>)}
-          </div>
-        </div>
-      </section>
+      {/* ── SERVICIOS: un avance de cada cosa, cada uno lleva a su página (Ale 14/11: inicio menos cargado) ── */}
+      <ServiciosInicio navTo={navTo}/>
 
-      <SectionDivider/>
-
-      {/* ── VENDÉ TU AUTO ── */}
-      <section style={{ position:"relative", overflow:"hidden", padding:"84px 5vw", background:"linear-gradient(120deg,#0d0708 0%,#140909 50%,#0a0c10 100%)", borderTop:`1px solid ${C.border}`, isolation:"isolate" }}>
-        <div style={{ position:"absolute", right:"-4vw", top:"50%", transform:"translateY(-50%)", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:"clamp(120px,22vw,320px)", lineHeight:.8, color:"transparent", WebkitTextStroke:"1px rgba(220,38,38,.16)", letterSpacing:-6, zIndex:-1, pointerEvents:"none", userSelect:"none" }}>VENDÉ</div>
-        <div style={{ position:"absolute", left:"-10%", top:"-40%", width:"60%", height:"180%", background:"radial-gradient(ellipse, rgba(220,38,38,.14), transparent 65%)", zIndex:-1, pointerEvents:"none" }}/>
-        <Reveal><Tag>Compra o consignación</Tag></Reveal>
-        <Reveal delay={.1}><SecH style={{ marginBottom:16, maxWidth:720 }}>¿Querés vender <Red>tu auto?</Red></SecH></Reveal>
-        <Reveal delay={.18}>
-          <p style={{ fontSize:15, fontWeight:300, color:"rgba(245,245,245,.62)", lineHeight:1.7, maxWidth:520, marginBottom:30, fontFamily:"sans-serif" }}>
-            Te lo compramos, lo vendemos por vos en consignación o lo tomamos como parte de pago. Cargá los datos y unas fotos desde el celular en 2 minutos y te respondemos en menos de 24 h.
-          </p>
-        </Reveal>
-        <Reveal delay={.26}>
-          <div style={{ display:"flex", gap:13, flexWrap:"wrap" }}>
-            <Btn primary onClick={() => navTo("vender")}>Vendé tu auto</Btn>
-            <Btn href={`https://wa.me/${WA_NORDEN}?text=${encodeURIComponent("Hola Norden Cars, quiero vender mi auto")}`}>Consultar por WhatsApp</Btn>
-          </div>
-        </Reveal>
-      </section>
-
-      <AlianzaTeilen abrirTeilen={abrirTeilen}/>
-
-      <SectionDivider/>
-
-      {/* ── PROCESO DE COMPRA ── */}
-      <section style={{ padding:"100px 5vw", background:C.bg }}>
-        <Reveal><Tag>Cómo funciona · La historia de Martín</Tag></Reveal>
-        <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Así se compra en <Red>Norden</Red></SecH></Reveal>
-        <Reveal delay={.2}><HistoriaCompra mobile={mob}/></Reveal>
-        <Reveal delay={.4}>
-          <div style={{ marginTop:38, display:"flex", gap:13, flexWrap:"wrap" }}>
-            <Btn primary onClick={() => navTo("stock")}>Ver stock disponible</Btn>
-            <Btn href={`https://wa.me/${WA_NORDEN}?text=Hola%2C%20quiero%20empezar%20el%20proceso%20de%20compra...`}>Empezar por WhatsApp</Btn>
-          </div>
-        </Reveal>
-      </section>
-
-      <SectionDivider/>
-
-      {/* ── PHOTO STRIP ── */}
-      <style>{`.foto-tira img{filter:brightness(.48) saturate(.72);transition:filter .7s ease,transform 1.2s cubic-bezier(.16,1,.3,1)}.foto-tira>div:hover img{filter:brightness(1) saturate(1.05);transform:scale(1.07)}`}</style>
-      <div className="foto-tira" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", height:210, overflow:"hidden", gap:1 }}>
-        {[IMG_BMW_FULL,IMG_BMW_FRONT,IMG_VW_FRONT,IMG_VW_INT].map((img,i) => (
-          <div key={i} style={{ overflow:"hidden" }}>
-            <img src={img} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
-          </div>
-        ))}
-      </div>
-
-      <SectionDivider/>
+      {/* ── ENTREGAS (avance) ── */}
+      <ClientesCarousel fotos={fotosClientes} verMas={() => navTo("entregas")}/>
 
       {/* ── NOSOTROS PREVIEW ── */}
       <section style={{ padding:"100px 5vw", background:`linear-gradient(to bottom, ${C.bg} 0%, ${C.carbon} 100%)` }}>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:72, alignItems:"center" }}>
           <Reveal>
-            <div style={{ position:"relative" }}>
-              <img src={IMG_GONCHI} alt="Alejandro y Gonchi — NordenCars" style={{ width:"100%", display:"block", objectFit:"cover" }}/>
-              <div style={{ position:"absolute", top:-8, right:-8, width:"36%", height:"36%", border:`2px solid ${C.red}`, zIndex:-1 }}/>
-              <div style={{ position:"absolute", bottom:0, left:0, right:0, background:"linear-gradient(to top,rgba(0,0,0,.88),transparent)", padding:"18px" }}>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:14, fontWeight:700, textTransform:"uppercase", color:"#fff", letterSpacing:1 }}>Alejandro <Red>&</Red> Gonchi · Fundadores</div>
-              </div>
-            </div>
+            <FotoFundadores leyenda="Fundadores"/>
           </Reveal>
           <div>
             <Reveal><Tag>Quiénes somos</Tag></Reveal>
-            <Reveal delay={.1}><SecH style={{ marginBottom:20 }}>La historia <Red>real</Red></SecH></Reveal>
-            <div style={{ width:36, height:2, background:C.red, marginBottom:20 }}/>
-            <Reveal delay={.2}><p style={{ fontSize:14, fontWeight:300, lineHeight:1.85, color:"rgba(245,245,245,.46)", marginBottom:18, fontFamily:"sans-serif" }}>"Hola a todos. Somos Gonchi y Ale. Lo que empezó como una pasión por los autos se formaliza con este paso. Nuestro objetivo: ayudarte a encontrar el vehículo que buscás, al precio justo y con la transparencia que merecés."</p></Reveal>
+            <Reveal delay={.1}><SecH style={{ marginBottom:24 }}>Nuestra <Red>historia</Red></SecH></Reveal>
+            <Reveal delay={.2}>
+              <CitaFundadores>Hola a todos. Somos Gonchi y Ale. Lo que empezó como una pasión por los autos se formaliza con este paso. Nuestro objetivo: ayudarte a encontrar el vehículo que buscás, al precio justo y con la transparencia que merecés.</CitaFundadores>
+            </Reveal>
             <Reveal delay={.3}><Btn primary onClick={() => navTo("nosotros")}>Conocer nuestra historia</Btn></Reveal>
           </div>
         </div>
       </section>
 
-      {/* ── CLIENTES FELICES ── */}
-      <ClientesCarousel fotos={fotosClientes}/>
-
-      {/* ── VIDEOS ── */}
-      <VideosSection videos={videosData}/>
-
-      {/* ── INSTAGRAM ── (Ale: junto a clientes y videos, antes de ubicación) */}
-      <InstagramPerfil/>
-
-      <SectionDivider/>
-
-      {/* ── LOCATION ── */}
-      <section style={{ padding:"80px 5vw", background:C.zinc2, position:"relative", overflow:"hidden" }}>
-        <CornerBrackets size={20} inset={26} color="rgba(220,38,38,.45)" opacity={.85}/>
-        <div style={{
-          position:"absolute", top:-60, right:-60,
-          width:340, height:240,
-          background:"radial-gradient(ellipse, rgba(220,38,38,.10), transparent 70%)",
-          filter:"blur(20px)", pointerEvents:"none",
-        }}/>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:64, alignItems:"center" }}>
-          <div>
-            <Reveal><Tag>Ubicación</Tag></Reveal>
-            <Reveal delay={.1}><SecH style={{ marginBottom:18 }}>Encontranos en <Red>Yerba Buena</Red></SecH></Reveal>
-            <Reveal delay={.2}>
-              <p style={{ fontSize:14, fontWeight:300, color:"rgba(245,245,245,.46)", lineHeight:1.75, marginBottom:26, fontFamily:"sans-serif" }}>
-                📍 <strong style={{ color:C.white }}>Galería Mercato, Casco Viejo</strong><br/>Yerba Buena, Tucumán, Argentina.<br/><br/>
-                🕐 Lunes a viernes · 9 a 13 y 16:30 a 20:30hs<br/>Sábados · 9 a 12:30hs
-              </p>
-              <Btn href="https://maps.google.com/?q=Galeria+Mercato+Yerba+Buena+Tucuman">Ver en Google Maps</Btn>
-            </Reveal>
-          </div>
-          <Reveal delay={.2}>
-            <div style={{ border:`1px solid ${C.border}`, overflow:"hidden", aspectRatio:"4/3" }}>
-              <iframe
-                src="https://maps.google.com/maps?q=San+Lorenzo+y+Cariola,+Yerba+Buena,+Tucum%C3%A1n,+Argentina&t=&z=17&ie=UTF8&iwloc=&output=embed"
-                width="100%" height="100%" style={{ border:0, display:"block", filter:"invert(.88) hue-rotate(180deg) saturate(.55) brightness(.8)" }}
-                allowFullScreen loading="lazy"/>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── FAQ ── */}
-      <FAQSection/>
+      {/* ── CIERRE: dónde estamos + WhatsApp ── */}
+      <CierreInicio/>
 
       <Footer navTo={navTo}/>
     </>
@@ -1846,7 +1898,7 @@ function StockPage({ stockData, setSelectedCar, loading, error, reintentar }) {
       {/* Grid */}
       <div style={{ padding:"46px 5vw", background:"linear-gradient(to bottom,#0d0d0d,#111)" }}>
         {loading && !stockData.length
-          ? <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:1, background:C.bg }}>
+          ? <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:24 }}>
               {[0,1,2,3,4,5].map(i => <CarSkeleton key={i}/>)}
             </div>
           : error && !stockData.length
@@ -1857,7 +1909,7 @@ function StockPage({ stockData, setSelectedCar, loading, error, reintentar }) {
               <div style={{ fontSize:15, marginBottom:5 }}>No hay vehículos con esos filtros</div>
               <div style={{ fontSize:11, color:C.muted2 }}>Probá otros filtros o consultanos directamente</div>
             </div>
-          : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:1, background:C.bg }}>
+          : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(275px,1fr))", gap:24 }}>
               {filtered.map(car => <CarCard key={car.id} car={car} onClick={setSelectedCar} comparar={{ on: comp.includes(car.id), lleno: comp.length >= 3, toggle: toggleComp }}/>)}
             </div>
         }
@@ -2069,28 +2121,21 @@ function NosotrosPage({ navTo }) {
   return (
     <div style={{ paddingTop:68 }}>
       <PageHeader tag="Quiénes somos" bgWord="NOSOTROS">
-        La historia <Red>real</Red>
+        Nuestra <Red>historia</Red>
       </PageHeader>
       <section style={{ padding:"80px 5vw", background:"#0c0c0c" }}>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:76, alignItems:"start" }}>
           <Reveal>
-            <div style={{ position:"relative" }}>
-              <img src={IMG_GONCHI} alt="Alejandro y Gonchi — NordenCars" style={{ width:"100%", display:"block", objectFit:"cover" }}/>
-              <div style={{ position:"absolute", top:-9, right:-9, width:"36%", height:"36%", border:`2px solid ${C.red}`, zIndex:-1 }}/>
-              <div style={{ position:"absolute", bottom:-9, left:-9, width:"28%", height:"22%", background:C.red, zIndex:-1, opacity:.5 }}/>
-              <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"18px", background:"linear-gradient(to top,rgba(0,0,0,.9),transparent)" }}>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:14, fontWeight:700, textTransform:"uppercase", color:"#fff", letterSpacing:1 }}>Alejandro <Red>&</Red> Gonchi · Fundadores NordenCars</div>
-              </div>
-            </div>
+            <FotoFundadores leyenda="Fundadores NordenCars"/>
           </Reveal>
           <div>
-            <Reveal><Tag>Nuestra historia</Tag></Reveal>
+            <Reveal><Tag>Desde 2022</Tag></Reveal>
             <Reveal delay={.1}><SecH style={{ marginBottom:22 }}>Pasión por <Red>los autos</Red></SecH></Reveal>
             <div style={{ width:36, height:2, background:C.red, marginBottom:22 }}/>
             {["Hola a todos. Somos Gonchi y Ale, y esto es Norden Cars. Lo que empezó hace unos años como una pasión compartida por los autos y un camino recorrido en la compra-venta, se formaliza con este paso.",
               "¿Nuestro objetivo? Ayudarte a encontrar ese 0km o usado que buscás, al precio justo y con la transparencia que te merecés. No solo vendemos autos y camionetas; brindamos el servicio y la confianza que a nosotros nos gustaría recibir.",
               "Nos podés encontrar en nuestra oficina comercial en Galería Mercato, Casco Viejo, Yerba Buena, Tucumán. ¡Bienvenidos a la comunidad de Norden Cars!"
-            ].map((t,i) => <Reveal key={i} delay={i*.12}><p style={{ fontSize:14, fontWeight:300, lineHeight:1.85, color:"rgba(245,245,245,.46)", marginBottom:16, fontFamily:"sans-serif" }}>"{t}"</p></Reveal>)}
+            ].map((t,i) => <Reveal key={i} delay={i*.12}><p style={{ fontSize:15, fontWeight:300, lineHeight:1.85, color:"rgba(245,245,245,.66)", marginBottom:16, fontFamily:"sans-serif", borderLeft:"2px solid rgba(220,38,38,.55)", paddingLeft:20 }}>"{t}"</p></Reveal>)}
             <Reveal delay={.42}>
               <div style={{ display:"flex", gap:10, marginTop:28 }}>
                 <a href={`https://wa.me/${WA_NORDEN}?text=Hola%20Norden%20Cars%2C%20vengo%20de%20la%20web...`} target="_blank" rel="noreferrer"
@@ -2119,6 +2164,8 @@ function NosotrosPage({ navTo }) {
           ))}
         </div>
       </section>
+      {/* Por qué elegirnos (antes en el inicio) */}
+      <Compromiso/>
       <Footer navTo={navTo}/>
     </div>
   );
@@ -2215,6 +2262,7 @@ function ContactoPage({ navTo }) {
                   📍 Galería Mercato, Casco Viejo<br/>Yerba Buena, Tucumán, Argentina<br/><br/>
                   🕐 Lun a Vie: 9–13 y 16:30–20:30hs<br/>Sáb: 9–12:30hs
                 </div>
+                <a href={MAPS_NORDEN} target="_blank" rel="noreferrer" style={{ display:"block", marginTop:10, fontSize:12, color:C.red, fontFamily:"sans-serif", textDecoration:"none", fontWeight:600 }}>Cómo llegar en Google Maps →</a>
                 <a href="https://www.instagram.com/norden.cars/" target="_blank" rel="noreferrer" style={{ display:"block", marginTop:10, fontSize:12, color:C.red, fontFamily:"sans-serif", textDecoration:"none" }}>📷 @norden.cars</a>
               </div>
             </Reveal>
@@ -2246,6 +2294,8 @@ function ContactoPage({ navTo }) {
           </Reveal>
         </div>
       </div>
+      {/* Preguntas frecuentes (antes en el inicio) */}
+      <FAQSection/>
       <Footer navTo={navTo}/>
     </div>
   );
@@ -2487,12 +2537,15 @@ function AlianzaTeilen({ abrirTeilen }) {
           </Reveal>
         </div>
         <Reveal delay={.2}>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:1, background:C.border, border:`1px solid ${C.border}` }}>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
             {[["1","Elegí el auto","0km o usado de nuestro stock."],["2","Simulá","Anticipo y cuota que te queden cómodos."],["3","Lo gestionamos","Carpeta y firma del crédito con Teilen."],["4","Te lo llevás","Con los papeles para circular."]].map(([n, t, d]) => (
-              <div key={n} style={{ background:"#0b0e15", padding:"20px 18px" }}>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:26, fontWeight:800, color:C.red, lineHeight:1 }}>{n}</div>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700, textTransform:"uppercase", color:C.white, margin:"8px 0 4px" }}>{t}</div>
-                <div style={{ fontSize:12, color:"rgba(245,245,245,.5)", lineHeight:1.5, fontFamily:"sans-serif" }}>{d}</div>
+              <div key={n} className="nc-spot nc-tile" style={{ padding:"20px 18px" }}>
+                <span className="nc-glow"/>
+                <div style={{ position:"relative", zIndex:2 }}>
+                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:26, fontWeight:800, color:C.red, lineHeight:1 }}>{n}</div>
+                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700, textTransform:"uppercase", color:C.white, margin:"8px 0 4px" }}>{t}</div>
+                  <div style={{ fontSize:12, color:"rgba(245,245,245,.55)", lineHeight:1.5, fontFamily:"sans-serif" }}>{d}</div>
+                </div>
               </div>
             ))}
           </div>
@@ -2615,9 +2668,9 @@ function TeilenModal({ onClose, precio }) {
   );
 }
 
-function OkmPage({ navTo, okm, abrirTeilen }) {
+function OkmPage({ navTo, okm, abrirTeilen, marcaInicial }) {
   const mob = useIsMobile();
-  const [marca, setMarca] = useState("Todas");
+  const [marca, setMarca] = useState(marcaInicial || "Todas");
   const [q, setQ] = useState("");
   const [sel, setSel] = useState(null);
   const marcas = ["Todas", ...Array.from(new Set(okm.modelos.map(m => m.marca)))];
@@ -3187,7 +3240,7 @@ function VenderPage({ navTo }) {
 /* ─── ROOT APP ───────────────────────────────────────────────────────────────── */
 // Cada sección tiene su dirección (#stock, #okm…): "atrás" del navegador vuelve a la
 // anterior y recargar deja en la misma sección (ver historial.js).
-const PAGINAS = ["home", "stock", "okm", "vender", "nosotros", "contacto"];
+const PAGINAS = ["home", "stock", "okm", "financiacion", "vender", "entregas", "nosotros", "contacto"];
 function paginaDeUrl() {
   try {
     const u = window.location;
@@ -3212,8 +3265,24 @@ export default function App() {
   const [stockIntento, setStockIntento] = useState(0); // "Reintentar" lo vuelve a pedir
   const [appLoading, setAppLoading] = useState(() => { try { return !sessionStorage.getItem("nc_splash_seen"); } catch { return true; } });
   const fotosClientes = CLIENTES_LOCAL;
+
+  // Luz que sigue al mouse en las tarjetas .nc-spot (marcas, por qué elegirnos, Teilen):
+  // un solo listener para toda la página; solo escribe dos variables CSS.
+  useEffect(() => {
+    if (!window.matchMedia?.("(hover: hover)").matches) return; // en celular no hay mouse
+    const mover = (e) => {
+      const el = e.target.closest?.(".nc-spot");
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      el.style.setProperty("--my", `${e.clientY - r.top}px`);
+    };
+    document.addEventListener("pointermove", mover, { passive: true });
+    return () => document.removeEventListener("pointermove", mover);
+  }, []);
   const videosData = SIN_VIDEOS;
   const okm = useOkm();
+  const [okmMarca, setOkmMarca] = useState(null); // marca tocada en el inicio → 0km filtrada
   const [teilen, setTeilen] = useState(false);
   const abrirTeilen = (precio) => setTeilen({ precio: typeof precio === "number" ? precio : null });
 
@@ -3359,6 +3428,7 @@ export default function App() {
   };
 
   const navTo = (p) => {
+    setOkmMarca(null); // entrar a 0km desde el menú muestra todas las marcas
     if (p === pageRef.current) { window.scrollTo({ top:0, behavior:"smooth" }); return; }
     empujarPagina({ page:p }, urlDePagina(p));
     cambiarPagina(p);
@@ -3396,9 +3466,11 @@ export default function App() {
       <Nav page={page} navTo={navTo} scrolled={scrolled}/>
 
       <div style={pageStyle}>
-        {page==="home"     && <HomePage navTo={navTo} setSelectedCar={setSelectedCar} stockData={stockData} loadingStock={loadingStock} stockError={stockError} reintentarStock={() => setStockIntento(n => n + 1)} config={config} fotosClientes={fotosClientes} videosData={videosData} abrirTeilen={abrirTeilen}/>}
-        {page==="okm"      && <OkmPage navTo={navTo} okm={okm} abrirTeilen={abrirTeilen}/>}
+        {page==="home"     && <HomePage okm={okm} verMarcaOkm={(m) => { navTo("okm"); setOkmMarca(m); }} navTo={navTo} setSelectedCar={setSelectedCar} stockData={stockData} loadingStock={loadingStock} stockError={stockError} reintentarStock={() => setStockIntento(n => n + 1)} config={config} fotosClientes={fotosClientes}/>}
+        {page==="okm"      && <OkmPage navTo={navTo} okm={okm} abrirTeilen={abrirTeilen} marcaInicial={okmMarca}/>}
         {page==="stock"    && <StockPage stockData={stockData} setSelectedCar={setSelectedCar} loading={loadingStock} error={stockError} reintentar={() => setStockIntento(n => n + 1)}/>}
+        {page==="financiacion" && <FinanciacionPage navTo={navTo} abrirTeilen={abrirTeilen}/>}
+        {page==="entregas" && <EntregasPage navTo={navTo} fotosClientes={fotosClientes} videosData={videosData}/>}
         {page==="nosotros" && <NosotrosPage navTo={navTo}/>}
         {page==="contacto" && <ContactoPage navTo={navTo}/>}
         {page==="vender"   && <VenderPage navTo={navTo}/>}
