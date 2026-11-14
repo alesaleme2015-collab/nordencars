@@ -54,8 +54,8 @@ const ERP_URL = "https://sistema.nordencars.store";
 
 /* ─── CONSTANTES ───────────────────────────────────────────────────────────── */
 // Marcas del inicio (Ale 14/11): salen del sistema (Precios 0km) y se suman solas
-// cuando se carga una nueva (ORA, ArcFox…). Esta lista vieja solo agrega las que
-// todavía no tienen modelos cargados en el sistema, y da el orden mientras carga.
+// cuando se carga una nueva (ORA, ArcFox…). Esta lista solo da el orden y sirve de
+// respaldo si el ERP no responde.
 const MARCAS_0KM = ["Toyota","Fiat","Chevrolet","BAIC","BYD","Jeep","RAM","Volkswagen","Peugeot","Ford","Haval","Citroën","KIA","BMW","MINI","Audi","Hyundai"];
 const CARROCERIAS = ["Todos","Sedán","SUV","Pick-up","Hatchback","Coupé","Otro"];
 
@@ -462,7 +462,7 @@ function Btn({ children, primary, full, small, onClick, disabled = false, href, 
     width: full ? "100%" : "auto", display:"inline-block", textAlign:"center",
     fontSize: small ? 11 : 12.5, fontWeight:600, letterSpacing:2, textTransform:"uppercase",
     fontFamily:"sans-serif", padding: small ? "8px 16px" : "13px 30px",
-    cursor: disabled ? "not-allowed" : "pointer", border:"none",
+    cursor: disabled ? "not-allowed" : "pointer", border:"none", borderRadius:8,
     transition:"background .3s, color .3s, box-shadow .3s, transform .25s cubic-bezier(.16,1,.3,1), outline-color .3s",
     background: primary ? (hov ? C.red2 : C.red) : "transparent",
     color: C.white, opacity: disabled ? .5 : 1, textDecoration:"none",
@@ -688,7 +688,7 @@ function EtiquetasAuto({ car, grande }) {
   if (car.recien_ingresado) et.push(["Recién ingresado", C.red]);
   if (!et.length) return null;
   return et.map(([t, bg]) => (
-    <span key={t} style={{ fontSize: grande ? 12 : 11, fontWeight:700, letterSpacing:1.2, textTransform:"uppercase", padding: grande ? "5px 11px" : "4px 9px", background:bg, color:"#fff", fontFamily:"sans-serif", boxShadow:"0 4px 14px rgba(0,0,0,.35)", whiteSpace:"nowrap" }}>{t}</span>
+    <span key={t} style={{ fontSize: grande ? 12 : 11, fontWeight:700, letterSpacing:1.2, textTransform:"uppercase", padding: grande ? "5px 11px" : "4px 9px", borderRadius:6, background:bg, color:"#fff", fontFamily:"sans-serif", boxShadow:"0 4px 14px rgba(0,0,0,.35)", whiteSpace:"nowrap" }}>{t}</span>
   ));
 }
 
@@ -793,10 +793,10 @@ function CarCard({ car, onClick, comparar }) {
             </div>
         }
         <div style={{ position:"absolute", top:11, left:11, display:"flex", flexDirection:"column", alignItems:"flex-start", gap:5, zIndex:2 }}>
-          <span style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", padding:"4px 9px", background:car.tipo==="0km"?C.red:"rgba(0,0,0,.82)", color:car.tipo==="0km"?"#fff":"rgba(255,255,255,.62)", border:car.tipo==="0km"?"none":`1px solid ${C.border2}`, fontFamily:"sans-serif" }}>{car.tipo}</span>
+          <span style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", padding:"4px 9px", borderRadius:6, background:car.tipo==="0km"?C.red:"rgba(0,0,0,.82)", color:car.tipo==="0km"?"#fff":"rgba(255,255,255,.62)", border:car.tipo==="0km"?"none":`1px solid ${C.border2}`, fontFamily:"sans-serif" }}>{car.tipo}</span>
           <EtiquetasAuto car={car}/>
         </div>
-        {car.carroceria && <span style={{ position:"absolute", top:11, right:11, fontSize:11, letterSpacing:1.5, textTransform:"uppercase", padding:"4px 9px", background:"rgba(0,0,0,.78)", color:"rgba(255,255,255,.48)", fontFamily:"sans-serif" }}>{car.carroceria}</span>}
+        {car.carroceria && <span style={{ position:"absolute", top:11, right:11, fontSize:11, letterSpacing:1.5, textTransform:"uppercase", padding:"4px 9px", borderRadius:6, background:"rgba(0,0,0,.78)", color:"rgba(255,255,255,.48)", fontFamily:"sans-serif" }}>{car.carroceria}</span>}
         <div style={{ position:"absolute", bottom:0, left:0, width:hov?"100%":"0%", height:2, background:C.red, transition:"width .42s cubic-bezier(.16,1,.3,1)" }}/>
         {comparar && (
           <button onClick={e => { e.stopPropagation(); comparar.toggle(car.id); }} data-cursor-label={comparar.on ? "Quitar" : "Comparar"}
@@ -990,8 +990,6 @@ function ReviewTile({ r }) {
 function FotoFundadores({ leyenda }) {
   return (
     <div style={{ position:"relative", isolation:"isolate" }}>
-      {/* Acento rojo detrás, como antes */}
-      <div style={{ position:"absolute", top:-10, right:-10, width:"36%", height:"36%", border:`2px solid ${C.red}`, borderRadius:12, zIndex:-1 }}/>
       <div style={{ position:"relative", borderRadius:12, overflow:"hidden", border:"1px solid rgba(255,255,255,.12)",
         boxShadow:"0 2px 6px rgba(0,0,0,.4), 0 30px 60px -12px rgba(0,0,0,.75), 0 60px 120px -30px rgba(0,0,0,.6)" }}>
         <img src={IMG_GONCHI} alt="Alejandro y Gonchi — NordenCars" style={{ width:"100%", display:"block", objectFit:"cover" }}/>
@@ -1005,14 +1003,11 @@ function FotoFundadores({ leyenda }) {
 }
 function CitaFundadores({ children }) {
   return (
-    <figure style={{ position:"relative", margin:"0 0 30px", padding:"26px 26px 22px 30px", borderRadius:12,
+    <figure style={{ position:"relative", margin:"0 0 30px", padding:"58px 28px 26px 30px", borderRadius:12,
       background:"linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.01))", border:"1px solid rgba(255,255,255,.08)",
       boxShadow:"0 24px 60px -24px rgba(0,0,0,.7)" }}>
-      <div aria-hidden style={{ position:"absolute", top:-26, left:18, fontFamily:"'Barlow Condensed',sans-serif", fontSize:110, fontWeight:900, lineHeight:1, color:C.red, opacity:.9 }}>“</div>
+      <div aria-hidden style={{ position:"absolute", top:10, left:22, fontFamily:"'Barlow Condensed',sans-serif", fontSize:72, fontWeight:900, lineHeight:1, color:C.red, opacity:.85 }}>“</div>
       <blockquote style={{ margin:0, fontSize:17, fontWeight:300, lineHeight:1.75, color:"rgba(245,245,245,.8)", fontFamily:"sans-serif" }}>{children}</blockquote>
-      <figcaption style={{ marginTop:16, display:"flex", alignItems:"center", gap:10, fontFamily:"'Barlow Condensed',sans-serif", fontSize:14, fontWeight:700, letterSpacing:2, textTransform:"uppercase", color:C.muted }}>
-        <span style={{ width:24, height:2, background:C.red }}/>Ale & Gonchi · Fundadores
-      </figcaption>
     </figure>
   );
 }
@@ -1021,7 +1016,12 @@ function CitaFundadores({ children }) {
 // Las 17 iguales (Ale 14/11): logo en su pastilla blanca (la arma el ERP para cada
 // marca, también las que no tienen ícono público: BAIC, BYD, Haval) + nombre.
 // Si el logo no carga, queda el nombre solo, con el mismo tamaño de tarjeta.
-function MarcaCard({ brand, onClick, chica, logo }) {
+// Logos en blanco parejo sobre fondo oscuro (Ale 14/11: las pastillas blancas de
+// distinto ancho parecían stickers). Los emblemas rellenos (óvalo de Ford, escudo de
+// Peugeot) en blanco quedan como una mancha: esos van en gris claro. Si se carga
+// una marca nueva con emblema relleno, sumarla acá.
+const MARCAS_ESCUDO = ["ford", "peugeot"];
+function MarcaCard({ brand, onClick, chica, logo, logoPastilla }) {
   const [imgOk, setImgOk] = useState(true);
   const slug = brand.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   return (
@@ -1030,7 +1030,8 @@ function MarcaCard({ brand, onClick, chica, logo }) {
       <span className="nc-glow"/>
       <span style={{ position:"relative", zIndex:2, height: chica ? 34 : 42, display:"flex", alignItems:"center", justifyContent:"center" }}>
         {imgOk
-          ? <img src={logo || `${ERP_URL}/api/publico/logo-okm/${slug}`} alt={brand} loading="lazy" onError={() => setImgOk(false)} style={{ height: chica ? 34 : 42, width:"auto", maxWidth: chica ? 86 : 120, objectFit:"contain", display:"block", borderRadius:6 }}/>
+          ? <img src={logo || logoPastilla || `${ERP_URL}/api/publico/logo-okm/${slug}`} alt={brand} loading="lazy" onError={() => setImgOk(false)} style={{ height: chica ? 30 : 38, width:"auto", maxWidth: chica ? 80 : 118, objectFit:"contain", display:"block",
+              filter: !logo ? "none" : MARCAS_ESCUDO.includes(slug) ? "grayscale(1) brightness(1.7)" : "brightness(0) invert(1)", opacity: logo ? .92 : 1 }}/>
           : <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:24, fontWeight:900, textTransform:"uppercase", color:C.white }}>{brand}</span>}
       </span>
       <span style={{ position:"relative", zIndex:2, fontFamily:"'Barlow Condensed',sans-serif", fontSize: chica ? 12 : 13, fontWeight:700, textTransform:"uppercase", letterSpacing: chica ? 1.5 : 2.5, color:"rgba(245,245,245,.62)" }}>{brand}</span>
@@ -1049,16 +1050,19 @@ function ClientesCarousel({ fotos = [], verMas }) {
         <Tag>Clientes felices</Tag>
         <SecH>Una gran <Red>comunidad</Red></SecH>
         <p style={{ fontSize:14, fontWeight:300, color:"rgba(245,245,245,.52)", lineHeight:1.75, maxWidth:560, marginTop:14, fontFamily:"sans-serif" }}>Somos una gran comunidad. Muchos clientes ya confían en nuestros servicios y productos. <span style={{ color:C.white, fontWeight:400 }}>¿Qué esperás para sumarte?</span></p>
+        <div style={{ display:"flex", alignItems:"center", gap:14, flexWrap:"wrap", marginTop:20 }}>
         <a href={GOOGLE_RESENA} target="_blank" rel="noreferrer" data-cursor-label="Opinar"
-          style={{ display:"inline-flex", alignItems:"center", gap:10, marginTop:20, padding:"11px 18px", border:`1px solid ${C.border2}`, color:C.white, textDecoration:"none", fontFamily:"sans-serif", fontSize:13 }}>
+          style={{ display:"inline-flex", alignItems:"center", gap:10, borderRadius:8, padding:"11px 18px", border:`1px solid ${C.border2}`, color:C.white, textDecoration:"none", fontFamily:"sans-serif", fontSize:13 }}>
           <span style={{ color:"#facc15", letterSpacing:2 }}>★★★★★</span>
           ¿Ya compraste en Norden? <b style={{ color:C.red2, fontWeight:600 }}>Dejanos tu opinión en Google</b>
         </a>
-        {verMas && <div style={{ marginTop:14 }}><Btn small onClick={verMas}>Ver todas las entregas →</Btn></div>}
+        {verMas && <Btn onClick={verMas}>Ver todas las entregas →</Btn>}
+        </div>
       </div></Reveal>
-      <div style={{ display:"flex", width:"max-content", animation:"marquee 50s linear infinite", gap:3 }}>
+      {/* Margen por foto (no "gap") para que la vuelta de la cinta no dé un saltito */}
+      <div style={{ display:"flex", width:"max-content", animation:"marquee 60s linear infinite" }}>
         {doubled.map((f,i) => (
-          <div key={i} style={{ flexShrink:0, width:238, height:330, overflow:"hidden" }}>
+          <div key={i} style={{ flexShrink:0, width:238, height:330, overflow:"hidden", borderRadius:12, marginRight:16, border:"1px solid rgba(255,255,255,.08)" }}>
             <img src={f.url} alt="" loading="lazy" style={{ width:"100%", height:"100%", objectFit:"cover", filter:"brightness(.82) saturate(.9)", transition:"filter .4s" }}
               onMouseEnter={e => e.currentTarget.style.filter="brightness(1) saturate(1)"}
               onMouseLeave={e => e.currentTarget.style.filter="brightness(.82) saturate(.9)"}/>
@@ -1303,13 +1307,15 @@ function ServiciosInicio({ navTo }) {
         {SERVICIOS.map((s, k) => (
           <Reveal key={s.p} delay={k * .08}>
             <button onClick={() => navTo(s.p)} className="nc-spot nc-tile" data-cursor-label="Ver más"
-              style={{ width:"100%", minHeight:230, textAlign:"left", cursor:"pointer", padding:"30px 28px", display:"flex", flexDirection:"column", justifyContent:"space-between", gap:26, color:"inherit", font:"inherit" }}>
+              style={{ width:"100%", minHeight:250, textAlign:"left", cursor:"pointer", padding:"30px 28px", background:"linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.01) 60%), #0f1217", display:"flex", flexDirection:"column", justifyContent:"space-between", gap:26, color:"inherit", font:"inherit" }}>
               <span className="nc-glow"/>
+              {/* Número grande de fondo */}
+              <span aria-hidden style={{ position:"absolute", top:14, right:22, zIndex:1, fontFamily:"'Barlow Condensed',sans-serif", fontSize:92, fontWeight:900, lineHeight:1, color:"transparent", WebkitTextStroke:"1px rgba(255,255,255,.1)", letterSpacing:-2, pointerEvents:"none" }}>0{k + 1}</span>
               <span style={{ position:"relative", zIndex:2, width:52, height:52, borderRadius:"50%", background:"rgba(220,38,38,.1)", border:"1px solid rgba(220,38,38,.25)", color:C.red, display:"flex", alignItems:"center", justifyContent:"center" }}><ServiceIcon name={s.i} size={24}/></span>
               <span style={{ position:"relative", zIndex:2, display:"block" }}>
                 <span style={{ display:"block", fontFamily:"'Barlow Condensed',sans-serif", fontSize:28, fontWeight:800, textTransform:"uppercase", color:C.white, lineHeight:1, marginBottom:10 }}>{s.t}</span>
                 <span style={{ display:"block", fontSize:14, fontWeight:300, lineHeight:1.65, color:"rgba(245,245,245,.62)", fontFamily:"sans-serif", marginBottom:18 }}>{s.d}</span>
-                <span style={{ fontSize:12, fontWeight:600, letterSpacing:2.2, textTransform:"uppercase", color:C.red2, fontFamily:"sans-serif" }}>{s.cta} →</span>
+                <span className="srv-cta" style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"10px 16px", borderRadius:8, border:"1px solid rgba(220,38,38,.45)", background:"rgba(220,38,38,.08)", fontSize:12, fontWeight:600, letterSpacing:2, textTransform:"uppercase", color:C.white, fontFamily:"sans-serif", transition:"background .3s, border-color .3s" }}>{s.cta} <span style={{ color:C.red2 }}>→</span></span>
               </span>
             </button>
           </Reveal>
@@ -1405,17 +1411,19 @@ function EntregasPage({ navTo, fotosClientes, videosData }) {
 
 
 const claveMarcaWeb = (m) => String(m).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
-// [{ nombre, logo, enSistema }]: primero las del sistema (en el orden de siempre y
-// después las nuevas), al final las de la lista vieja que el sistema todavía no tiene.
-function marcasInicio(modelos = []) {
+// [{ nombre, logo, enSistema }]: las del sistema, en el orden de siempre y después las nuevas.
+function marcasInicio(okm) {
+  const modelos = okm?.modelos || [];
   const delSistema = new Map();
-  for (const m of modelos) if (m?.marca && !delSistema.has(claveMarcaWeb(m.marca))) delSistema.set(claveMarcaWeb(m.marca), { nombre: m.marca, logo: m.logo_pastilla || null, enSistema: true });
-  if (!delSistema.size) return MARCAS_0KM.map(n => ({ nombre: n, logo: null, enSistema: false }));
+  for (const m of modelos) if (m?.marca && !delSistema.has(claveMarcaWeb(m.marca))) delSistema.set(claveMarcaWeb(m.marca), { nombre: m.marca, logo: m.logo || null, logoPastilla: m.logo_pastilla || null, enSistema: true });
+  if (okm?.cargando) return [];
+  if (!delSistema.size) return MARCAS_0KM.map(n => ({ nombre: n, logo: null, enSistema: false })); // el ERP no respondió
   const viejas = MARCAS_0KM.map(n => ({ nombre: n, clave: claveMarcaWeb(n) }));
   const enOrden = viejas.filter(v => delSistema.has(v.clave)).map(v => delSistema.get(v.clave));
   const nuevas = [...delSistema.entries()].filter(([k]) => !viejas.some(v => v.clave === k)).map(([, v]) => v).sort((a, b) => a.nombre.localeCompare(b.nombre));
-  const sinCargar = viejas.filter(v => !delSistema.has(v.clave)).map(v => ({ nombre: v.nombre, logo: null, enSistema: false }));
-  return [...enOrden, ...nuevas, ...sinCargar];
+  // Ale 14/11: solo las marcas con modelos cargados (una marca sin nada que mostrar
+  // es un callejón sin salida). Cuando se cargan sus modelos, aparecen solas.
+  return [...enOrden, ...nuevas];
 }
 
 function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingStock, stockError, reintentarStock, config, fotosClientes }) {
@@ -1533,7 +1541,7 @@ function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingS
             {config.hero_subtitulo || "Al precio justo, con la transparencia que merecés. 0km y usados seleccionados en Yerba Buena, Tucumán."}
           </p>
           <div style={{ display:"flex", gap:13, flexWrap:"wrap", animation:"fadeUp .8s 1s both" }}>
-            <div className="btn-glow" style={{ display:"inline-block", borderRadius:2 }}><Btn primary onClick={() => navTo("stock")}>Ver Stock Disponible</Btn></div>
+            <div className="btn-glow" style={{ display:"inline-block", borderRadius:8 }}><Btn primary onClick={() => navTo("stock")}>Ver Stock Disponible</Btn></div>
             <Btn onClick={() => navTo("vender")}>Vender mi Auto</Btn>
           </div>
         </div>
@@ -1585,11 +1593,11 @@ function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingS
         </div>
         <div style={{
           display:"grid",
-          gridTemplateColumns: mob ? "repeat(3,1fr)" : "repeat(auto-fill,minmax(160px,1fr))",
+          gridTemplateColumns: mob ? "repeat(3,1fr)" : "repeat(5,1fr)", // 15 marcas: 5×3 en compu, 3×5 en celular
           gap: mob ? 10 : 16,
           background:"transparent",
         }}>
-          {marcasInicio(okm?.modelos).map((m,i) => <Reveal key={m.nombre} delay={Math.min(i, 16)*.022}><MarcaCard brand={m.nombre} logo={m.logo} chica={mob} onClick={() => verMarcaOkm(m.enSistema ? m.nombre : null)}/></Reveal>)}
+          {marcasInicio(okm).map((m,i) => <Reveal key={m.nombre} delay={Math.min(i, 16)*.022}><MarcaCard brand={m.nombre} logo={m.logo} logoPastilla={m.logoPastilla} chica={mob} onClick={() => verMarcaOkm(m.enSistema ? m.nombre : null)}/></Reveal>)}
         </div>
       </section>
 
