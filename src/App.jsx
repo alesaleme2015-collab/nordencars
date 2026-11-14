@@ -1536,6 +1536,9 @@ function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingS
     return () => window.removeEventListener("resize", ck);
   }, []);
 
+  // Cantidad de marcas 0km: la misma que la grilla (sale del sistema). 15 mientras carga.
+  const cantMarcas = new Set((okm?.modelos || []).map(m => claveMarcaWeb(m.marca))).size || 15;
+
   // Con el video andando se ocultan las barras de luz y los autos 3D (quedan de respaldo)
   const [conVideo, setConVideo] = useState(false);
 
@@ -1635,7 +1638,7 @@ function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingS
 
         {/* Stats bar */}
         <div style={{ position:"absolute", bottom:0, left:0, right:0, display:"flex", borderTop:`1px solid ${C.border}`, background:"rgba(5,5,5,.92)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", zIndex:2 }}>
-          {[["+","100","","Vehículos vendidos"],["","100","%","Satisfacción"],["","17","","Marcas 0km"],["","24","hs","Respuesta"]].map(([pre,n,suf,l],i) => (
+          {[["+","100","","Vehículos vendidos"],["","100","%","Satisfacción"],["+",String(cantMarcas),"","Marcas 0km"],["","24","hs","Respuesta"]].map(([pre,n,suf,l],i) => (
             <HeroStatItem key={i} pre={pre} n={n} suf={suf} l={l} last={i===3} mob={mob}/>
           ))}
         </div>
