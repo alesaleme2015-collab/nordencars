@@ -598,12 +598,12 @@ function FloatWa() {
 /* ─── NAV ───────────────────────────────────────────────────────────────────── */
 function Nav({ page, navTo, scrolled }) {
   // En compu el menú va a la vista; las tres rayitas quedan solo para celular/tablet.
-  const compacto = useIsMobile(1100);
+  const compacto = useIsMobile(1200);
   const [menuAbierto, setMenuOpen] = useState(false);
   const menuOpen = menuAbierto && compacto; // si se agranda la ventana, el menú lateral se cierra solo
   useCapaAtras(menuOpen, () => setMenuOpen(false)); // "atrás" cierra el menú
   const go = (p) => { navTo(p); setMenuOpen(false); };
-  const links = [["home","Inicio"],["stock","Stock"],["okm","0km"],["vender","Vendé tu auto"],["nosotros","Nosotros"],["contacto","Contacto"]];
+  const links = [["home","Inicio"],["stock","Stock"],["okm","0km"],["financiacion","Financiación"],["vender","Vendé tu auto"],["entregas","Entregas"],["nosotros","Nosotros"],["contacto","Contacto"]];
 
   return (
     <>
@@ -613,8 +613,8 @@ function Nav({ page, navTo, scrolled }) {
             <img src={IMG_LOGO} alt="NordenCars" style={{ height:34 }}/>
           </button>
           {!compacto && (
-            <div style={{ display:"flex", alignItems:"center", gap:34 }}>
-              {links.filter(([p]) => p !== "vender").map(([p,l]) => (
+            <div style={{ display:"flex", alignItems:"center", gap:30 }}>
+              {links.filter(([p]) => p !== "vender" && p !== "home").map(([p,l]) => (
                 <button key={p} onClick={() => go(p)} className="nav-link" data-activo={page===p ? "1" : "0"}
                   style={{ background:"none", border:"none", cursor:"pointer", padding:"6px 0", fontSize:12.5, letterSpacing:2.4, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:500,
                     color: page===p ? C.white : "rgba(245,245,245,.62)", transition:"color .25s" }}>
@@ -1047,7 +1047,7 @@ function MarcaCard({ brand, onClick, chica }) {
 
 /* ─── PROCESO ORBITAL (sistema solar del proceso de compra) ─────────────────── */
 /* ─── CLIENTES CAROUSEL ─────────────────────────────────────────────────────── */
-function ClientesCarousel({ fotos = [] }) {
+function ClientesCarousel({ fotos = [], verMas }) {
   if (!fotos.length) return null;
   const doubled = [...fotos, ...fotos];
   return (
@@ -1061,6 +1061,7 @@ function ClientesCarousel({ fotos = [] }) {
           <span style={{ color:"#facc15", letterSpacing:2 }}>★★★★★</span>
           ¿Ya compraste en Norden? <b style={{ color:C.red2, fontWeight:600 }}>Dejanos tu opinión en Google</b>
         </a>
+        {verMas && <div style={{ marginTop:14 }}><Btn small onClick={verMas}>Ver todas las entregas →</Btn></div>}
       </div></Reveal>
       <div style={{ display:"flex", width:"max-content", animation:"marquee 50s linear infinite", gap:3 }}>
         {doubled.map((f,i) => (
@@ -1198,7 +1199,7 @@ function Footer({ navTo }) {
         </div>
         <div>
           <div style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:C.red, marginBottom:14, fontFamily:"sans-serif" }}>Navegación</div>
-          {[["home","Inicio"],["stock","Stock"],["okm","0km"],["vender","Vendé tu auto"],["nosotros","Nosotros"],["contacto","Contacto"]].map(([p,l]) => (
+          {[["home","Inicio"],["stock","Stock"],["okm","0km"],["financiacion","Financiación"],["vender","Vendé tu auto"],["entregas","Entregas"],["nosotros","Nosotros"],["contacto","Contacto"]].map(([p,l]) => (
             <div key={p} style={{ marginBottom:9 }}>
               <FooterLink onClick={() => navTo(p)}>{l}</FooterLink>
             </div>
@@ -1261,7 +1262,156 @@ function HeroStatItem({ pre, n, suf, l, last, mob }) {
 }
 
 /* ─── HOME PAGE ─────────────────────────────────────────────────────────────── */
-function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, reintentarStock, config, fotosClientes, videosData, abrirTeilen }) {
+/* ─── PÁGINAS NUEVAS Y AVANCES DEL INICIO (Ale 14/11) ────────────────────────
+   El inicio muestra un avance de cada tema y lleva a su página; el detalle vive en
+   Financiación, Entregas, Nosotros y Contacto. Nada se borró: cada cosa se mudó. */
+
+// "Por qué elegirnos" (antes en el inicio; ahora en Nosotros)
+function Compromiso() {
+  return (
+    <section style={{ padding:"100px 5vw", background:`linear-gradient(to bottom, ${C.bg} 0%, ${C.carbon} 100%)`, position:"relative", overflow:"hidden" }}>
+      <CornerBrackets size={22} inset={28} color="rgba(220,38,38,.55)"/>
+      {/* Mesh glow rojo arriba */}
+      <div style={{
+        position:"absolute", top:-120, left:"50%", transform:"translateX(-50%)",
+        width:680, height:240,
+        background:"radial-gradient(ellipse, rgba(220,38,38,.10), transparent 70%)",
+        filter:"blur(24px)", pointerEvents:"none",
+      }}/>
+      <div style={{ position:"relative", zIndex:1 }}>
+        <Reveal><Tag>Por qué elegirnos</Tag></Reveal>
+        <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Nuestro <Red>compromiso</Red></SecH></Reveal>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(198px,1fr))", gap:18, background:"transparent" }}>
+          {[{i:"stock",t:"Stock seleccionado",d:"Cada auto pasa una revisión rigurosa antes de entrar al catálogo. Solo publicamos lo que recomendaríamos a un amigo."},
+            {i:"inspeccion",t:"Inspección pre-compra",d:"Revisión técnica completa del vehículo: te mostramos el estado real, sin sorpresas, antes de que compres."},
+            {i:"transparencia",t:"Transparencia total",d:"Historial completo y documentación en orden. Sin letras chicas, sin sorpresas. Lo que acordamos es lo que firmamos."},
+            {i:"financiacion",t:"Financiación",d:"Trabajamos con múltiples entidades. Te armamos el plan de cuotas que mejor se ajuste a tus posibilidades."},
+            {i:"permutas",t:"Permutas",d:"Tomamos tu auto como parte de pago al mejor precio del mercado. Simple, rápido y sin vueltas."},
+            {i:"agil",t:"Gestión ágil",d:"Transferencia y trámites resueltos rápido. Vos solo te preocupás por estrenar tu nuevo vehículo."},
+            {i:"local",t:"Presencia local",d:"Galería Mercato, Yerba Buena. Atención presencial, personalizada y sin apuros. También por WhatsApp."},
+          ].map((s,i) => <Reveal key={i} delay={i*.055}><FlipCard s={s}/></Reveal>)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const SERVICIOS = [
+  { i:"financiacion", p:"financiacion", t:"Financiación", d:"Simulá anticipo y cuota con Teilen y mirá paso a paso cómo se compra.", cta:"Simular mi crédito" },
+  { i:"permutas", p:"vender", t:"Vendé o permutá", d:"Te lo compramos, lo consignamos o lo tomamos como parte de pago. Respuesta en menos de 24 h.", cta:"Tasar mi auto" },
+  { i:"transparencia", p:"nosotros", t:"Por qué Norden", d:"Stock revisado, transparencia total y gestoría propia. Conocé quiénes somos.", cta:"Conocernos" },
+];
+function ServiciosInicio({ navTo }) {
+  return (
+    <section style={{ padding:"100px 5vw", background:`linear-gradient(to bottom, ${C.bg} 0%, ${C.carbon} 100%)` }}>
+      <Reveal><Tag>Servicios</Tag></Reveal>
+      <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Todo en un <Red>solo lugar</Red></SecH></Reveal>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))", gap:18 }}>
+        {SERVICIOS.map((s, k) => (
+          <Reveal key={s.p} delay={k * .08}>
+            <button onClick={() => navTo(s.p)} className="nc-spot nc-tile" data-cursor-label="Ver más"
+              style={{ width:"100%", minHeight:230, textAlign:"left", cursor:"pointer", padding:"30px 28px", display:"flex", flexDirection:"column", justifyContent:"space-between", gap:26, color:"inherit", font:"inherit" }}>
+              <span className="nc-glow"/>
+              <span style={{ position:"relative", zIndex:2, width:52, height:52, borderRadius:"50%", background:"rgba(220,38,38,.1)", border:"1px solid rgba(220,38,38,.25)", color:C.red, display:"flex", alignItems:"center", justifyContent:"center" }}><ServiceIcon name={s.i} size={24}/></span>
+              <span style={{ position:"relative", zIndex:2, display:"block" }}>
+                <span style={{ display:"block", fontFamily:"'Barlow Condensed',sans-serif", fontSize:28, fontWeight:800, textTransform:"uppercase", color:C.white, lineHeight:1, marginBottom:10 }}>{s.t}</span>
+                <span style={{ display:"block", fontSize:14, fontWeight:300, lineHeight:1.65, color:"rgba(245,245,245,.62)", fontFamily:"sans-serif", marginBottom:18 }}>{s.d}</span>
+                <span style={{ fontSize:12, fontWeight:600, letterSpacing:2.2, textTransform:"uppercase", color:C.red2, fontFamily:"sans-serif" }}>{s.cta} →</span>
+              </span>
+            </button>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CierreInicio() {
+  return (
+    <section style={{ padding:"90px 5vw", background:C.bg, borderTop:`1px solid ${C.border}`, position:"relative", overflow:"hidden" }}>
+      <div style={{ position:"absolute", left:"50%", top:"-60%", transform:"translateX(-50%)", width:"70%", height:"160%", background:"radial-gradient(ellipse, rgba(220,38,38,.12), transparent 65%)", pointerEvents:"none" }}/>
+      <div style={{ position:"relative", textAlign:"center", maxWidth:760, margin:"0 auto" }}>
+        <Reveal><div style={{ display:"flex", justifyContent:"center" }}><Tag>Yerba Buena · Tucumán</Tag></div></Reveal>
+        <Reveal delay={.1}><SecH style={{ marginBottom:18 }}>¿Buscás auto? <Red>Hablemos</Red></SecH></Reveal>
+        <Reveal delay={.18}>
+          <p style={{ fontSize:15, fontWeight:300, color:"rgba(245,245,245,.62)", lineHeight:1.7, fontFamily:"sans-serif", marginBottom:28 }}>
+            Galería Mercato, Casco Viejo · Lunes a viernes de 9 a 13 y de 16:30 a 20:30 · Sábados de 9 a 12:30
+          </p>
+        </Reveal>
+        <Reveal delay={.26}>
+          <div style={{ display:"flex", gap:13, flexWrap:"wrap", justifyContent:"center" }}>
+            <Btn primary href={`https://wa.me/${WA_NORDEN}?text=${encodeURIComponent("Hola Norden Cars, vengo de la web")}`}>Escribinos por WhatsApp</Btn>
+            <Btn href="https://maps.google.com/?q=Galeria+Mercato+Yerba+Buena+Tucuman">Cómo llegar</Btn>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+function FinanciacionPage({ navTo, abrirTeilen }) {
+  const mob = useIsMobile();
+  return (
+    <div style={{ paddingTop:68 }}>
+      <PageHeader tag="Financiación" bgWord="CUOTAS">
+        Tu auto, <Red>en cuotas</Red>
+      </PageHeader>
+      <AlianzaTeilen abrirTeilen={abrirTeilen}/>
+      <SectionDivider/>
+      <section style={{ padding:"100px 5vw", background:C.bg }}>
+        <Reveal><Tag>Cómo funciona · La historia de Martín</Tag></Reveal>
+        <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Así se compra en <Red>Norden</Red></SecH></Reveal>
+        <Reveal delay={.2}><HistoriaCompra mobile={mob}/></Reveal>
+        <Reveal delay={.4}>
+          <div style={{ marginTop:38, display:"flex", gap:13, flexWrap:"wrap" }}>
+            <Btn primary onClick={() => navTo("stock")}>Ver stock disponible</Btn>
+            <Btn href={`https://wa.me/${WA_NORDEN}?text=Hola%2C%20quiero%20empezar%20el%20proceso%20de%20compra...`}>Empezar por WhatsApp</Btn>
+          </div>
+        </Reveal>
+      </section>
+      <Footer navTo={navTo}/>
+    </div>
+  );
+}
+
+function EntregasPage({ navTo, fotosClientes, videosData }) {
+  const mob = useIsMobile();
+  return (
+    <div style={{ paddingTop:68 }}>
+      <PageHeader tag="Clientes felices" bgWord="ENTREGAS">
+        Ellos ya manejan <Red>su Norden</Red>
+      </PageHeader>
+      <section style={{ padding:"70px 5vw 90px", background:C.bg }}>
+        <Reveal>
+          <p style={{ fontSize:15, fontWeight:300, color:"rgba(245,245,245,.62)", lineHeight:1.7, maxWidth:620, fontFamily:"sans-serif", marginBottom:22 }}>
+            Cada foto es un cliente nuestro el día que se llevó su auto. Sin fotos de catálogo.
+          </p>
+          <a href={GOOGLE_RESENA} target="_blank" rel="noreferrer" data-cursor-label="Opinar"
+            style={{ display:"inline-flex", alignItems:"center", gap:10, padding:"11px 18px", border:`1px solid ${C.border2}`, borderRadius:8, color:C.white, textDecoration:"none", fontFamily:"sans-serif", fontSize:13 }}>
+            <span style={{ color:"#facc15", letterSpacing:2 }}>★★★★★</span>
+            ¿Ya compraste en Norden? <b style={{ color:C.red2, fontWeight:600 }}>Dejanos tu opinión en Google</b>
+          </a>
+        </Reveal>
+        <div style={{ marginTop:40, display:"grid", gridTemplateColumns: mob ? "repeat(2,minmax(0,1fr))" : "repeat(auto-fill,minmax(220px,1fr))", gap: mob ? 8 : 14 }}>
+          {fotosClientes.map((f, k) => (
+            <Reveal key={f.url} delay={(k % 4) * .06}>
+              <div className="entrega-foto" style={{ aspectRatio:"4/5", borderRadius:10, overflow:"hidden", border:"1px solid rgba(255,255,255,.08)", background:C.zinc }}>
+                <img src={f.url} alt="Entrega a un cliente de Norden Cars" loading="lazy" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+        <style>{".entrega-foto img{filter:brightness(.88);transition:transform .8s cubic-bezier(.16,1,.3,1),filter .5s}.entrega-foto:hover img{transform:scale(1.05);filter:none}"}</style>
+      </section>
+      <VideosSection videos={videosData}/>
+      <InstagramPerfil/>
+      <Footer navTo={navTo}/>
+    </div>
+  );
+}
+
+
+function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, reintentarStock, config, fotosClientes }) {
   const preview = stockData.filter(v => v.destacado).slice(0,4);
   const shown = preview.length >= 2 ? preview : stockData.slice(0,4);
   const mob = useIsMobile();
@@ -1439,83 +1589,11 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
 
       <SectionDivider/>
 
-      {/* ── SERVICES (flip cards) — sección VIP con corner brackets ── */}
-      <section style={{ padding:"100px 5vw", background:`linear-gradient(to bottom, ${C.bg} 0%, ${C.carbon} 100%)`, position:"relative", overflow:"hidden" }}>
-        <CornerBrackets size={22} inset={28} color="rgba(220,38,38,.55)"/>
-        {/* Mesh glow rojo arriba */}
-        <div style={{
-          position:"absolute", top:-120, left:"50%", transform:"translateX(-50%)",
-          width:680, height:240,
-          background:"radial-gradient(ellipse, rgba(220,38,38,.10), transparent 70%)",
-          filter:"blur(24px)", pointerEvents:"none",
-        }}/>
-        <div style={{ position:"relative", zIndex:1 }}>
-          <Reveal><Tag>Por qué elegirnos</Tag></Reveal>
-          <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Nuestro <Red>compromiso</Red></SecH></Reveal>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(198px,1fr))", gap:18, background:"transparent" }}>
-            {[{i:"stock",t:"Stock seleccionado",d:"Cada auto pasa una revisión rigurosa antes de entrar al catálogo. Solo publicamos lo que recomendaríamos a un amigo."},
-              {i:"inspeccion",t:"Inspección pre-compra",d:"Revisión técnica completa del vehículo: te mostramos el estado real, sin sorpresas, antes de que compres."},
-              {i:"transparencia",t:"Transparencia total",d:"Historial completo y documentación en orden. Sin letras chicas, sin sorpresas. Lo que acordamos es lo que firmamos."},
-              {i:"financiacion",t:"Financiación",d:"Trabajamos con múltiples entidades. Te armamos el plan de cuotas que mejor se ajuste a tus posibilidades."},
-              {i:"permutas",t:"Permutas",d:"Tomamos tu auto como parte de pago al mejor precio del mercado. Simple, rápido y sin vueltas."},
-              {i:"agil",t:"Gestión ágil",d:"Transferencia y trámites resueltos rápido. Vos solo te preocupás por estrenar tu nuevo vehículo."},
-              {i:"local",t:"Presencia local",d:"Galería Mercato, Yerba Buena. Atención presencial, personalizada y sin apuros. También por WhatsApp."},
-            ].map((s,i) => <Reveal key={i} delay={i*.055}><FlipCard s={s}/></Reveal>)}
-          </div>
-        </div>
-      </section>
+      {/* ── SERVICIOS: un avance de cada cosa, cada uno lleva a su página (Ale 14/11: inicio menos cargado) ── */}
+      <ServiciosInicio navTo={navTo}/>
 
-      <SectionDivider/>
-
-      {/* ── VENDÉ TU AUTO ── */}
-      <section style={{ position:"relative", overflow:"hidden", padding:"84px 5vw", background:"linear-gradient(120deg,#0d0708 0%,#140909 50%,#0a0c10 100%)", borderTop:`1px solid ${C.border}`, isolation:"isolate" }}>
-        <div style={{ position:"absolute", right:"-4vw", top:"50%", transform:"translateY(-50%)", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:"clamp(120px,22vw,320px)", lineHeight:.8, color:"transparent", WebkitTextStroke:"1px rgba(220,38,38,.16)", letterSpacing:-6, zIndex:-1, pointerEvents:"none", userSelect:"none" }}>VENDÉ</div>
-        <div style={{ position:"absolute", left:"-10%", top:"-40%", width:"60%", height:"180%", background:"radial-gradient(ellipse, rgba(220,38,38,.14), transparent 65%)", zIndex:-1, pointerEvents:"none" }}/>
-        <Reveal><Tag>Compra o consignación</Tag></Reveal>
-        <Reveal delay={.1}><SecH style={{ marginBottom:16, maxWidth:720 }}>¿Querés vender <Red>tu auto?</Red></SecH></Reveal>
-        <Reveal delay={.18}>
-          <p style={{ fontSize:15, fontWeight:300, color:"rgba(245,245,245,.62)", lineHeight:1.7, maxWidth:520, marginBottom:30, fontFamily:"sans-serif" }}>
-            Te lo compramos, lo vendemos por vos en consignación o lo tomamos como parte de pago. Cargá los datos y unas fotos desde el celular en 2 minutos y te respondemos en menos de 24 h.
-          </p>
-        </Reveal>
-        <Reveal delay={.26}>
-          <div style={{ display:"flex", gap:13, flexWrap:"wrap" }}>
-            <Btn primary onClick={() => navTo("vender")}>Vendé tu auto</Btn>
-            <Btn href={`https://wa.me/${WA_NORDEN}?text=${encodeURIComponent("Hola Norden Cars, quiero vender mi auto")}`}>Consultar por WhatsApp</Btn>
-          </div>
-        </Reveal>
-      </section>
-
-      <AlianzaTeilen abrirTeilen={abrirTeilen}/>
-
-      <SectionDivider/>
-
-      {/* ── PROCESO DE COMPRA ── */}
-      <section style={{ padding:"100px 5vw", background:C.bg }}>
-        <Reveal><Tag>Cómo funciona · La historia de Martín</Tag></Reveal>
-        <Reveal delay={.1}><SecH style={{ marginBottom:44 }}>Así se compra en <Red>Norden</Red></SecH></Reveal>
-        <Reveal delay={.2}><HistoriaCompra mobile={mob}/></Reveal>
-        <Reveal delay={.4}>
-          <div style={{ marginTop:38, display:"flex", gap:13, flexWrap:"wrap" }}>
-            <Btn primary onClick={() => navTo("stock")}>Ver stock disponible</Btn>
-            <Btn href={`https://wa.me/${WA_NORDEN}?text=Hola%2C%20quiero%20empezar%20el%20proceso%20de%20compra...`}>Empezar por WhatsApp</Btn>
-          </div>
-        </Reveal>
-      </section>
-
-      <SectionDivider/>
-
-      {/* ── PHOTO STRIP ── */}
-      <style>{`.foto-tira img{filter:brightness(.48) saturate(.72);transition:filter .7s ease,transform 1.2s cubic-bezier(.16,1,.3,1)}.foto-tira>div:hover img{filter:brightness(1) saturate(1.05);transform:scale(1.07)}`}</style>
-      <div className="foto-tira" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", height:210, overflow:"hidden", gap:1 }}>
-        {[IMG_BMW_FULL,IMG_BMW_FRONT,IMG_VW_FRONT,IMG_VW_INT].map((img,i) => (
-          <div key={i} style={{ overflow:"hidden" }}>
-            <img src={img} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
-          </div>
-        ))}
-      </div>
-
-      <SectionDivider/>
+      {/* ── ENTREGAS (avance) ── */}
+      <ClientesCarousel fotos={fotosClientes} verMas={() => navTo("entregas")}/>
 
       {/* ── NOSOTROS PREVIEW ── */}
       <section style={{ padding:"100px 5vw", background:`linear-gradient(to bottom, ${C.bg} 0%, ${C.carbon} 100%)` }}>
@@ -1534,51 +1612,8 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
         </div>
       </section>
 
-      {/* ── CLIENTES FELICES ── */}
-      <ClientesCarousel fotos={fotosClientes}/>
-
-      {/* ── VIDEOS ── */}
-      <VideosSection videos={videosData}/>
-
-      {/* ── INSTAGRAM ── (Ale: junto a clientes y videos, antes de ubicación) */}
-      <InstagramPerfil/>
-
-      <SectionDivider/>
-
-      {/* ── LOCATION ── */}
-      <section style={{ padding:"80px 5vw", background:C.zinc2, position:"relative", overflow:"hidden" }}>
-        <CornerBrackets size={20} inset={26} color="rgba(220,38,38,.45)" opacity={.85}/>
-        <div style={{
-          position:"absolute", top:-60, right:-60,
-          width:340, height:240,
-          background:"radial-gradient(ellipse, rgba(220,38,38,.10), transparent 70%)",
-          filter:"blur(20px)", pointerEvents:"none",
-        }}/>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:64, alignItems:"center" }}>
-          <div>
-            <Reveal><Tag>Ubicación</Tag></Reveal>
-            <Reveal delay={.1}><SecH style={{ marginBottom:18 }}>Encontranos en <Red>Yerba Buena</Red></SecH></Reveal>
-            <Reveal delay={.2}>
-              <p style={{ fontSize:14, fontWeight:300, color:"rgba(245,245,245,.46)", lineHeight:1.75, marginBottom:26, fontFamily:"sans-serif" }}>
-                📍 <strong style={{ color:C.white }}>Galería Mercato, Casco Viejo</strong><br/>Yerba Buena, Tucumán, Argentina.<br/><br/>
-                🕐 Lunes a viernes · 9 a 13 y 16:30 a 20:30hs<br/>Sábados · 9 a 12:30hs
-              </p>
-              <Btn href="https://maps.google.com/?q=Galeria+Mercato+Yerba+Buena+Tucuman">Ver en Google Maps</Btn>
-            </Reveal>
-          </div>
-          <Reveal delay={.2}>
-            <div style={{ border:`1px solid ${C.border}`, overflow:"hidden", aspectRatio:"4/3" }}>
-              <iframe
-                src="https://maps.google.com/maps?q=San+Lorenzo+y+Cariola,+Yerba+Buena,+Tucum%C3%A1n,+Argentina&t=&z=17&ie=UTF8&iwloc=&output=embed"
-                width="100%" height="100%" style={{ border:0, display:"block", filter:"invert(.88) hue-rotate(180deg) saturate(.55) brightness(.8)" }}
-                allowFullScreen loading="lazy"/>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── FAQ ── */}
-      <FAQSection/>
+      {/* ── CIERRE: dónde estamos + WhatsApp ── */}
+      <CierreInicio/>
 
       <Footer navTo={navTo}/>
     </>
@@ -2115,6 +2150,8 @@ function NosotrosPage({ navTo }) {
           ))}
         </div>
       </section>
+      {/* Por qué elegirnos (antes en el inicio) */}
+      <Compromiso/>
       <Footer navTo={navTo}/>
     </div>
   );
@@ -2242,6 +2279,8 @@ function ContactoPage({ navTo }) {
           </Reveal>
         </div>
       </div>
+      {/* Preguntas frecuentes (antes en el inicio) */}
+      <FAQSection/>
       <Footer navTo={navTo}/>
     </div>
   );
@@ -3186,7 +3225,7 @@ function VenderPage({ navTo }) {
 /* ─── ROOT APP ───────────────────────────────────────────────────────────────── */
 // Cada sección tiene su dirección (#stock, #okm…): "atrás" del navegador vuelve a la
 // anterior y recargar deja en la misma sección (ver historial.js).
-const PAGINAS = ["home", "stock", "okm", "vender", "nosotros", "contacto"];
+const PAGINAS = ["home", "stock", "okm", "financiacion", "vender", "entregas", "nosotros", "contacto"];
 function paginaDeUrl() {
   try {
     const u = window.location;
@@ -3395,9 +3434,11 @@ export default function App() {
       <Nav page={page} navTo={navTo} scrolled={scrolled}/>
 
       <div style={pageStyle}>
-        {page==="home"     && <HomePage navTo={navTo} setSelectedCar={setSelectedCar} stockData={stockData} loadingStock={loadingStock} stockError={stockError} reintentarStock={() => setStockIntento(n => n + 1)} config={config} fotosClientes={fotosClientes} videosData={videosData} abrirTeilen={abrirTeilen}/>}
+        {page==="home"     && <HomePage navTo={navTo} setSelectedCar={setSelectedCar} stockData={stockData} loadingStock={loadingStock} stockError={stockError} reintentarStock={() => setStockIntento(n => n + 1)} config={config} fotosClientes={fotosClientes}/>}
         {page==="okm"      && <OkmPage navTo={navTo} okm={okm} abrirTeilen={abrirTeilen}/>}
         {page==="stock"    && <StockPage stockData={stockData} setSelectedCar={setSelectedCar} loading={loadingStock} error={stockError} reintentar={() => setStockIntento(n => n + 1)}/>}
+        {page==="financiacion" && <FinanciacionPage navTo={navTo} abrirTeilen={abrirTeilen}/>}
+        {page==="entregas" && <EntregasPage navTo={navTo} fotosClientes={fotosClientes} videosData={videosData}/>}
         {page==="nosotros" && <NosotrosPage navTo={navTo}/>}
         {page==="contacto" && <ContactoPage navTo={navTo}/>}
         {page==="vender"   && <VenderPage navTo={navTo}/>}
