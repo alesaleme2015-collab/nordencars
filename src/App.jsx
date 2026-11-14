@@ -23,6 +23,9 @@ const WA_NORDEN      = "5493816375262";
 const WA_NORDEN_DISP = "+54 9 381 637-5262";
 // Link para dejar una opinión de Norden en Google (Ale, 2026-10-29). El mismo usa el ERP.
 const GOOGLE_RESENA = "https://g.page/r/CTczIyYkYCQJEBM/review";
+// Ficha de Norden Cars en Google Maps (Ale 14/11: "Cómo llegar" mandaba a una búsqueda
+// genérica de Galería Mercato). En el celular abre la app de Maps en nuestra ficha.
+const MAPS_NORDEN = "https://www.google.com/maps?cid=658757153877865271";
 // Barras del fondo del hero (líneas de luz animadas, estilo "shader").
 // Valores deterministas: cada barra titila con su propio ritmo, altura y desfase.
 const HERO_BARS = Array.from({ length: 18 }, (_, i) => ({
@@ -1331,7 +1334,7 @@ function CierreInicio() {
         <Reveal delay={.26}>
           <div style={{ display:"flex", gap:13, flexWrap:"wrap", justifyContent:"center" }}>
             <Btn primary href={`https://wa.me/${WA_NORDEN}?text=${encodeURIComponent("Hola Norden Cars, vengo de la web")}`}>Escribinos por WhatsApp</Btn>
-            <Btn href="https://maps.google.com/?q=Galeria+Mercato+Yerba+Buena+Tucuman">Cómo llegar</Btn>
+            <Btn href={MAPS_NORDEN}>Cómo llegar</Btn>
           </div>
         </Reveal>
       </div>
@@ -2251,6 +2254,7 @@ function ContactoPage({ navTo }) {
                   📍 Galería Mercato, Casco Viejo<br/>Yerba Buena, Tucumán, Argentina<br/><br/>
                   🕐 Lun a Vie: 9–13 y 16:30–20:30hs<br/>Sáb: 9–12:30hs
                 </div>
+                <a href={MAPS_NORDEN} target="_blank" rel="noreferrer" style={{ display:"block", marginTop:10, fontSize:12, color:C.red, fontFamily:"sans-serif", textDecoration:"none", fontWeight:600 }}>Cómo llegar en Google Maps →</a>
                 <a href="https://www.instagram.com/norden.cars/" target="_blank" rel="noreferrer" style={{ display:"block", marginTop:10, fontSize:12, color:C.red, fontFamily:"sans-serif", textDecoration:"none" }}>📷 @norden.cars</a>
               </div>
             </Reveal>
