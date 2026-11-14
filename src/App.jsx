@@ -509,23 +509,24 @@ function Chatbot() {
 
   return (
     <>
-      <button onClick={() => setOpen(o => !o)} title="Preguntas frecuentes" style={{
-        position:"fixed", bottom:98, right:28, zIndex:600, width:50, height:50,
-        borderRadius:"50%", border:"none", background:C.red, cursor:"pointer",
-        boxShadow:"0 4px 22px rgba(220,38,38,.45)", display:"flex", alignItems:"center", justifyContent:"center",
-        transition:"all .3s", transform: open ? "scale(1.08) rotate(45deg)" : "scale(1)",
+      {/* Botón secundario y discreto: WhatsApp (abajo) es el principal */}
+      <button onClick={() => setOpen(o => !o)} title="Preguntas frecuentes" aria-label="Preguntas frecuentes" style={{
+        position:"fixed", bottom:92, right:33, zIndex:600, width:44, height:44,
+        borderRadius:"50%", border:`1px solid ${open ? C.red : C.border2}`, background: open ? C.red : "rgba(13,16,21,.88)", cursor:"pointer",
+        backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)",
+        boxShadow:"0 6px 22px rgba(0,0,0,.45)", display:"flex", alignItems:"center", justifyContent:"center",
+        transition:"all .3s",
       }}>
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round">
           {open
             ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
             : <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           }
         </svg>
-        {!open && <span style={{ position:"absolute", top:-3, right:-3, width:15, height:15, borderRadius:"50%", background:"#22c55e", border:"2px solid #090909", fontSize:10.5, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontFamily:"sans-serif" }}>?</span>}
       </button>
 
       {open && (
-        <div style={{ position:"fixed", bottom:158, right:28, zIndex:601, width:315, background:C.zinc, border:`1px solid ${C.border2}`, display:"flex", flexDirection:"column", overflow:"hidden", boxShadow:"0 24px 80px rgba(0,0,0,.85)" }}>
+        <div style={{ position:"fixed", bottom:148, right:28, maxWidth:"calc(100vw - 40px)", zIndex:601, width:315, background:C.zinc, border:`1px solid ${C.border2}`, display:"flex", flexDirection:"column", overflow:"hidden", boxShadow:"0 24px 80px rgba(0,0,0,.85)" }}>
           {/* Header */}
           <div style={{ background:C.red, padding:"13px 16px", display:"flex", alignItems:"center", gap:10 }}>
             <div style={{ width:30, height:30, borderRadius:"50%", background:"rgba(255,255,255,.2)", display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -590,7 +591,10 @@ function FloatWa() {
 
 /* ─── NAV ───────────────────────────────────────────────────────────────────── */
 function Nav({ page, navTo, scrolled }) {
-  const [menuOpen, setMenuOpen] = useState(false);
+  // En compu el menú va a la vista; las tres rayitas quedan solo para celular/tablet.
+  const compacto = useIsMobile(1100);
+  const [menuAbierto, setMenuOpen] = useState(false);
+  const menuOpen = menuAbierto && compacto; // si se agranda la ventana, el menú lateral se cierra solo
   useCapaAtras(menuOpen, () => setMenuOpen(false)); // "atrás" cierra el menú
   const go = (p) => { navTo(p); setMenuOpen(false); };
   const links = [["home","Inicio"],["stock","Stock"],["okm","0km"],["vender","Vendé tu auto"],["nosotros","Nosotros"],["contacto","Contacto"]];
@@ -602,14 +606,28 @@ function Nav({ page, navTo, scrolled }) {
           <button onClick={() => go("home")} style={{ background:"none", border:"none", cursor:"pointer", padding:0 }}>
             <img src={IMG_LOGO} alt="NordenCars" style={{ height:34 }}/>
           </button>
-          {/* Hamburger — siempre visible */}
-          <button onClick={() => setMenuOpen(o => !o)}
+          {!compacto && (
+            <div style={{ display:"flex", alignItems:"center", gap:34 }}>
+              {links.filter(([p]) => p !== "vender").map(([p,l]) => (
+                <button key={p} onClick={() => go(p)} className="nav-link"
+                  style={{ background:"none", border:"none", cursor:"pointer", padding:"6px 0", fontSize:12.5, letterSpacing:2.4, textTransform:"uppercase", fontFamily:"sans-serif", fontWeight:500,
+                    color: page===p ? C.white : "rgba(245,245,245,.62)", borderBottom:`2px solid ${page===p ? C.red : "transparent"}`, transition:"color .25s, border-color .25s" }}>
+                  {l}
+                </button>
+              ))}
+            </div>
+          )}
+          <div style={{ display:"flex", alignItems:"center", gap: compacto ? 14 : 0 }}>
+          <Btn primary small onClick={() => go("vender")}>Vendé tu auto</Btn>
+          {/* Hamburger — solo celular/tablet */}
+          {compacto && <button onClick={() => setMenuOpen(o => !o)}
             aria-label="Menú" aria-expanded={menuOpen}
             style={{ background:"none", border:"none", cursor:"pointer", padding:"8px 4px", display:"flex", flexDirection:"column", gap:5, zIndex:2 }}>
             <span style={{ display:"block", width:24, height:2, background:menuOpen?C.red:C.white, transform:menuOpen?"rotate(45deg) translateY(7px)":"none", transition:"all .32s cubic-bezier(.16,1,.3,1)", transformOrigin:"center" }}/>
             <span style={{ display:"block", width:24, height:2, background:menuOpen?"transparent":C.white, transition:"all .32s" }}/>
             <span style={{ display:"block", width:24, height:2, background:menuOpen?C.red:C.white, transform:menuOpen?"rotate(-45deg) translateY(-7px)":"none", transition:"all .32s cubic-bezier(.16,1,.3,1)", transformOrigin:"center" }}/>
-          </button>
+          </button>}
+          </div>
         </div>
       </nav>
 
@@ -634,32 +652,17 @@ function Nav({ page, navTo, scrolled }) {
 /* ─── MARQUEE ───────────────────────────────────────────────────────────────── */
 function Marquee() {
   const itemsTop = ["Compra Garantizada","0km y Usados","Financiación","Permutas","Yerba Buena · Tucumán","Transparencia Total","Transferencia Ágil","Marcas Premium","Sin Letras Chicas"];
-  const itemsBot = ["NordenCars","Atención presencial","Tasamos tu auto","Stock seleccionado","Lun–Vie 9–13 · 16:30–20:30","Sáb 9–12:30","Galería Mercato","Casco Viejo","Confianza local","Est. 2022"];
+  // Una sola cinta, fina y oscura (antes eran dos cintas rojas macizas)
+  const fade = "linear-gradient(to right, transparent, #000 10%, #000 90%, transparent)";
   return (
-    <div style={{ background:C.red, position:"relative", overflow:"hidden" }}>
-      {/* Línea superior — 36s, normal */}
-      <div style={{ overflow:"hidden", padding:"7px 0", position:"relative" }}>
-        <div style={{ display:"flex", width:"max-content", animation:"marquee 36s linear infinite" }}>
-          {[...Array(2)].flatMap((_, r) => itemsTop.map((t, i) => (
-            <div key={"a"+r+t+i} style={{ display:"flex", alignItems:"center", gap:14, padding:"0 28px", whiteSpace:"nowrap", fontSize:12, fontWeight:600, letterSpacing:3, textTransform:"uppercase", color:"rgba(255,255,255,.92)", fontFamily:"sans-serif" }}>
-              <span style={{ width:3, height:3, background:"rgba(255,255,255,.65)", borderRadius:"50%", flexShrink:0 }}/>
-              {t}
-            </div>
-          )))}
-        </div>
-      </div>
-      {/* Divisor sutil */}
-      <div style={{ height:1, background:"rgba(0,0,0,.18)" }}/>
-      {/* Línea inferior — 52s, sentido inverso para dar profundidad */}
-      <div style={{ overflow:"hidden", padding:"7px 0", position:"relative", background:"rgba(0,0,0,.08)" }}>
-        <div style={{ display:"flex", width:"max-content", animation:"marqueeRev 52s linear infinite" }}>
-          {[...Array(2)].flatMap((_, r) => itemsBot.map((t, i) => (
-            <div key={"b"+r+t+i} style={{ display:"flex", alignItems:"center", gap:14, padding:"0 28px", whiteSpace:"nowrap", fontSize:11.5, fontWeight:500, letterSpacing:2.5, textTransform:"uppercase", color:"rgba(255,255,255,.65)", fontFamily:"sans-serif" }}>
-              <span style={{ width:3, height:3, background:"rgba(255,255,255,.4)", borderRadius:"50%", flexShrink:0 }}/>
-              {t}
-            </div>
-          )))}
-        </div>
+    <div style={{ background:"rgba(255,255,255,.025)", borderTop:`1px solid ${C.border2}`, borderBottom:`1px solid ${C.border2}`, overflow:"hidden", padding:"13px 0", WebkitMaskImage:fade, maskImage:fade }}>
+      <div style={{ display:"flex", width:"max-content", animation:"marquee 48s linear infinite" }}>
+        {[...Array(2)].flatMap((_, r) => itemsTop.map((t, i) => (
+          <div key={"a"+r+t+i} style={{ display:"flex", alignItems:"center", gap:18, padding:"0 26px", whiteSpace:"nowrap", fontSize:12, fontWeight:500, letterSpacing:3, textTransform:"uppercase", color:"rgba(245,245,245,.6)", fontFamily:"sans-serif" }}>
+            <span style={{ width:4, height:4, background:C.red, borderRadius:"50%", flexShrink:0 }}/>
+            {t}
+          </div>
+        )))}
       </div>
     </div>
   );
@@ -1209,46 +1212,6 @@ function Footer({ navTo }) {
   );
 }
 
-/* ─── NUMBER STAT TILE (numbers bar rojo) ───────────────────────────────── */
-function NumberStatTile({ pre, n, suf, l }) {
-  const [hov, setHov] = useState(false);
-  return (
-    <div
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        flex:1, position:"relative", overflow:"hidden",
-        background: hov ? "rgba(0,0,0,.22)" : "rgba(0,0,0,.13)",
-        padding:"38px 16px", textAlign:"center",
-        cursor:"default",
-        transition:"background .35s",
-      }}>
-      {/* Línea blanca creciendo desde abajo en hover */}
-      <div style={{
-        position:"absolute", bottom:0, left:0, height:2,
-        width: hov ? "100%" : "0%",
-        background:"#fff",
-        transition:"width .55s cubic-bezier(.16,1,.3,1)",
-      }}/>
-      <div style={{
-        fontFamily:"'Barlow Condensed',sans-serif",
-        fontSize:50, fontWeight:900, color:"#fff", lineHeight:1, letterSpacing:-2,
-        transform: hov ? "translateY(-3px)" : "translateY(0)",
-        transition:"transform .45s cubic-bezier(.16,1,.3,1)",
-        fontVariantNumeric:"tabular-nums",
-      }}>
-        {pre}{<StatCounter value={n} duration={1600}/>}{suf}
-      </div>
-      <div style={{
-        fontSize:11, letterSpacing:3, textTransform:"uppercase",
-        color: hov ? "rgba(255,255,255,.95)" : "rgba(255,255,255,.56)",
-        marginTop:8, fontFamily:"sans-serif",
-        transition:"color .35s",
-      }}>{l}</div>
-    </div>
-  );
-}
-
 /* ─── HERO STAT ITEM (con divisor animado e indicador rojo en hover) ─────── */
 function HeroStatItem({ pre, n, suf, l, last, mob }) {
   const [hov, setHov] = useState(false);
@@ -1402,7 +1365,7 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
           </p>
           <div style={{ display:"flex", gap:13, flexWrap:"wrap", animation:"fadeUp .8s 1s both" }}>
             <div className="btn-glow" style={{ display:"inline-block", borderRadius:2 }}><Btn primary onClick={() => navTo("stock")}>Ver Stock Disponible</Btn></div>
-            <Btn onClick={() => navTo("contacto")}>Vender mi Auto</Btn>
+            <Btn onClick={() => navTo("vender")}>Vender mi Auto</Btn>
           </div>
         </div>
 
@@ -1414,7 +1377,7 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
 
         {/* Stats bar */}
         <div style={{ position:"absolute", bottom:0, left:0, right:0, display:"flex", borderTop:`1px solid ${C.border}`, background:"rgba(5,5,5,.92)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", zIndex:2 }}>
-          {[["+","100","","Vehículos vendidos"],["","100","%","Satisfacción"],["","17","","Marcas 0km"],["","Tucumán","","Yerba Buena"]].map(([pre,n,suf,l],i) => (
+          {[["+","100","","Vehículos vendidos"],["","100","%","Satisfacción"],["","17","","Marcas 0km"],["","24","hs","Respuesta"]].map(([pre,n,suf,l],i) => (
             <HeroStatItem key={i} pre={pre} n={n} suf={suf} l={l} last={i===3} mob={mob}/>
           ))}
         </div>
@@ -1460,22 +1423,6 @@ function HomePage({ navTo, setSelectedCar, stockData, loadingStock, stockError, 
           {MARCAS_0KM.map((m,i) => <Reveal key={m} delay={i*.022}><FlipBrandCard brand={m}/></Reveal>)}
         </div>
       </section>
-
-      {/* ── NUMBERS BAR ── */}
-      <div className="num-bar" style={{
-        background:"linear-gradient(135deg, #DC2626 0%, #B91C1C 50%, #DC2626 100%)",
-        display:"flex", gap:1, position:"relative", overflow:"hidden",
-      }}>
-        {/* Trama diagonal sutil para textura */}
-        <div style={{
-          position:"absolute", inset:0,
-          backgroundImage:"repeating-linear-gradient(45deg,rgba(255,255,255,.04) 0,rgba(255,255,255,.04) 1px,transparent 1px,transparent 60px)",
-          pointerEvents:"none",
-        }}/>
-        {[["+","100","","Vehículos vendidos"],["","100","%","Satisfacción"],["","17","","Marcas 0km"],["","24","hs","Respuesta"]].map(([pre,n,suf,l],i) => (
-          <NumberStatTile key={i} pre={pre} n={n} suf={suf} l={l}/>
-        ))}
-      </div>
 
       <SectionDivider/>
 
@@ -3232,24 +3179,6 @@ function VenderPage({ navTo }) {
   );
 }
 
-/* Botón fijo "Vendé tu auto" (abajo a la izquierda; a la derecha están WhatsApp y el chat). */
-function FloatVender({ onClick }) {
-  const [hov, setHov] = useState(false);
-  return (
-    <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} aria-label="Vendé tu auto"
-      style={{ position:"fixed", left:20, bottom:28, zIndex:600, display:"flex", alignItems:"center", gap:9, padding:"0 18px 0 14px", height:46,
-        background: hov ? C.red : "rgba(12,14,18,.92)", border:`1px solid ${hov ? C.red : "rgba(220,38,38,.55)"}`, color:"#fff",
-        backdropFilter:"blur(12px)", cursor:"pointer", fontFamily:"sans-serif", fontSize:12, fontWeight:600, letterSpacing:2.2, textTransform:"uppercase",
-        boxShadow: hov ? "0 10px 32px rgba(220,38,38,.4)" : "0 6px 24px rgba(0,0,0,.45)", transition:"all .3s cubic-bezier(.16,1,.3,1)",
-        transform: hov ? "translateY(-2px)" : "none" }}>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M5 17h14M6 17l1.5-5h9L18 17M7.5 12 9 8h6l1.5 4"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/>
-      </svg>
-      Vendé tu auto
-    </button>
-  );
-}
-
 /* ─── ROOT APP ───────────────────────────────────────────────────────────────── */
 // Cada sección tiene su dirección (#stock, #okm…): "atrás" del navegador vuelve a la
 // anterior y recargar deja en la misma sección (ver historial.js).
@@ -3458,7 +3387,6 @@ export default function App() {
       {selectedCar && <CarModal car={selectedCar} onClose={() => setSelectedCar(null)}/>}
       {teilen && createPortal(<TeilenModal precio={teilen.precio} onClose={() => setTeilen(false)}/>, document.body)}
 
-      {page !== "vender" && <FloatVender onClick={() => navTo("vender")}/>}
       <FloatWa/>
       <Chatbot/>
     </div>
