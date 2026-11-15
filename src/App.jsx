@@ -1451,7 +1451,8 @@ function puedeVideo() {
 function HeroVideo({ mobile, onListo }) {
   const ref = useRef(null);
   const [ok] = useState(puedeVideo);
-  const [listo, setListo] = useState(false);
+  const [listo, setListo] = useState(false); // ya está reproduciendo (para el nombre del auto)
+  const [falla, setFalla] = useState(false);
   const [tramo, setTramo] = useState(0);
   const [avance, setAvance] = useState(0);
   const v = mobile ? HERO_VIDEO.celu : HERO_VIDEO.compu;
@@ -1476,10 +1477,12 @@ function HeroVideo({ mobile, onListo }) {
   return (
     <>
       <video key={v.src} ref={ref} src={v.src} poster={v.poster} autoPlay muted loop playsInline preload="auto" aria-hidden
-        onPlaying={() => { setListo(true); onListo?.(true); }} onError={() => onListo?.(false)} onTimeUpdate={alAvanzar}
-        style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity: listo ? 1 : 0, transition:"opacity 1.2s ease", zIndex:0 }}/>
+        onPlaying={() => { setListo(true); onListo?.(true); }} onError={() => { setFalla(true); onListo?.(false); }} onTimeUpdate={alAvanzar}
+        // Ale 15/11: al volver al inicio se veía 1 segundo la portada vieja. Ahora el video
+        // (y mientras carga, su primer cuadro) se ve desde el primer instante.
+        style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity: falla ? 0 : 1, zIndex:0, background:"#050505" }}/>
       {/* Degradado para que el título, los botones y los números se lean siempre */}
-      <div style={{ position:"absolute", inset:0, zIndex:0, pointerEvents:"none", opacity: listo ? 1 : 0, transition:"opacity 1.2s ease",
+      <div style={{ position:"absolute", inset:0, zIndex:0, pointerEvents:"none", opacity: falla ? 0 : 1,
         background: mobile
           ? "linear-gradient(to bottom, rgba(5,5,5,.88) 0%, rgba(5,5,5,.62) 40%, rgba(5,5,5,.18) 62%, rgba(5,5,5,.25) 80%, rgba(5,5,5,.95) 100%)"
           : "linear-gradient(90deg, rgba(5,5,5,.92) 0%, rgba(5,5,5,.6) 42%, rgba(5,5,5,.15) 100%), linear-gradient(to top, rgba(5,5,5,.95) 0%, rgba(5,5,5,0) 30%)" }}/>
@@ -1529,7 +1532,7 @@ function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingS
     const py = (e.clientY - r.top) / r.height - 0.5;
     setTilt({ rx: -py * 9, ry: px * 15 });
   };
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 760); // desde el arranque: así el celular no carga primero el video de compu
   useEffect(() => {
     const ck = () => setIsMobile(window.innerWidth < 760);
     ck(); window.addEventListener("resize", ck);
@@ -1540,7 +1543,7 @@ function HomePage({ okm, verMarcaOkm, navTo, setSelectedCar, stockData, loadingS
   const cantMarcas = new Set((okm?.modelos || []).map(m => claveMarcaWeb(m.marca))).size || 15;
 
   // Con el video andando se ocultan las barras de luz y los autos 3D (quedan de respaldo)
-  const [conVideo, setConVideo] = useState(false);
+  const [conVideo, setConVideo] = useState(puedeVideo); // si el video falla, vuelve la portada de siempre
 
   // Título split por palabra para animación con stagger
   const titleLines = [
