@@ -2552,7 +2552,7 @@ function OkmModal({ m, onClose, abrirTeilen }) {
             {m.versiones.length > 0 && <div style={{ fontSize:11, color:C.muted, fontFamily:"sans-serif", marginBottom:18 }}>{m.vigente_al ? `Lista vigente al ${fmtFecha(m.vigente_al)}` : "Consultanos el precio actualizado por WhatsApp"}</div>}
             {m.versiones.length === 0 && (
               // Modelo que vendemos sin lista cargada todavía: versiones y precio por WhatsApp.
-              <p style={{ fontSize:13, color:C.white, fontFamily:"sans-serif", lineHeight:1.6, marginBottom:18 }}>Consultanos versiones, colores y precio final para Tucumán: te respondemos al toque.</p>
+              <p style={{ fontSize:13, color:C.white, fontFamily:"sans-serif", lineHeight:1.6, marginBottom:18 }}>Consultanos versiones, colores y precio final: te respondemos al toque.</p>
             )}
             <div style={{ display:"flex", flexDirection:"column", gap:1, background:C.border, marginBottom: m.versiones.length ? 18 : 0 }}>
               {m.versiones.map(v => (
@@ -2766,7 +2766,7 @@ function OkmPage({ navTo, okm, abrirTeilen, marcaInicial }) {
   return (
     <div style={{ paddingTop:68 }}>
       <style>{`@keyframes okmFade{from{opacity:0}to{opacity:1}}@keyframes okmUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}@keyframes okmCar{from{opacity:0;transform:translateX(-60px) scale(.94)}to{opacity:1;transform:none}}.okm-chips::-webkit-scrollbar{display:none}`}</style>
-      <PageHeader tag="Precios 0km" bgWord="0KM" subtitle="Precio final para Tucumán, actualizado con las listas de cada marca.">
+      <PageHeader tag="Precios 0km" bgWord="0KM" subtitle="Precios actualizados con las listas de cada marca.">
         Tu 0km <Red>al mejor precio</Red>
       </PageHeader>
       <div style={{ padding: mob ? "26px 16px 70px" : "48px 5vw 100px", background:"#0c0c0c" }}>
