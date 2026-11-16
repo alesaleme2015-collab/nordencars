@@ -3339,6 +3339,28 @@ function paginaDeUrl() {
 }
 const urlDePagina = (p) => window.location.pathname + (p === "home" ? "" : "#" + p);
 
+/* ─── VERSIÓN NUEVA (Ale 16/11) ────────────────────────────────────────────────
+   La web cambia de página sin recargarse, así que una pestaña abierta (en el
+   celular quedan días) seguía con el código viejo y no veía los arreglos (caso: la
+   portada vieja que aparecía al volver al inicio, ya arreglada). Cada versión
+   publicada tiene su archivo con nombre único (/assets/index-XXXX.js): se revisa
+   de a ratos si en el servidor hay otro y, si lo hay, el próximo cambio de página
+   carga la web entera ya actualizada (nunca interrumpe mientras se lee). */
+const CODIGO_ACTUAL = (() => {
+  try { return document.querySelector('script[type="module"][src*="/assets/index-"]')?.getAttribute("src") || null; } catch { return null; }
+})(); // en el modo de desarrollo es null: no se revisa nada
+let versionNueva = false;
+let ultimaRevision = 0;
+async function revisarVersion() {
+  if (!CODIGO_ACTUAL || versionNueva || Date.now() - ultimaRevision < 60000) return;
+  ultimaRevision = Date.now();
+  try {
+    const html = await (await fetch(`/?nc-version=${Date.now()}`, { cache: "no-store" })).text();
+    const enServidor = html.match(/\/assets\/index-[\w-]+\.js/)?.[0];
+    if (enServidor && enServidor !== CODIGO_ACTUAL) versionNueva = true;
+  } catch { /* sin conexión: se vuelve a probar más tarde */ }
+}
+
 export default function App() {
   const [page, setPage] = useState(paginaDeUrl);
   const pageRef = useRef(page); // la sección a la que se está yendo (cambia antes que `page`, que espera la animación)
@@ -3517,9 +3539,23 @@ export default function App() {
   const navTo = (p) => {
     setOkmMarca(null); // entrar a 0km desde el menú muestra todas las marcas
     if (p === pageRef.current) { window.scrollTo({ top:0, behavior:"smooth" }); return; }
+    if (versionNueva) { // hay versión nueva publicada: ir a esa página cargando la web actualizada
+      window.history.pushState({ page:p }, "", urlDePagina(p));
+      window.location.reload();
+      return;
+    }
     empujarPagina({ page:p }, urlDePagina(p));
     cambiarPagina(p);
   };
+
+  // Revisar si hay versión nueva: cada 5 minutos y cada vez que se vuelve a la pestaña
+  useEffect(() => {
+    if (!CODIGO_ACTUAL) return;
+    const alVolver = () => { if (document.visibilityState === "visible") revisarVersion(); };
+    document.addEventListener("visibilitychange", alVolver);
+    const t = setInterval(revisarVersion, 5 * 60 * 1000);
+    return () => { document.removeEventListener("visibilitychange", alVolver); clearInterval(t); };
+  }, []);
 
   // Primera entrada del historial = la sección con la que se entró; "atrás"/"adelante" cambian de sección.
   useEffect(() => {
